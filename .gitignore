@@ -3,3 +3,4 @@ source
 Makefile
 build
 Makefile
+*.swp
