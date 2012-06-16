@@ -61,6 +61,31 @@ Event loop lifecycle</p>
 <p>With the basics out of the way, lets write our first libuv program. It does
 nothing, except start a loop which will exit immediately.</p>
 <p>TODO caption program with location in code folder</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Now quitting.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
 <p>This program quits immediately because it has no events to process. A libuv
 event loop has to be told to watch out for events using the various API
 functions.</p>
