@@ -12,6 +12,9 @@ and inexperienced and may be severely wrong at points. He encourages you to
 to the book by `forking the repository <https://github.com/nikhilm/uvbook>`_
 and sending a pull request.
 
+Nikhil is indebted to Marc Lehmann's comprehensive man page about libev which
+describes much of the semantics of the two libraries.
+
 Colophon
 --------
 
