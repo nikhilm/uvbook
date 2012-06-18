@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <uv.h>
 
-int main()
-{
+int main() {
     uv_loop_t *loop = uv_loop_new();
 
     printf("Now quitting.\n");
