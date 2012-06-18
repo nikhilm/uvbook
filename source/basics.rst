@@ -1,5 +1,17 @@
+Basics of libuv
+===============
+
+libuv offers core utilities like timers, non-blocking networking support,
+asynchronous file system access, child processes and more in an **always
+asynchronous** manner. It uses a driven process to function in a single thread.
+
+TODO clear up about async and threads
+
+Async
+-----
+
 Event loops
-===========
+-----------
 
 libuv is based on an *event-driven* model of programming. The idea is to
 express interest in certain events and respond to them when they occur. The

@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 1
 
    introduction
-   eventloops
+   basics
    basic-io
    networking
    threads
