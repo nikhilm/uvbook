@@ -150,3 +150,7 @@ This is mostly used when a loop shouldn't wait around for certain watchers,
 even if they are active. See :doc:`patterns` for an example.
 
 Semantics of event loops
+
+void \*data pattern
+
+note about not necessarily creating type structs on the stack
