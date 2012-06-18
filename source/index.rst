@@ -19,6 +19,7 @@ Contents:
    processes
    multiple
    utilities
+   patterns
    glossary
    about
 
