@@ -2,7 +2,8 @@ UV_PATH=$(shell pwd)/../libuv
 
 examples=\
 	helloworld\
-	idle-basic
+	idle-basic\
+	file-read
 
 all: libuv
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc -g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a -o $$dir main.c; cd ..; done
