@@ -12,13 +12,14 @@ Contents:
    :maxdepth: 1
 
    introduction
-   eventloops
-   basic-io
+   basics
+   io
    networking
    threads
    processes
    multiple
    utilities
+   patterns
    glossary
    about
 

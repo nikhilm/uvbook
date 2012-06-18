@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Basics of libuv &mdash; An Introduction to libuv 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/print.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/theme_extras.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="top" title="An Introduction to libuv 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="I/O" href="io.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+  </head>
+  <body>
+      <div class="header"><h1 class="heading"><a href="index.html">
+          <span>An Introduction to libuv 1.0.0 documentation</span></a></h1>
+        <h2 class="heading"><span>Basics of libuv</span></h2>
+      </div>
+      <div class="topnav">
+      
+        <p>
+        «&#160;&#160;<a href="introduction.html">Introduction</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="io.html">I/O</a>&#160;&#160;»
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="basics-of-libuv">
+<h1>Basics of libuv<a class="headerlink" href="#basics-of-libuv" title="Permalink to this headline">¶</a></h1>
+<p>libuv offers core utilities like timers, non-blocking networking support,
+asynchronous file system access, child processes and more in an <strong>always
+asynchronous</strong> manner. It uses a driven process to function in a single thread.</p>
+<p>TODO clear up about async and threads</p>
+<div class="section" id="async">
+<h2>Async<a class="headerlink" href="#async" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="event-loops">
+<h2>Event loops<a class="headerlink" href="#event-loops" title="Permalink to this headline">¶</a></h2>
+<p>libuv is based on an <em>event-driven</em> model of programming. The idea is to
+express interest in certain events and respond to them when they occur. The
+responsibility of gathering events from the operating system or monitoring
+other sources of events is handled by libuv, and the user can register
+callbacks to be invoked when an event occurs. An event-loop is a loop that
+keeps running <em>forever</em>, watching out for events and notifying the user via
+callbacks. In pseudocode:</p>
+<div class="highlight-python"><pre>while there are still events to process:
+    e = get the next event
+    if there is a callback associated with e:
+        call the callback</pre>
+</div>
+<p>Some examples of events are:</p>
+<ul class="simple">
+<li>File is ready for writing</li>
+<li>A socket has data ready to be read</li>
+<li>A timer has timed out</li>
+</ul>
+<p>This event loop is encapsulated by <cite>uv_run()</cite> the end-all function when using
+libuv. A standard program using libuv</p>
+<p>Basics of the evented I/O model
+Event loop lifecycle</p>
+</div>
+<div class="section" id="hello-world">
+<h2>Hello World<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h2>
+<p>With the basics out of the way, lets write our first libuv program. It does
+nothing, except start a loop which will exit immediately.</p>
+<p>TODO caption program with location in code folder</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Now quitting.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>This program quits immediately because it has no events to process. A libuv
+event loop has to be told to watch out for events using the various API
+functions.</p>
+<div class="section" id="default-loop">
+<h3>Default loop<a class="headerlink" href="#default-loop" title="Permalink to this headline">¶</a></h3>
+<p>A default loop is provided by libuv and can be accessed using
+<cite>uv_default_loop()</cite>. You should use this loop if you only want a single
+loop.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">node.js uses the default loop as its main loop. If you are writing bindings
+you should be aware of this.</p>
+</div>
+<p>TODO does ev limitation of ev_child only on default loop extend to libuv? Check
+this</p>
+</div>
+</div>
+<div class="section" id="watchers">
+<h2>Watchers<a class="headerlink" href="#watchers" title="Permalink to this headline">¶</a></h2>
+<p>Watchers are how users of libuv express interest in particular events. Watchers
+are opaque structs named as <cite>uv_TYPE_t</cite> where type signifies what the watcher
+is used for. A full list of watchers supported by libuv is:</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All watcher structs are subclasses of <cite>uv_handle_t</cite> and often referred to
+as <strong>handles</strong> in libuv and in this text.</p>
+</div>
+<p>Watchers are setup by a corresponding</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>function.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Some watcher initialization functions require the loop as a first argument.</p>
+</div>
+<p>A watcher is set to actually listen for events by invoking</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_start</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>and stopped by calling the corresponding</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_stop</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Callbacks are functions which are called by libuv whenever an event the watcher
+is interested in has taken place. Application specific logic will usually be
+implemented in the callback. For example, an IO watcher&#8217;s callback will receive
+the data read from a file, a timer callback will be triggered on timeout and so
+on.</p>
+<div class="section" id="idling">
+<h3>Idling<a class="headerlink" href="#idling" title="Permalink to this headline">¶</a></h3>
+<p>Here is an example of using a watcher. An idle watcher&#8217;s callback is repeatedly
+called. There are some deeper semantics, discussed in <a class="reference internal" href="utilities.html"><em>Utilities</em></a>, but
+we&#8217;ll ignore them for now. Let&#8217;s just use an idle watcher to look at the
+watcher life cycle and see how <cite>uv_run()</cite> will now block because a watcher is
+present. The idle watcher is stopped when the count is reached and <cite>uv_run()</cite>
+exits since no event watchers are active.</p>
+<p>TODO caption</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+</span>    <span class="n">counter</span><span class="o">++</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;=</span> <span class="mf">10e6</span><span class="p">)</span>
+<span class="hll">        <span class="n">uv_idle_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+</span><span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
+</span><span class="hll">
+</span><span class="hll">    <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">wait_for_a_while</span><span class="p">);</span>
+</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Idling...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">());</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="reference-counting">
+<h2>Reference counting<a class="headerlink" href="#reference-counting" title="Permalink to this headline">¶</a></h2>
+<p>TODO move section to some other chapter?</p>
+<p>The event loop only runs (i.e. <cite>uv_run()</cite> blocks) as long as their are active
+watchers. This system works by having every watcher increase the reference
+count of the event loop when it is started and decreasing the reference count
+when stopped. It is also possible to manually change the reference count of
+handles using (TODO glossary add handles and watchers):</p>
+<p>This is mostly used when a loop shouldn&#8217;t wait around for certain watchers,
+even if they are active. See <a class="reference internal" href="patterns.html"><em>Patterns</em></a> for an example.</p>
+<p>Semantics of event loops</p>
+</div>
+</div>
+
+
+      </div>
+      <div class="bottomnav">
+      
+        <p>
+        «&#160;&#160;<a href="introduction.html">Introduction</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        &#160;&#160;::&#160;&#160;
+        <a href="io.html">I/O</a>&#160;&#160;»
+        </p>
+
+      </div>
+
+    <div class="footer">
+        &copy; Copyright 2012, Nikhil Marathe.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
