@@ -9,3 +9,8 @@ all: libuv
 
 libuv:
 	make -C ../libuv
+
+clean:
+	for dir in $(examples); do cd $$dir; rm -f $$dir; cd ..; done
+
+.PHONY: clean
