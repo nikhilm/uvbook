@@ -125,6 +125,15 @@ We set the dominos rolling in `main()`:
 Filesystem operations
 ---------------------
 
+All the standard filesystem operations like `unlink`, `rmdir`, `stat` are
+supported asynchronously and have intuitive argument order. They follow the
+same patterns as the read/write/open calls, returning the result in the
+`uv_fs_t.result` field. The full list:
+
+.. rubric:: Filesystem operations
+.. literalinclude:: ../libuv/include/uv.h
+    :lines: 1390-1466
+
 Buffers and Streams
 -------------------
 
