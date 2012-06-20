@@ -125,10 +125,85 @@ We set the dominos rolling in `main()`:
 Filesystem operations
 ---------------------
 
+Buffers and Streams
+-------------------
+
+The basic I/O tool in libuv is the stream (`uv_stream_t`). TCP sockets, UDP
+sockets, named pipes for file I/O and IPC are all treated as stream subclasses.
+
+Streams are initialized using custom functions for each subclass, then operated
+upon using
+
+.. code-block:: c
+
+    int uv_read_start(uv_stream_t*, uv_alloc_cb alloc_cb, uv_read_cb read_cb);
+    int uv_read_stop(uv_stream_t*);
+    int uv_write(uv_write_t* req, uv_stream_t* handle,
+                uv_buf_t bufs[], int bufcnt, uv_write_cb cb);
+
+The stream based functions are simpler to use than the filesystem ones and
+libuv will automatically keep reading from a stream when `uv_read_start()` is
+called once, until `uv_read_stop()` is called.
+
+The discrete unit of data is the buffer -- `uv_buf_t`. This is simply
+a collection of a pointer to bytes (`uv_buf_t.base`) and the length
+(`uv_buf_t.len`). The `uv_buf_t` is lightweight and passed around by value.
+What does require management is the actual bytes, which have to be allocated
+and freed by the application.
+
+To demonstrate streams using pipes, here is a simple tee utility using libuv.
+Doing all operations asynchronously shows the power of evented I/O. The two
+writes won't block each other, but we've to be careful to copy over the buffer
+data to ensure we don't free a buffer until it has been written.
+
+The program is to be executed as:
+
+    ./uvtee <output_file>
+
+We start of opening pipes on the files we require. libuv pipes to a file are
+opened as bidirectional by default.
+
+.. rubric:: uvtee/main.c - read on pipes
+.. literalinclude:: ../code/uvtee/main.c
+    :linenos:
+    :lines: 62-81
+    :emphasize-lines: 4,5,15
+
+The third argument of `uv_pipe_init()` should be set to 1 for IPC using named
+pipes. This is covered in :doc:`processes`. The `uv_pipe_open()` call
+associates the file descriptor with the file.
+
+We start monitoring `stdin`. The `alloc_buffer` callback is invoked as new
+buffers are required to hold incoming data. `read_stdin` will be called with
+these buffers.
+
+.. rubric:: uvtee/main.c - reading buffers
+.. literalinclude:: ../code/uvtee/main.c
+    :linenos:
+    :lines: 19-22,44-60
+
+The standard `malloc` is sufficient here, but you can use any memory allocation
+scheme. For example, node.js uses its own slab allocator which associates
+buffers with V8 objects.
+
+The read callback `nread` parameter is -1 on any error. This error might be
+EOF, in which case we close all the streams, using the generic close function
+`uv_close()` which deals with the handle based on its internal type.
+Otherwise `nread` is a non-negative number and we can attempt to write that
+many bytes to the output streams. Finally remember that buffer allocation and
+deallocation is application responsibility, so we free the data.
+
+.. rubric:: uvtee/main.c - Write to pipe
+.. literalinclude:: ../code/uvtee/main.c
+    :linenos:
+    :lines: 9-13,23-42
+
+`write_data()` makes a copy of the buffer obtained from read. Again, this
+buffer does not get passed through to the callback trigged on write completion.
+To get around this we wrap a write request and a buffer in `write_req_t` and
+unwrap it in the callbacks.
+
 File modification notification
 ------------------------------
 
 TODO rework section title
-
-buffers and streams
-Local I/O
