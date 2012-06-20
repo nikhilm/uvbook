@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Filesystem &mdash; An Introduction to libuv 1.0.0 documentation</title>
+    <title>Filesystem &mdash; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -29,13 +29,13 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="An Introduction to libuv 1.0.0 documentation" href="index.html" />
+    <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Networking" href="networking.html" />
     <link rel="prev" title="Basics of libuv" href="basics.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>An Introduction to libuv 1.0.0 documentation</span></a></h1>
+          <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Filesystem</span></h2>
       </div>
       <div class="topnav">
@@ -248,8 +248,9 @@ Doing all operations asynchronously shows the power of evented I/O. The two
 writes won&#8217;t block each other, but we&#8217;ve to be careful to copy over the buffer
 data to ensure we don&#8217;t free a buffer until it has been written.</p>
 <p>The program is to be executed as:</p>
-<blockquote>
-<div>./uvtee &lt;output_file&gt;</div></blockquote>
+<div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">uvtee</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
 <p>We start of opening pipes on the files we require. libuv pipes to a file are
 opened as bidirectional by default.</p>
 <p class="rubric">uvtee/main.c - read on pipes</p>
@@ -408,9 +409,81 @@ buffer does not get passed through to the callback trigged on write completion.
 To get around this we wrap a write request and a buffer in <cite>write_req_t</cite> and
 unwrap it in the callbacks.</p>
 </div>
-<div class="section" id="file-modification-notification">
-<h2>File modification notification<a class="headerlink" href="#file-modification-notification" title="Permalink to this headline">¶</a></h2>
-<p>TODO rework section title</p>
+<div class="section" id="file-change-events">
+<h2>File change events<a class="headerlink" href="#file-change-events" title="Permalink to this headline">¶</a></h2>
+<p>All modern operating systems provide APIs to put watches on individual files or
+directories and be informed when the files are modified. libuv wraps common
+file change notification libraries <a class="footnote-reference" href="#fsnotify" id="id1">[1]</a>. This is one of the more
+inconsistent parts of libuv. File change notification systems are themselves
+extremely varied across platforms so getting everything working everywhere is
+difficult. To demonstrate, I&#8217;m going to build a simple utility which runs
+a command whenever any of the watched files change:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">onchange</span> <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">file1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">file2</span><span class="p">]</span> <span class="p">...</span>
+</pre></div>
+</div>
+<p>The file change notification is started using <cite>uv_fs_event_init()</cite>:</p>
+<p class="rubric">onchange/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="k">while</span> <span class="p">(</span><span class="n">argc</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Adding watch on %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">]);</span>
+<span class="hll">        <span class="n">uv_fs_event_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_fs_event_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_fs_event_t</span><span class="p">)),</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">run_command</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span>    <span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The third argument is the actual file or directory to monitor. The last
+argument, <cite>flags</cite>, can be:</p>
+<p>but both are currently unimplemented on all platforms.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">You will in fact raise an assertion error if you pass any flags. So stick
+to 0.</p>
+</div>
+<p>The callback will receive the following arguments:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><cite>uv_fs_event_t *handle</cite> - The watcher. The <cite>filename</cite> field of the watcher
+is the file on which the watch was set.</li>
+<li><cite>const char *filename</cite> - If a directory is being monitored, this is the
+file which was changed. Only non-<cite>null</cite> on Linux and Windows. May be <cite>null</cite>
+even on those platforms.</li>
+<li><cite>int flags</cite> - one of <cite>UV_RENAME</cite> or <cite>UV_CHANGE</cite>.</li>
+<li><cite>int status</cite> - Currently 0.</li>
+</ol>
+</div></blockquote>
+<p>In our example we simply print the arguments and run the command using
+<cite>system()</cite>.</p>
+<p class="rubric">onchange/main.c - file change notification callback</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">uv_fs_event_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Change detected in %s: &quot;</span><span class="p">,</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">filename</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">==</span> <span class="n">UV_RENAME</span><span class="p">)</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;renamed&quot;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">==</span> <span class="n">UV_CHANGE</span><span class="p">)</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;changed&quot;</span><span class="p">);</span>
+
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot; %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">filename</span> <span class="o">?</span> <span class="n">filename</span> <span class="o">:</span> <span class="s">&quot;&quot;</span><span class="p">);</span>
+    <span class="n">system</span><span class="p">(</span><span class="n">command</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="fsnotify" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
+Windows, event ports on Solaris, unsupported on Cygwin</td></tr>
+</tbody>
+</table>
 </div>
 </div>
 

@@ -167,7 +167,7 @@ Doing all operations asynchronously shows the power of evented I/O. The two
 writes won't block each other, but we've to be careful to copy over the buffer
 data to ensure we don't free a buffer until it has been written.
 
-The program is to be executed as:
+The program is to be executed as::
 
     ./uvtee <output_file>
 
@@ -214,7 +214,58 @@ buffer does not get passed through to the callback trigged on write completion.
 To get around this we wrap a write request and a buffer in `write_req_t` and
 unwrap it in the callbacks.
 
-File modification notification
-------------------------------
+File change events
+------------------
 
-TODO rework section title
+All modern operating systems provide APIs to put watches on individual files or
+directories and be informed when the files are modified. libuv wraps common
+file change notification libraries [#fsnotify]_. This is one of the more
+inconsistent parts of libuv. File change notification systems are themselves
+extremely varied across platforms so getting everything working everywhere is
+difficult. To demonstrate, I'm going to build a simple utility which runs
+a command whenever any of the watched files change::
+
+    ./onchange <command> <file1> [file2] ...
+
+The file change notification is started using `uv_fs_event_init()`:
+
+.. rubric:: onchange/main.c
+.. literalinclude:: ../code/onchange/main.c
+    :linenos:
+    :lines: 29-32
+    :emphasize-lines: 3
+
+The third argument is the actual file or directory to monitor. The last
+argument, `flags`, can be:
+
+.. literalinclude:: ../libuv/include/uv.h
+    :lines: 1501,1510
+
+but both are currently unimplemented on all platforms.
+
+.. warning::
+
+    You will in fact raise an assertion error if you pass any flags. So stick
+    to 0.
+
+The callback will receive the following arguments:
+
+  #. `uv_fs_event_t *handle` - The watcher. The `filename` field of the watcher
+     is the file on which the watch was set.
+  #. `const char *filename` - If a directory is being monitored, this is the
+     file which was changed. Only non-`null` on Linux and Windows. May be `null`
+     even on those platforms.
+  #. `int flags` - one of `UV_RENAME` or `UV_CHANGE`.
+  #. `int status` - Currently 0.
+
+In our example we simply print the arguments and run the command using
+`system()`.
+
+.. rubric:: onchange/main.c - file change notification callback
+.. literalinclude:: ../code/onchange/main.c
+    :linenos:
+    :lines: 9-18
+
+.. rubric:: Footnotes
+.. [#fsnotify] inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
+    Windows, event ports on Solaris, unsupported on Cygwin

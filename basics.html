@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Basics of libuv &mdash; An Introduction to libuv 1.0.0 documentation</title>
+    <title>Basics of libuv &mdash; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -29,13 +29,13 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
-    <link rel="top" title="An Introduction to libuv 1.0.0 documentation" href="index.html" />
+    <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Filesystem" href="filesystem.html" />
     <link rel="prev" title="Introduction" href="introduction.html" /> 
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
-          <span>An Introduction to libuv 1.0.0 documentation</span></a></h1>
+          <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Basics of libuv</span></h2>
       </div>
       <div class="topnav">
@@ -142,7 +142,7 @@ is used for. A full list of watchers supported by libuv is:</p>
 <p class="last">All watcher structs are subclasses of <cite>uv_handle_t</cite> and often referred to
 as <strong>handles</strong> in libuv and in this text.</p>
 </div>
-<p>Watchers are setup by a corresponding</p>
+<p>Watchers are setup by a corresponding:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -151,11 +151,11 @@ as <strong>handles</strong> in libuv and in this text.</p>
 <p class="first admonition-title">Note</p>
 <p class="last">Some watcher initialization functions require the loop as a first argument.</p>
 </div>
-<p>A watcher is set to actually listen for events by invoking</p>
+<p>A watcher is set to actually listen for events by invoking:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_start</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>and stopped by calling the corresponding</p>
+<p>and stopped by calling the corresponding:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_stop</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -208,6 +208,10 @@ watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
 <a class="reference internal" href="glossary.html#term-handle"><em class="xref std std-term">handles</em></a> using:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">uv_ref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+<span class="kt">void</span> <span class="n">uv_unref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+</pre></div>
+</div>
 <p>This is mostly used when a loop shouldn&#8217;t wait around for certain watchers,
 even if they are active. See <a class="reference internal" href="patterns.html"><em>Patterns</em></a> for an example.</p>
 <p>Semantics of event loops</p>
