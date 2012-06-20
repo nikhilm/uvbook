@@ -46,8 +46,7 @@ Hello World
 With the basics out of the way, lets write our first libuv program. It does
 nothing, except start a loop which will exit immediately.
 
-TODO caption program with location in code folder
-
+.. rubric:: helloworld/main.c
 .. literalinclude:: ../code/helloworld/main.c
     :linenos:
 
@@ -77,6 +76,7 @@ Watchers are how users of libuv express interest in particular events. Watchers
 are opaque structs named as `uv_TYPE_t` where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:
 
+.. rubric:: libuv watchers
 .. literalinclude:: ../libuv/include/uv.h
     :lines: 184-202
 
@@ -125,8 +125,7 @@ watcher life cycle and see how `uv_run()` will now block because a watcher is
 present. The idle watcher is stopped when the count is reached and `uv_run()`
 exits since no event watchers are active.
 
-TODO caption
-
+.. rubric:: idle-basic/main.c
 .. literalinclude:: ../code/idle-basic/main.c
     :emphasize-lines: 6,10,14-17
 

@@ -54,6 +54,7 @@ Filesystem operation callbacks have the signature:
 Let's see a simple implementation of `cat`. We start with registering
 a callback for when the file is opened:
 
+.. rubric:: file-read/main.c - opening a file
 .. literalinclude:: ../code/file-read/main.c
     :linenos:
     :lines: 39-48
@@ -67,6 +68,7 @@ The `result` field of a `uv_fs_t` is the file descriptor in case of the
     The `uv_fs_req_cleanup()` function must be called to free internal memory
     allocations in libuv.
 
+.. rubric:: file-read/main.c - read callback
 .. literalinclude:: ../code/file-read/main.c
     :linenos:
     :lines: 24-37
@@ -93,6 +95,7 @@ will be triggered after the write is complete*.  In our case the callback
 simply drives the next read. Thus read and write proceed in lockstep via
 callbacks.
 
+.. rubric:: file-read/main.c - write callback
 .. literalinclude:: ../code/file-read/main.c
     :linenos:
     :lines: 14-22
@@ -110,6 +113,14 @@ callbacks.
     Due to the way filesystems and disk drives are configured for performance,
     a write that 'succeeds' may not be committed to disk yet. See
     `uv_fs_fsync` for stronger guarantees.
+
+We set the dominos rolling in `main()`:
+
+.. rubric:: file-read/main.c
+.. literalinclude:: ../code/file-read/main.c
+    :linenos:
+    :lines: 50-54
+    :emphasize-lines: 2
 
 Filesystem operations
 ---------------------
