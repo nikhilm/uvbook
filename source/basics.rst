@@ -138,7 +138,7 @@ The event loop only runs (i.e. `uv_run()` blocks) as long as their are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
-handles using (TODO glossary add handles and watchers):
+:term:`handles <handle>` using:
 
 .. code-block::
 
