@@ -167,7 +167,7 @@ Doing all operations asynchronously shows the power of evented I/O. The two
 writes won't block each other, but we've to be careful to copy over the buffer
 data to ensure we don't free a buffer until it has been written.
 
-The program is to be executed as:
+The program is to be executed as::
 
     ./uvtee <output_file>
 
@@ -223,7 +223,7 @@ file change notification libraries [#fsnotify]_. This is one of the more
 inconsistent parts of libuv. File change notification systems are themselves
 extremely varied across platforms so getting everything working everywhere is
 difficult. To demonstrate, I'm going to build a simple utility which runs
-a command whenever any of the watched files change.::
+a command whenever any of the watched files change::
 
     ./onchange <command> <file1> [file2] ...
 

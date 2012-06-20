@@ -85,9 +85,7 @@ is used for. A full list of watchers supported by libuv is:
     All watcher structs are subclasses of `uv_handle_t` and often referred to
     as **handles** in libuv and in this text.
 
-Watchers are setup by a corresponding
-
-.. code-block:: c
+Watchers are setup by a corresponding::
 
     uv_TYPE_init(uv_TYPE_t*)
 
@@ -97,15 +95,11 @@ function.
 
     Some watcher initialization functions require the loop as a first argument.
 
-A watcher is set to actually listen for events by invoking
-
-.. code-block:: c
+A watcher is set to actually listen for events by invoking::
 
     uv_TYPE_start(uv_TYPE_t*, callback)
 
-and stopped by calling the corresponding
-
-.. code-block:: c
+and stopped by calling the corresponding::
 
     uv_TYPE_stop(uv_TYPE_t*)
 
@@ -138,9 +132,7 @@ The event loop only runs (i.e. `uv_run()` blocks) as long as their are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
-:term:`handles <handle>` using:
-
-.. code-block:: c
+:term:`handles <handle>` using::
 
     void uv_ref(uv_handle_t*);
     void uv_unref(uv_handle_t*);
