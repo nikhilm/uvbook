@@ -3,7 +3,7 @@ UV_PATH=$(shell pwd)/../libuv
 examples=\
 	helloworld\
 	idle-basic\
-	file-read\
+	uvcat\
 	uvtee
 
 all: libuv

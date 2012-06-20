@@ -54,8 +54,8 @@ Filesystem operation callbacks have the signature:
 Let's see a simple implementation of `cat`. We start with registering
 a callback for when the file is opened:
 
-.. rubric:: file-read/main.c - opening a file
-.. literalinclude:: ../code/file-read/main.c
+.. rubric:: uvcat/main.c - opening a file
+.. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 39-48
     :emphasize-lines: 2
@@ -68,8 +68,8 @@ The `result` field of a `uv_fs_t` is the file descriptor in case of the
     The `uv_fs_req_cleanup()` function must be called to free internal memory
     allocations in libuv.
 
-.. rubric:: file-read/main.c - read callback
-.. literalinclude:: ../code/file-read/main.c
+.. rubric:: uvcat/main.c - read callback
+.. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 24-37
     :emphasize-lines: 6,9,12
@@ -95,8 +95,8 @@ will be triggered after the write is complete*.  In our case the callback
 simply drives the next read. Thus read and write proceed in lockstep via
 callbacks.
 
-.. rubric:: file-read/main.c - write callback
-.. literalinclude:: ../code/file-read/main.c
+.. rubric:: uvcat/main.c - write callback
+.. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 14-22
     :emphasize-lines: 7
@@ -116,8 +116,8 @@ callbacks.
 
 We set the dominos rolling in `main()`:
 
-.. rubric:: file-read/main.c
-.. literalinclude:: ../code/file-read/main.c
+.. rubric:: uvcat/main.c
+.. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 50-54
     :emphasize-lines: 2
