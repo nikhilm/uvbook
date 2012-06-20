@@ -90,7 +90,7 @@ Event loop lifecycle</p>
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h2>
 <p>With the basics out of the way, lets write our first libuv program. It does
 nothing, except start a loop which will exit immediately.</p>
-<p>TODO caption program with location in code folder</p>
+<p class="rubric">helloworld/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -136,6 +136,7 @@ this</p>
 <p>Watchers are how users of libuv express interest in particular events. Watchers
 are opaque structs named as <cite>uv_TYPE_t</cite> where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:</p>
+<p class="rubric">libuv watchers</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">All watcher structs are subclasses of <cite>uv_handle_t</cite> and often referred to
@@ -171,7 +172,7 @@ we&#8217;ll ignore them for now. Let&#8217;s just use an idle watcher to look at
 watcher life cycle and see how <cite>uv_run()</cite> will now block because a watcher is
 present. The idle watcher is stopped when the count is reached and <cite>uv_run()</cite>
 exits since no event watchers are active.</p>
-<p>TODO caption</p>
+<p class="rubric">idle-basic/main.c</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;uv.h&gt;</span>
 
@@ -206,7 +207,7 @@ exits since no event watchers are active.</p>
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
-handles using (TODO glossary add handles and watchers):</p>
+<a class="reference internal" href="glossary.html#term-handle"><em class="xref std std-term">handles</em></a> using:</p>
 <p>This is mostly used when a loop shouldn&#8217;t wait around for certain watchers,
 even if they are active. See <a class="reference internal" href="patterns.html"><em>Patterns</em></a> for an example.</p>
 <p>Semantics of event loops</p>

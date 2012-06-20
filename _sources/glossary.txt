@@ -10,3 +10,9 @@ Glossary
 
     `node.js <http://nodejs.org>`_
         Evented I/O for JavaScript
+
+    watcher
+        libuv structure encapsulating data about a certain kind of event.
+
+    handle
+        See :term:`watcher`

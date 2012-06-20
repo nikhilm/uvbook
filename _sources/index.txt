@@ -9,7 +9,7 @@ Welcome to An Introduction to libuv's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    introduction
    basics
