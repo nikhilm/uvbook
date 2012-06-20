@@ -14,8 +14,9 @@ Simple filesystem read/write is achieved using the `uv_fs_*` functions and the
 
 .. note::
 
-    The fs operations are actually a part of `libeio` on Unix systems. `libeio`
-    is a separate library written by the author of `libev`. TODO link
+    The fs operations are actually a part of `libeio
+    <http://software.schmorp.de/pkg/libeio.html>`_ on Unix systems. `libeio` is
+    a separate library written by the author of `libev`.
 
 All filesystem functions have two forms - *synchronous* and *asynchronous*.
 
@@ -103,10 +104,11 @@ callbacks.
 
 .. note::
 
-    The error usually stored in `errno` TODO link to errno.h can be accessed
-    from `uv_fs_t.errorno`, but converted to a standard `UV_*` error code.
-    There is currently no way to directly extract a string error message from
-    the `errorno` field.
+    The error usually stored in `errno
+    <http://man7.org/linux/man-pages/man3/errno.3.html>`_ can be accessed from
+    `uv_fs_t.errorno`, but converted to a standard `UV_*` error code.  There is
+    currently no way to directly extract a string error message from the
+    `errorno` field.
 
 .. warning::
 
