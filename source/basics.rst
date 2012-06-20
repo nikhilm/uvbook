@@ -140,7 +140,7 @@ count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
 :term:`handles <handle>` using:
 
-.. code-block::
+.. code-block:: c
 
     void uv_ref(uv_handle_t*);
     void uv_unref(uv_handle_t*);
