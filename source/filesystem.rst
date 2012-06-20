@@ -51,18 +51,65 @@ Filesystem operation callbacks have the signature:
 
     void callback(uv_fs_t* req);
 
-Here is a simple example of reading a file.
+Let's see a simple implementation of `cat`. We start with registering
+a callback for when the file is opened:
 
 .. literalinclude:: ../code/file-read/main.c
     :linenos:
-    :emphasize-lines: 6-7,11,20,24,26,31,35
+    :lines: 39-48
+    :emphasize-lines: 2
 
-TODO don't include whole at one point, part by part explanations, especially
-`result` field.
+The `result` field of a `uv_fs_t` is the file descriptor in case of the
+`uv_fs_open` callback. If the file is successfully opened, we start reading it.
+
+.. warning::
+
+    The `uv_fs_req_cleanup()` function must be called to free internal memory
+    allocations in libuv.
+
+.. literalinclude:: ../code/file-read/main.c
+    :linenos:
+    :lines: 24-37
+    :emphasize-lines: 6,9,12
+
+In the case of a read call, you should pass an *initialized* buffer which will
+be filled with data before the read callback is triggered.
+
+In the read callback the `result` field is 0 for EOF, -1 for error and the
+number of bytes read on success.
+
+Here you see a common pattern when writing asynchronous programs. The
+`uv_fs_close()` call is performed synchronously. *Usually tasks which are
+one-off, or are done as part of the startup or shutdown stage are performed
+synchronously, since we are interested in fast I/O when the program is going
+about its primary task and dealing with multiple I/O sources*. For solo tasks
+the performance difference usually is negligible and may lead to simpler code.
+
+We can generalize the pattern that the actual return value of the original
+system call is stored in `uv_fs_t.result`.
+
+Filesystem writing is similarly simple using `uv_fs_write()`.  *Your callback
+will be triggered after the write is complete*.  In our case the callback
+simply drives the next read. Thus read and write proceed in lockstep via
+callbacks.
+
+.. literalinclude:: ../code/file-read/main.c
+    :linenos:
+    :lines: 14-22
+    :emphasize-lines: 7
 
 .. note::
 
-    Error handling
+    The error usually stored in `errno` TODO link to errno.h can be accessed
+    from `uv_fs_t.errorno`, but converted to a standard `UV_*` error code.
+    There is currently no way to directly extract a string error message from
+    the `errorno` field.
+
+.. warning::
+
+    Due to the way filesystems and disk drives are configured for performance,
+    a write that 'succeeds' may not be committed to disk yet. See
+    `uv_fs_fsync` for stronger guarantees.
 
 Filesystem operations
 ---------------------
