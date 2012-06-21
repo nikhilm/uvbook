@@ -34,7 +34,7 @@ Some examples of events are:
 * A socket has data ready to be read
 * A timer has timed out
 
-This event loop is encapsulated by `uv_run()` the end-all function when using
+This event loop is encapsulated by ``uv_run()`` the end-all function when using
 libuv. A standard program using libuv
 
 Basics of the evented I/O model
@@ -58,7 +58,7 @@ Default loop
 ++++++++++++
 
 A default loop is provided by libuv and can be accessed using
-`uv_default_loop()`. You should use this loop if you only want a single
+``uv_default_loop()``. You should use this loop if you only want a single
 loop.
 
 .. note::
@@ -73,7 +73,7 @@ Watchers
 --------
 
 Watchers are how users of libuv express interest in particular events. Watchers
-are opaque structs named as `uv_TYPE_t` where type signifies what the watcher
+are opaque structs named as ``uv_TYPE_t`` where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:
 
 .. rubric:: libuv watchers
@@ -82,7 +82,7 @@ is used for. A full list of watchers supported by libuv is:
 
 .. note::
 
-    All watcher structs are subclasses of `uv_handle_t` and often referred to
+    All watcher structs are subclasses of ``uv_handle_t`` and often referred to
     as **handles** in libuv and in this text.
 
 Watchers are setup by a corresponding::
@@ -115,8 +115,8 @@ Idling
 Here is an example of using a watcher. An idle watcher's callback is repeatedly
 called. There are some deeper semantics, discussed in :doc:`utilities`, but
 we'll ignore them for now. Let's just use an idle watcher to look at the
-watcher life cycle and see how `uv_run()` will now block because a watcher is
-present. The idle watcher is stopped when the count is reached and `uv_run()`
+watcher life cycle and see how ``uv_run()`` will now block because a watcher is
+present. The idle watcher is stopped when the count is reached and ``uv_run()``
 exits since no event watchers are active.
 
 .. rubric:: idle-basic/main.c
@@ -128,7 +128,7 @@ Reference counting
 
 TODO move section to some other chapter?
 
-The event loop only runs (i.e. `uv_run()` blocks) as long as their are active
+The event loop only runs (i.e. ``uv_run()`` blocks) as long as their are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of

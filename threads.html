@@ -54,13 +54,120 @@
         
   <div class="section" id="threads">
 <h1>Threads<a class="headerlink" href="#threads" title="Permalink to this headline">¶</a></h1>
-<p>single event loop
-uv_queue_work
-inter thread communication using uv_async
+<p>Wait a minute? Why are we on threads? Aren&#8217;t event loops supposed to be <strong>the
+way</strong> to do <em>web-scale programming</em>? Well no. Threads are still the medium in
+which the processor does its job, and threads are mighty useful sometimes, even
+though you might have to wade through scary looking mutexes. TODO rework this
+a bit</p>
+<p>Threads are used internally to fake the asynchronous nature of all the system
+calls. libuv also uses threads to allow you, the application, to perform a task
+asynchronously that is actually blocking, by spawning a thread and collecting
+the result when it is done.</p>
+<p>Today there are two predominant thread libraries. The Windows threads
+implementation and <a class="reference external" href="http://man7.org/linux/man-pages/man7/pthreads.7.html">pthreads</a>. libuv&#8217;s thread API is analogous to
+the pthread API and often has similar semantics.</p>
+<p>A notable aspect of libuv&#8217;s thread facilities is that it is a self contained
+section within libuv. Whereas other features intimately depend on the event
+loop and callback principles, threads are complete agnostic, they block as
+required, signal errors directly via return values and, as shown in the
+<a class="reference internal" href="#thread-create-example"><em>first example</em></a>, don&#8217;t even require a running
+event loop.</p>
+<p>This chapter makes the following assumption: <strong>There is only one event loop,
+running in one thread (the main thread)</strong>. No other thread interacts
+with the event loop (except using <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>). <a class="reference internal" href="multiple.html"><em>Multiple event loops</em></a> covers
+running event loops in different threads and managing them.</p>
+<div class="section" id="core-thread-operations">
+<h2>Core thread operations<a class="headerlink" href="#core-thread-operations" title="Permalink to this headline">¶</a></h2>
+<p>There isn&#8217;t much here, you just start a thread using <tt class="docutils literal"><span class="pre">uv_thread_create()</span></tt> and
+wait for it to close using <tt class="docutils literal"><span class="pre">uv_thread_join()</span></tt>.</p>
+<p class="rubric" id="thread-create-example">thread-create/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">tracklen</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="hll">    <span class="n">uv_thread_t</span> <span class="n">hare_id</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">uv_thread_t</span> <span class="n">tortoise_id</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hare_id</span><span class="p">,</span> <span class="n">hare</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">tracklen</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tortoise_id</span><span class="p">,</span> <span class="n">tortoise</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">tracklen</span><span class="p">);</span>
+</span><span class="hll">
+</span>    <span class="n">uv_thread_join</span><span class="p">(</span><span class="o">&amp;</span><span class="n">hare_id</span><span class="p">);</span>
+    <span class="n">uv_thread_join</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tortoise_id</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last"><tt class="docutils literal"><span class="pre">uv_thread_t</span></tt> is just an alias for <tt class="docutils literal"><span class="pre">pthread_t</span></tt> on Unix, but this is an
+implementation detail, avoid depending on it to always be true.</p>
+</div>
+<p>The second parameter is the function which will serve as the entry point for
+the thread, the last parameter is a <tt class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></tt> argument which can be used to pass
+custom parameters to the thread. The function <tt class="docutils literal"><span class="pre">hare</span></tt> will now run in a separate
+thread, scheduled pre-emptively by the operating system:</p>
+<p class="rubric">thread-create/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">hare</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="kt">int</span> <span class="n">tracklen</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">arg</span><span class="p">);</span>
+</span>    <span class="k">while</span> <span class="p">(</span><span class="n">tracklen</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">tracklen</span><span class="o">--</span><span class="p">;</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Hare ran another step</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Hare done running!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Unlike <tt class="docutils literal"><span class="pre">pthread_join()</span></tt> which allows the target thread to pass back a value to
+the calling thread using a second parameter, <tt class="docutils literal"><span class="pre">uv_thread_join()</span></tt> does not. To
+send values use <a class="reference internal" href="#inter-thread-communication"><em>Inter-thread communication</em></a>.</p>
+</div>
+<div class="section" id="synchronization-primitives">
+<h2>Synchronization Primitives<a class="headerlink" href="#synchronization-primitives" title="Permalink to this headline">¶</a></h2>
+<p>This section is purposely spartan. This book is not about threads, so I only
+catalogue any surprises in the libuv APIs here. For the rest you can look at
+the pthreads <a class="reference external" href="pthreads">man pages</a></p>
+<div class="section" id="mutexes">
+<h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
+<p>Recursive mutexes not allowed</p>
+</div>
+<div class="section" id="locks">
+<h3>Locks<a class="headerlink" href="#locks" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="others">
+<h3>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h3>
+<p>Semaphores not dne
+The problem with condition variables</p>
+</div>
+</div>
+<div class="section" id="libuv-work-queue">
+<h2>libuv work queue<a class="headerlink" href="#libuv-work-queue" title="Permalink to this headline">¶</a></h2>
+<p>uv_queue_work</p>
+</div>
+<div class="section" id="inter-thread-communication">
+<span id="id1"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
+<p>inter thread communication using uv_async
 synchronization
 parallel downloads example?</p>
 <p>note about recursive mutexes not supported
-note about bad error of just aborting</p>
+note about bad error of just aborting
+uv_once</p>
+</div>
 </div>
 
 

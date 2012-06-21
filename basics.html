@@ -81,7 +81,7 @@ callbacks. In pseudocode:</p>
 <li>A socket has data ready to be read</li>
 <li>A timer has timed out</li>
 </ul>
-<p>This event loop is encapsulated by <cite>uv_run()</cite> the end-all function when using
+<p>This event loop is encapsulated by <tt class="docutils literal"><span class="pre">uv_run()</span></tt> the end-all function when using
 libuv. A standard program using libuv</p>
 <p>Basics of the evented I/O model
 Event loop lifecycle</p>
@@ -120,7 +120,7 @@ functions.</p>
 <div class="section" id="default-loop">
 <h3>Default loop<a class="headerlink" href="#default-loop" title="Permalink to this headline">¶</a></h3>
 <p>A default loop is provided by libuv and can be accessed using
-<cite>uv_default_loop()</cite>. You should use this loop if you only want a single
+<tt class="docutils literal"><span class="pre">uv_default_loop()</span></tt>. You should use this loop if you only want a single
 loop.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -134,12 +134,12 @@ this</p>
 <div class="section" id="watchers">
 <h2>Watchers<a class="headerlink" href="#watchers" title="Permalink to this headline">¶</a></h2>
 <p>Watchers are how users of libuv express interest in particular events. Watchers
-are opaque structs named as <cite>uv_TYPE_t</cite> where type signifies what the watcher
+are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:</p>
 <p class="rubric">libuv watchers</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">All watcher structs are subclasses of <cite>uv_handle_t</cite> and often referred to
+<p class="last">All watcher structs are subclasses of <tt class="docutils literal"><span class="pre">uv_handle_t</span></tt> and often referred to
 as <strong>handles</strong> in libuv and in this text.</p>
 </div>
 <p>Watchers are setup by a corresponding:</p>
@@ -169,8 +169,8 @@ on.</p>
 <p>Here is an example of using a watcher. An idle watcher&#8217;s callback is repeatedly
 called. There are some deeper semantics, discussed in <a class="reference internal" href="utilities.html"><em>Utilities</em></a>, but
 we&#8217;ll ignore them for now. Let&#8217;s just use an idle watcher to look at the
-watcher life cycle and see how <cite>uv_run()</cite> will now block because a watcher is
-present. The idle watcher is stopped when the count is reached and <cite>uv_run()</cite>
+watcher life cycle and see how <tt class="docutils literal"><span class="pre">uv_run()</span></tt> will now block because a watcher is
+present. The idle watcher is stopped when the count is reached and <tt class="docutils literal"><span class="pre">uv_run()</span></tt>
 exits since no event watchers are active.</p>
 <p class="rubric">idle-basic/main.c</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
@@ -203,7 +203,7 @@ exits since no event watchers are active.</p>
 <div class="section" id="reference-counting">
 <h2>Reference counting<a class="headerlink" href="#reference-counting" title="Permalink to this headline">¶</a></h2>
 <p>TODO move section to some other chapter?</p>
-<p>The event loop only runs (i.e. <cite>uv_run()</cite> blocks) as long as their are active
+<p>The event loop only runs (i.e. <tt class="docutils literal"><span class="pre">uv_run()</span></tt> blocks) as long as their are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of

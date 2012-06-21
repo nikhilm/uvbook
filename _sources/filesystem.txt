@@ -1,8 +1,8 @@
 Filesystem
 ==========
 
-Simple filesystem read/write is achieved using the `uv_fs_*` functions and the
-`uv_fs_t` struct.
+Simple filesystem read/write is achieved using the ``uv_fs_*`` functions and the
+``uv_fs_t`` struct.
 
 .. note::
 
@@ -15,8 +15,8 @@ Simple filesystem read/write is achieved using the `uv_fs_*` functions and the
 .. note::
 
     The fs operations are actually a part of `libeio
-    <http://software.schmorp.de/pkg/libeio.html>`_ on Unix systems. `libeio` is
-    a separate library written by the author of `libev`.
+    <http://software.schmorp.de/pkg/libeio.html>`_ on Unix systems. ``libeio`` is
+    a separate library written by the author of ``libev``.
 
 All filesystem functions have two forms - *synchronous* and *asynchronous*.
 
@@ -36,7 +36,7 @@ A file descriptor is obtained using
 
     int uv_fs_open(uv_loop_t* loop, uv_fs_t* req, const char* path, int flags, int mode, uv_fs_cb cb)
 
-`flags` and `mode` are standard
+``flags`` and ``mode`` are standard
 `Unix flags <http://man7.org/linux/man-pages/man2/open.2.html>`_.
 libuv takes care of converting to the appropriate Windows flags.
 
@@ -52,7 +52,7 @@ Filesystem operation callbacks have the signature:
 
     void callback(uv_fs_t* req);
 
-Let's see a simple implementation of `cat`. We start with registering
+Let's see a simple implementation of ``cat``. We start with registering
 a callback for when the file is opened:
 
 .. rubric:: uvcat/main.c - opening a file
@@ -61,12 +61,12 @@ a callback for when the file is opened:
     :lines: 39-48
     :emphasize-lines: 2
 
-The `result` field of a `uv_fs_t` is the file descriptor in case of the
-`uv_fs_open` callback. If the file is successfully opened, we start reading it.
+The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
+``uv_fs_open`` callback. If the file is successfully opened, we start reading it.
 
 .. warning::
 
-    The `uv_fs_req_cleanup()` function must be called to free internal memory
+    The ``uv_fs_req_cleanup()`` function must be called to free internal memory
     allocations in libuv.
 
 .. rubric:: uvcat/main.c - read callback
@@ -78,20 +78,20 @@ The `result` field of a `uv_fs_t` is the file descriptor in case of the
 In the case of a read call, you should pass an *initialized* buffer which will
 be filled with data before the read callback is triggered.
 
-In the read callback the `result` field is 0 for EOF, -1 for error and the
+In the read callback the ``result`` field is 0 for EOF, -1 for error and the
 number of bytes read on success.
 
 Here you see a common pattern when writing asynchronous programs. The
-`uv_fs_close()` call is performed synchronously. *Usually tasks which are
+``uv_fs_close()`` call is performed synchronously. *Usually tasks which are
 one-off, or are done as part of the startup or shutdown stage are performed
 synchronously, since we are interested in fast I/O when the program is going
 about its primary task and dealing with multiple I/O sources*. For solo tasks
 the performance difference usually is negligible and may lead to simpler code.
 
 We can generalize the pattern that the actual return value of the original
-system call is stored in `uv_fs_t.result`.
+system call is stored in ``uv_fs_t.result``.
 
-Filesystem writing is similarly simple using `uv_fs_write()`.  *Your callback
+Filesystem writing is similarly simple using ``uv_fs_write()``.  *Your callback
 will be triggered after the write is complete*.  In our case the callback
 simply drives the next read. Thus read and write proceed in lockstep via
 callbacks.
@@ -106,17 +106,17 @@ callbacks.
 
     The error usually stored in `errno
     <http://man7.org/linux/man-pages/man3/errno.3.html>`_ can be accessed from
-    `uv_fs_t.errorno`, but converted to a standard `UV_*` error code.  There is
+    ``uv_fs_t.errorno``, but converted to a standard ``UV_*`` error code.  There is
     currently no way to directly extract a string error message from the
-    `errorno` field.
+    ``errorno`` field.
 
 .. warning::
 
     Due to the way filesystems and disk drives are configured for performance,
     a write that 'succeeds' may not be committed to disk yet. See
-    `uv_fs_fsync` for stronger guarantees.
+    ``uv_fs_fsync`` for stronger guarantees.
 
-We set the dominos rolling in `main()`:
+We set the dominos rolling in ``main()``:
 
 .. rubric:: uvcat/main.c
 .. literalinclude:: ../code/uvcat/main.c
@@ -127,10 +127,10 @@ We set the dominos rolling in `main()`:
 Filesystem operations
 ---------------------
 
-All the standard filesystem operations like `unlink`, `rmdir`, `stat` are
+All the standard filesystem operations like ``unlink``, ``rmdir``, ``stat`` are
 supported asynchronously and have intuitive argument order. They follow the
 same patterns as the read/write/open calls, returning the result in the
-`uv_fs_t.result` field. The full list:
+``uv_fs_t.result`` field. The full list:
 
 .. rubric:: Filesystem operations
 .. literalinclude:: ../libuv/include/uv.h
@@ -139,7 +139,7 @@ same patterns as the read/write/open calls, returning the result in the
 Buffers and Streams
 -------------------
 
-The basic I/O tool in libuv is the stream (`uv_stream_t`). TCP sockets, UDP
+The basic I/O tool in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
 sockets, named pipes for file I/O and IPC are all treated as stream subclasses.
 
 Streams are initialized using custom functions for each subclass, then operated
@@ -153,12 +153,12 @@ upon using
                 uv_buf_t bufs[], int bufcnt, uv_write_cb cb);
 
 The stream based functions are simpler to use than the filesystem ones and
-libuv will automatically keep reading from a stream when `uv_read_start()` is
-called once, until `uv_read_stop()` is called.
+libuv will automatically keep reading from a stream when ``uv_read_start()`` is
+called once, until ``uv_read_stop()`` is called.
 
-The discrete unit of data is the buffer -- `uv_buf_t`. This is simply
-a collection of a pointer to bytes (`uv_buf_t.base`) and the length
-(`uv_buf_t.len`). The `uv_buf_t` is lightweight and passed around by value.
+The discrete unit of data is the buffer -- ``uv_buf_t``. This is simply
+a collection of a pointer to bytes (``uv_buf_t.base``) and the length
+(``uv_buf_t.len``). The ``uv_buf_t`` is lightweight and passed around by value.
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.
 
@@ -180,12 +180,12 @@ opened as bidirectional by default.
     :lines: 62-81
     :emphasize-lines: 4,5,15
 
-The third argument of `uv_pipe_init()` should be set to 1 for IPC using named
-pipes. This is covered in :doc:`processes`. The `uv_pipe_open()` call
+The third argument of ``uv_pipe_init()`` should be set to 1 for IPC using named
+pipes. This is covered in :doc:`processes`. The ``uv_pipe_open()`` call
 associates the file descriptor with the file.
 
-We start monitoring `stdin`. The `alloc_buffer` callback is invoked as new
-buffers are required to hold incoming data. `read_stdin` will be called with
+We start monitoring ``stdin``. The ``alloc_buffer`` callback is invoked as new
+buffers are required to hold incoming data. ``read_stdin`` will be called with
 these buffers.
 
 .. rubric:: uvtee/main.c - reading buffers
@@ -193,14 +193,14 @@ these buffers.
     :linenos:
     :lines: 19-22,44-60
 
-The standard `malloc` is sufficient here, but you can use any memory allocation
+The standard ``malloc`` is sufficient here, but you can use any memory allocation
 scheme. For example, node.js uses its own slab allocator which associates
 buffers with V8 objects.
 
-The read callback `nread` parameter is -1 on any error. This error might be
+The read callback ``nread`` parameter is -1 on any error. This error might be
 EOF, in which case we close all the streams, using the generic close function
-`uv_close()` which deals with the handle based on its internal type.
-Otherwise `nread` is a non-negative number and we can attempt to write that
+``uv_close()`` which deals with the handle based on its internal type.
+Otherwise ``nread`` is a non-negative number and we can attempt to write that
 many bytes to the output streams. Finally remember that buffer allocation and
 deallocation is application responsibility, so we free the data.
 
@@ -209,9 +209,9 @@ deallocation is application responsibility, so we free the data.
     :linenos:
     :lines: 9-13,23-42
 
-`write_data()` makes a copy of the buffer obtained from read. Again, this
+``write_data()`` makes a copy of the buffer obtained from read. Again, this
 buffer does not get passed through to the callback trigged on write completion.
-To get around this we wrap a write request and a buffer in `write_req_t` and
+To get around this we wrap a write request and a buffer in ``write_req_t`` and
 unwrap it in the callbacks.
 
 File change events
@@ -227,7 +227,7 @@ a command whenever any of the watched files change::
 
     ./onchange <command> <file1> [file2] ...
 
-The file change notification is started using `uv_fs_event_init()`:
+The file change notification is started using ``uv_fs_event_init()``:
 
 .. rubric:: onchange/main.c
 .. literalinclude:: ../code/onchange/main.c
@@ -236,7 +236,7 @@ The file change notification is started using `uv_fs_event_init()`:
     :emphasize-lines: 3
 
 The third argument is the actual file or directory to monitor. The last
-argument, `flags`, can be:
+argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
     :lines: 1501,1510
@@ -250,16 +250,16 @@ but both are currently unimplemented on all platforms.
 
 The callback will receive the following arguments:
 
-  #. `uv_fs_event_t *handle` - The watcher. The `filename` field of the watcher
+  #. ``uv_fs_event_t *handle`` - The watcher. The ``filename`` field of the watcher
      is the file on which the watch was set.
-  #. `const char *filename` - If a directory is being monitored, this is the
-     file which was changed. Only non-`null` on Linux and Windows. May be `null`
+  #. ``const char *filename`` - If a directory is being monitored, this is the
+     file which was changed. Only non-``null`` on Linux and Windows. May be ``null``
      even on those platforms.
-  #. `int flags` - one of `UV_RENAME` or `UV_CHANGE`.
-  #. `int status` - Currently 0.
+  #. ``int flags`` - one of ``UV_RENAME`` or ``UV_CHANGE``.
+  #. ``int status`` - Currently 0.
 
 In our example we simply print the arguments and run the command using
-`system()`.
+``system()``.
 
 .. rubric:: onchange/main.c - file change notification callback
 .. literalinclude:: ../code/onchange/main.c
