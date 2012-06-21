@@ -5,7 +5,8 @@ examples=\
 	idle-basic\
 	uvcat\
 	uvtee\
-	onchange
+	onchange\
+	thread-create
 
 all: libuv
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc -g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a -o $$dir main.c; cd ..; done
