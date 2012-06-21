@@ -25,14 +25,14 @@ event loop.
 
 This chapter makes the following assumption: **There is only one event loop,
 running in one thread (the main thread)**. No other thread interacts
-with the event loop (except using `uv_async_send`). :doc:`multiple` covers
+with the event loop (except using ``uv_async_send``). :doc:`multiple` covers
 running event loops in different threads and managing them.
 
 Core thread operations
 ----------------------
 
-There isn't much here, you just start a thread using `uv_thread_create()` and
-wait for it to close using `uv_thread_join()`.
+There isn't much here, you just start a thread using ``uv_thread_create()`` and
+wait for it to close using ``uv_thread_join()``.
 
 .. _thread-create-example:
 
@@ -44,12 +44,12 @@ wait for it to close using `uv_thread_join()`.
 
 .. tip::
 
-    `uv_thread_t` is just an alias for `pthread_t` on Unix, but this is an
+    ``uv_thread_t`` is just an alias for ``pthread_t`` on Unix, but this is an
     implementation detail, avoid depending on it to always be true.
 
 The second parameter is the function which will serve as the entry point for
-the thread, the last parameter is a `void *` argument which can be used to pass
-custom parameters to the thread. The function `hare` will now run in a separate
+the thread, the last parameter is a ``void *`` argument which can be used to pass
+custom parameters to the thread. The function ``hare`` will now run in a separate
 thread, scheduled pre-emptively by the operating system:
 
 .. rubric:: thread-create/main.c
