@@ -37,6 +37,10 @@ Code
 ----
 
 All the code from this book is included as part of the source of the book on
-Github. Clone/Download the book (TODO: link) and run ``make`` in the ``code/``
+Github. `Clone`_/`Download`_ the book and run ``make`` in the ``code/``
 folder to compile all the examples. This book and the code is based on libuv
-version ``node-v0.7.9`` and a version is included in the ``code/`` folder.
+version ``node-v0.7.9`` and a version is included in the ``libuv/`` folder
+which will be compiled automatically.
+
+.. _Clone: https://github.com/nikhilm/uvbook
+.. _Download: https://github.com/nikhilm/uvbook/downloads
