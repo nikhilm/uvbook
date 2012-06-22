@@ -23,6 +23,9 @@ required, signal errors directly via return values and, as shown in the
 :ref:`first example <thread-create-example>`, don't even require a running
 event loop.
 
+libuv's thread API is also very limited since the semantics and syntax of
+threads are different on all platforms, with different levels of completeness.
+
 This chapter makes the following assumption: **There is only one event loop,
 running in one thread (the main thread)**. No other thread interacts
 with the event loop (except using ``uv_async_send``). :doc:`multiple` covers
@@ -72,16 +75,50 @@ the pthreads `man pages <pthreads>`_
 Mutexes
 ~~~~~~~
 
-Recursive mutexes not allowed
+The mutex functions are a **direct** map to the pthread equivalents.
+
+.. rubric:: libuv mutex functions
+.. literalinclude:: ../libuv/include/uv.h
+    :lines: 1578-1582
+
+The ``uv_mutex_init()`` and ``uv_mutex_trylock()`` functions will return 0 on
+success, -1 on error instead of error codes.
+
+If `libuv` has been compiled with debugging enabled, ``uv_mutex_destroy()``,
+``uv_mutex_lock()`` and ``uv_mutex_unlock()`` will ``abort()`` on error.
+Similarly ``uv_mutex_trylock()`` will abort if the error is anything *other
+than* ``EAGAIN``.
+
+Recursive mutexes are supported by some platforms, but you should not rely on
+them. The BSD mutex implementation will raise an error if a thread which has
+locked a mutex attempts to lock it again. For example, a construct like::
+
+    uv_mutex_lock(a_mutex);
+    uv_thread_create(thread_id, entry, (void *)a_mutex);
+    uv_mutex_lock(a_mutex);
+    // more things here
+
+can be used to wait until another thread initializes some stuff and then
+unlocks ``a_mutex`` but will lead to your program crashing if in debug mode, or
+otherwise behaving wrongly.
+
+.. tip::
+
+    Mutexes on linux support attributes for a recursive mutex, but the API is
+    not exposed via libuv.
 
 Locks
 ~~~~~
 
+Read-write locks are the other synchronization primitive supported.
+
 Others
 ~~~~~~
 
-Semaphores not dne
-The problem with condition variables
+Semaphores and condition variables are not implemented yet. Their are a couple
+of patches for condition variable support in libuv TODO link, but since the
+Windows condition variable system is available only from Windows Vista and
+Windows Server 2008 onwards [#]_, its not in libuv yet.
 
 libuv work queue
 ----------------
@@ -102,3 +139,6 @@ note about bad error of just aborting
 uv_once
 
 .. _pthreads: http://man7.org/linux/man-pages/man7/pthreads.7.html
+
+.. rubric:: Footnotes
+.. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
