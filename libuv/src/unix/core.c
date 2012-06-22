@@ -59,8 +59,6 @@
 static uv_loop_t default_loop_struct;
 static uv_loop_t* default_loop_ptr;
 
-static void uv__finish_close(uv_handle_t* handle);
-
 
 void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
   handle->close_cb = close_cb;
@@ -111,12 +109,78 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     uv__poll_close((uv_poll_t*)handle);
     break;
 
+  case UV_FS_POLL:
+    uv__fs_poll_close((uv_fs_poll_t*)handle);
+    break;
+
   default:
     assert(0);
   }
 
   handle->flags |= UV_CLOSING;
-  uv__make_pending(handle);
+
+  handle->next_closing = handle->loop->closing_handles;
+  handle->loop->closing_handles = handle;
+}
+
+
+static void uv__finish_close(uv_handle_t* handle) {
+  assert(!uv__is_active(handle));
+  assert(handle->flags & UV_CLOSING);
+  assert(!(handle->flags & UV_CLOSED));
+  handle->flags |= UV_CLOSED;
+
+  switch (handle->type) {
+    case UV_PREPARE:
+    case UV_CHECK:
+    case UV_IDLE:
+    case UV_ASYNC:
+    case UV_TIMER:
+    case UV_PROCESS:
+    case UV_FS_EVENT:
+    case UV_FS_POLL:
+    case UV_POLL:
+      break;
+
+    case UV_NAMED_PIPE:
+    case UV_TCP:
+    case UV_TTY:
+      assert(!uv__io_active(&((uv_stream_t*)handle)->read_watcher));
+      assert(!uv__io_active(&((uv_stream_t*)handle)->write_watcher));
+      assert(((uv_stream_t*)handle)->fd == -1);
+      uv__stream_destroy((uv_stream_t*)handle);
+      break;
+
+    case UV_UDP:
+      uv__udp_finish_close((uv_udp_t*)handle);
+      break;
+
+    default:
+      assert(0);
+      break;
+  }
+
+  uv__handle_unref(handle);
+  ngx_queue_remove(&handle->handle_queue);
+
+  if (handle->close_cb) {
+    handle->close_cb(handle);
+  }
+}
+
+
+static void uv__run_closing_handles(uv_loop_t* loop) {
+  uv_handle_t* p;
+  uv_handle_t* q;
+
+  p = loop->closing_handles;
+  loop->closing_handles = NULL;
+
+  while (p) {
+    q = p->next_closing;
+    uv__finish_close(p);
+    p = q;
+  }
 }
 
 
@@ -163,68 +227,37 @@ void uv_loop_delete(uv_loop_t* loop) {
 }
 
 
-static void uv__run_pending(uv_loop_t* loop) {
-  uv_handle_t* p;
-  uv_handle_t* q;
+static unsigned int uv__poll_timeout(uv_loop_t* loop) {
+  if (!uv__has_active_handles(loop))
+    return 0;
 
-  if (!loop->pending_handles)
-    return;
+  if (!ngx_queue_empty(&loop->idle_handles))
+    return 0;
 
-  for (p = loop->pending_handles, loop->pending_handles = NULL; p; p = q) {
-    q = p->next_pending;
-    p->next_pending = NULL;
-    p->flags &= ~UV__PENDING;
+  if (loop->closing_handles)
+    return 0;
 
-    if (p->flags & UV_CLOSING) {
-      uv__finish_close(p);
-      continue;
-    }
-
-    switch (p->type) {
-    case UV_NAMED_PIPE:
-    case UV_TCP:
-    case UV_TTY:
-      uv__stream_pending((uv_stream_t*)p);
-      break;
-    default:
-      abort();
-    }
-  }
+  return uv__next_timeout(loop);
 }
 
 
-static void uv__poll(uv_loop_t* loop, int block) {
-  /* bump the loop's refcount, otherwise libev does
-   * a zero timeout poll and we end up busy looping
-   */
-  ev_ref(loop->ev);
-  ev_run(loop->ev, block ? EVRUN_ONCE : EVRUN_NOWAIT);
-  ev_unref(loop->ev);
-}
-
-
-static int uv__should_block(uv_loop_t* loop) {
-  return ngx_queue_empty(&loop->idle_handles)
-      && !ngx_queue_empty(&loop->active_handles);
+static void uv__poll(uv_loop_t* loop) {
+  void ev__run(EV_P_ ev_tstamp waittime);
+  ev_invoke_pending(loop->ev);
+  ev__run(loop->ev, uv__poll_timeout(loop) / 1000.);
+  ev_invoke_pending(loop->ev);
 }
 
 
 static int uv__run(uv_loop_t* loop) {
+  uv_update_time(loop);
+  uv__run_timers(loop);
   uv__run_idle(loop);
-  uv__run_pending(loop);
-
-  if (uv__has_active_handles(loop) || uv__has_active_reqs(loop)) {
-    uv__run_prepare(loop);
-    /* Need to poll even if there are no active handles left, otherwise
-     * uv_work_t reqs won't complete...
-     */
-    uv__poll(loop, uv__should_block(loop));
-    uv__run_check(loop);
-  }
-
-  return uv__has_pending_handles(loop)
-      || uv__has_active_handles(loop)
-      || uv__has_active_reqs(loop);
+  uv__run_prepare(loop);
+  uv__poll(loop);
+  uv__run_check(loop);
+  uv__run_closing_handles(loop);
+  return uv__has_active_handles(loop) || uv__has_active_reqs(loop);
 }
 
 
@@ -239,72 +272,13 @@ int uv_run_once(uv_loop_t* loop) {
 }
 
 
-void uv__handle_init(uv_loop_t* loop, uv_handle_t* handle,
-    uv_handle_type type) {
-  loop->counters.handle_init++;
-
-  handle->loop = loop;
-  handle->type = type;
-  handle->flags = UV__REF; /* ref the loop when active */
-  handle->next_pending = NULL;
-}
-
-
-void uv__finish_close(uv_handle_t* handle) {
-  assert(!uv__is_active(handle));
-  assert(handle->flags & UV_CLOSING);
-  assert(!(handle->flags & UV_CLOSED));
-  handle->flags |= UV_CLOSED;
-
-  switch (handle->type) {
-    case UV_PREPARE:
-    case UV_CHECK:
-    case UV_IDLE:
-    case UV_ASYNC:
-    case UV_TIMER:
-    case UV_PROCESS:
-      break;
-
-    case UV_NAMED_PIPE:
-    case UV_TCP:
-    case UV_TTY:
-      assert(!uv__io_active(&((uv_stream_t*)handle)->read_watcher));
-      assert(!uv__io_active(&((uv_stream_t*)handle)->write_watcher));
-      assert(((uv_stream_t*)handle)->fd == -1);
-      uv__stream_destroy((uv_stream_t*)handle);
-      break;
-
-    case UV_UDP:
-      uv__udp_finish_close((uv_udp_t*)handle);
-      break;
-
-    case UV_FS_EVENT:
-      break;
-
-    case UV_POLL:
-      break;
-
-    default:
-      assert(0);
-      break;
-  }
-
-
-  if (handle->close_cb) {
-    handle->close_cb(handle);
-  }
-
-  uv__handle_unref(handle);
-}
-
-
 void uv_update_time(uv_loop_t* loop) {
-  ev_now_update(loop->ev);
+  loop->time = uv_hrtime() / 1000000;
 }
 
 
 int64_t uv_now(uv_loop_t* loop) {
-  return (int64_t)(ev_now(loop->ev) * 1000);
+  return loop->time;
 }
 
 
@@ -317,8 +291,7 @@ static int uv_getaddrinfo_done(eio_req* req_) {
   uv_getaddrinfo_t* req = req_->data;
   struct addrinfo *res = req->res;
 #if __sun
-  uv_getaddrinfo_t* handle = req->data;
-  size_t hostlen = strlen(handle->hostname);
+  size_t hostlen = strlen(req->hostname);
 #endif
 
   req->res = NULL;
@@ -490,55 +463,69 @@ int uv__accept(int sockfd) {
 
 
 int uv__nonblock(int fd, int set) {
+  int r;
+
 #if FIONBIO
-  return ioctl(fd, FIONBIO, &set);
+  do
+    r = ioctl(fd, FIONBIO, &set);
+  while (r == -1 && errno == EINTR);
+
+  return r;
 #else
   int flags;
 
-  if ((flags = fcntl(fd, F_GETFL)) == -1) {
+  do
+    r = fcntl(fd, F_GETFL);
+  while (r == -1 && errno == EINTR);
+
+  if (r == -1)
     return -1;
-  }
 
-  if (set) {
-    flags |= O_NONBLOCK;
-  } else {
-    flags &= ~O_NONBLOCK;
-  }
+  if (set)
+    flags = r | O_NONBLOCK;
+  else
+    flags = r & ~O_NONBLOCK;
 
-  if (fcntl(fd, F_SETFL, flags) == -1) {
-    return -1;
-  }
+  do
+    r = fcntl(fd, F_SETFL, flags);
+  while (r == -1 && errno == EINTR);
 
-  return 0;
+  return r;
 #endif
 }
 
 
 int uv__cloexec(int fd, int set) {
+  int flags;
+  int r;
+
 #if __linux__
   /* Linux knows only FD_CLOEXEC so we can safely omit the fcntl(F_GETFD)
    * syscall. CHECKME: That's probably true for other Unices as well.
    */
-  return fcntl(fd, F_SETFD, set ? FD_CLOEXEC : 0);
+  if (set)
+    flags = FD_CLOEXEC;
+  else
+    flags = 0;
 #else
-  int flags;
+  do
+    r = fcntl(fd, F_GETFD);
+  while (r == -1 && errno == EINTR);
 
-  if ((flags = fcntl(fd, F_GETFD)) == -1) {
+  if (r == -1)
     return -1;
-  }
 
-  if (set) {
-    flags |= FD_CLOEXEC;
-  } else {
-    flags &= ~FD_CLOEXEC;
-  }
-
-  if (fcntl(fd, F_SETFD, flags) == -1) {
-    return -1;
-  }
-
-  return 0;
+  if (set)
+    flags = r | FD_CLOEXEC;
+  else
+    flags = r & ~FD_CLOEXEC;
 #endif
+
+  do
+    r = fcntl(fd, F_SETFD, flags);
+  while (r == -1 && errno == EINTR);
+
+  return r;
 }
 
 
@@ -597,6 +584,18 @@ uv_err_t uv_chdir(const char* dir) {
   } else {
     return uv__new_sys_error(errno);
   }
+}
+
+
+void uv_disable_stdio_inheritance(void) {
+  int fd;
+
+  /* Set the CLOEXEC flag on all open descriptors. Unconditionally try the
+   * first 16 file descriptors. After that, bail out after the first error.
+   */
+  for (fd = 0; ; fd++)
+    if (uv__cloexec(fd, 1) && fd > 15)
+      break;
 }
 
 

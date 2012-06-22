@@ -22,6 +22,7 @@
 
 #include "uv.h"
 #include "eio.h"
+#include "internal.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -87,13 +88,20 @@ void uv_eio_init(uv_loop_t* loop) {
 
   uv_idle_init(loop, &loop->uv_eio_poller);
   uv_idle_start(&loop->uv_eio_poller, uv_eio_do_poll);
+  loop->uv_eio_poller.flags |= UV__HANDLE_INTERNAL;
 
   loop->uv_eio_want_poll_notifier.data = loop;
-  uv_async_init(loop, &loop->uv_eio_want_poll_notifier,
-      uv_eio_want_poll_notifier_cb);
+  uv_async_init(loop,
+                &loop->uv_eio_want_poll_notifier,
+                uv_eio_want_poll_notifier_cb);
+  loop->uv_eio_want_poll_notifier.flags |= UV__HANDLE_INTERNAL;
+  uv__handle_unref(&loop->uv_eio_want_poll_notifier);
 
-  uv_async_init(loop, &loop->uv_eio_done_poll_notifier,
-      uv_eio_done_poll_notifier_cb);
+  uv_async_init(loop,
+                &loop->uv_eio_done_poll_notifier,
+                uv_eio_done_poll_notifier_cb);
+  loop->uv_eio_done_poll_notifier.flags |= UV__HANDLE_INTERNAL;
+  uv__handle_unref(&loop->uv_eio_done_poll_notifier);
 
   uv_once(&uv__eio_init_once_guard, uv__eio_init);
 }

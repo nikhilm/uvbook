@@ -1,4 +1,15 @@
 UV_PATH=$(shell pwd)/../libuv
+CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
+
+uname_S=$(shell uname -s)
+
+ifeq (Darwin, $(uname_S))
+CFLAGS+=-framework CoreServices
+endif
+
+ifeq (Linux, $(uname_S))
+CFLAGS+=-lrt
+endif
 
 examples=\
 	helloworld\
@@ -9,7 +20,7 @@ examples=\
 	thread-create
 
 all: libuv
-	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc -g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a -o $$dir main.c; cd ..; done
+	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c; cd ..; done
 
 libuv:
 	make -C ../libuv

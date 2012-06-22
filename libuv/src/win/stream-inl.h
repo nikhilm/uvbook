@@ -19,65 +19,51 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef UV_WIN_STREAM_INL_H_
+#define UV_WIN_STREAM_INL_H_
+
+#include <assert.h>
+
 #include "uv.h"
 #include "internal.h"
-
-#include <dlfcn.h>
-#include <errno.h>
-#include <string.h>
-#include <locale.h>
-
-static int uv__dlerror(uv_lib_t* lib);
+#include "handle-inl.h"
+#include "req-inl.h"
 
 
-int uv_dlopen(const char* filename, uv_lib_t* lib) {
-  dlerror(); /* Reset error status. */
-  lib->errmsg = NULL;
-  lib->handle = dlopen(filename, RTLD_LAZY);
-  return uv__dlerror(lib);
+INLINE static void uv_stream_init(uv_loop_t* loop,
+                                  uv_stream_t* handle,
+                                  uv_handle_type type) {
+  uv__handle_init(loop, (uv_handle_t*) handle, type);
+  handle->write_queue_size = 0;
+  handle->activecnt = 0;
+
+  loop->counters.stream_init++;
 }
 
 
-void uv_dlclose(uv_lib_t* lib) {
-  if (lib->errmsg) {
-    free(lib->errmsg);
-    lib->errmsg = NULL;
+INLINE static void uv_connection_init(uv_stream_t* handle) {
+  handle->flags |= UV_HANDLE_CONNECTION;
+  handle->write_reqs_pending = 0;
+
+  uv_req_init(handle->loop, (uv_req_t*) &(handle->read_req));
+  handle->read_req.event_handle = NULL;
+  handle->read_req.wait_handle = INVALID_HANDLE_VALUE;
+  handle->read_req.type = UV_READ;
+  handle->read_req.data = handle;
+
+  handle->shutdown_req = NULL;
+}
+
+
+INLINE static size_t uv_count_bufs(uv_buf_t bufs[], int count) {
+  size_t bytes = 0;
+  int i;
+
+  for (i = 0; i < count; i++) {
+    bytes += (size_t)bufs[i].len;
   }
 
-  if (lib->handle) {
-    /* Ignore errors. No good way to signal them without leaking memory. */
-    dlclose(lib->handle);
-    lib->handle = NULL;
-  }
+  return bytes;
 }
 
-
-int uv_dlsym(uv_lib_t* lib, const char* name, void** ptr) {
-  dlerror(); /* Reset error status. */
-  *ptr = dlsym(lib->handle, name);
-  return uv__dlerror(lib);
-}
-
-
-const char* uv_dlerror(uv_lib_t* lib) {
-  return lib->errmsg ? lib->errmsg : "no error";
-}
-
-
-static int uv__dlerror(uv_lib_t* lib) {
-  char* errmsg;
-
-  if (lib->errmsg)
-    free(lib->errmsg);
-
-  errmsg = dlerror();
-
-  if (errmsg) {
-    lib->errmsg = strdup(errmsg);
-    return -1;
-  }
-  else {
-    lib->errmsg = NULL;
-    return 0;
-  }
-}
+#endif /* UV_WIN_STREAM_INL_H_ */

@@ -19,14 +19,16 @@
  * IN THE SOFTWARE.
  */
 
-#include "uv.h"
-#include "internal.h"
-
 #include <assert.h>
 #include <malloc.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "uv.h"
+#include "internal.h"
+#include "handle-inl.h"
+#include "req-inl.h"
 
 
 const unsigned int uv_directory_watcher_buffer_size = 4096;
@@ -34,8 +36,7 @@ const unsigned int uv_directory_watcher_buffer_size = 4096;
 
 static void uv_fs_event_init_handle(uv_loop_t* loop, uv_fs_event_t* handle,
     const char* filename, uv_fs_event_cb cb) {
-  uv_handle_init(loop, (uv_handle_t*) handle);
-  handle->type = UV_FS_EVENT;
+  uv__handle_init(loop, (uv_handle_t*) handle, UV_FS_EVENT);
   handle->cb = cb;
   handle->dir_handle = INVALID_HANDLE_VALUE;
   handle->buffer = NULL;
@@ -479,7 +480,6 @@ void uv_fs_event_endgame(uv_loop_t* loop, uv_fs_event_t* handle) {
   if (handle->flags & UV_HANDLE_CLOSING &&
       !handle->req_pending) {
     assert(!(handle->flags & UV_HANDLE_CLOSED));
-    handle->flags |= UV_HANDLE_CLOSED;
     uv__handle_stop(handle);
 
     if (handle->buffer) {
@@ -507,8 +507,6 @@ void uv_fs_event_endgame(uv_loop_t* loop, uv_fs_event_t* handle) {
       handle->dirw = NULL;
     }
 
-    if (handle->close_cb) {
-      handle->close_cb((uv_handle_t*)handle);
-    }
+    uv__handle_close(handle);
   }
 }

@@ -20,64 +20,58 @@
  */
 
 #include "uv.h"
-#include "internal.h"
+#include "task.h"
 
-#include <dlfcn.h>
-#include <errno.h>
-#include <string.h>
-#include <locale.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-static int uv__dlerror(uv_lib_t* lib);
-
-
-int uv_dlopen(const char* filename, uv_lib_t* lib) {
-  dlerror(); /* Reset error status. */
-  lib->errmsg = NULL;
-  lib->handle = dlopen(filename, RTLD_LAZY);
-  return uv__dlerror(lib);
-}
+static char magic_cookie[] = "magic cookie";
+static int seen_timer_handle;
+static uv_timer_t timer;
 
 
-void uv_dlclose(uv_lib_t* lib) {
-  if (lib->errmsg) {
-    free(lib->errmsg);
-    lib->errmsg = NULL;
-  }
+static void walk_cb(uv_handle_t* handle, void* arg) {
+  ASSERT(arg == (void*)magic_cookie);
 
-  if (lib->handle) {
-    /* Ignore errors. No good way to signal them without leaking memory. */
-    dlclose(lib->handle);
-    lib->handle = NULL;
+  if (handle == (uv_handle_t*)&timer) {
+    seen_timer_handle++;
+  } else {
+    ASSERT(0 && "unexpected handle");
   }
 }
 
 
-int uv_dlsym(uv_lib_t* lib, const char* name, void** ptr) {
-  dlerror(); /* Reset error status. */
-  *ptr = dlsym(lib->handle, name);
-  return uv__dlerror(lib);
+static void timer_cb(uv_timer_t* handle, int status) {
+  ASSERT(handle == &timer);
+  ASSERT(status == 0);
+
+  uv_walk(handle->loop, walk_cb, magic_cookie);
+  uv_close((uv_handle_t*)handle, NULL);
 }
 
 
-const char* uv_dlerror(uv_lib_t* lib) {
-  return lib->errmsg ? lib->errmsg : "no error";
-}
+TEST_IMPL(walk_handles) {
+  uv_loop_t* loop;
+  int r;
 
+  loop = uv_default_loop();
 
-static int uv__dlerror(uv_lib_t* lib) {
-  char* errmsg;
+  r = uv_timer_init(loop, &timer);
+  ASSERT(r == 0);
 
-  if (lib->errmsg)
-    free(lib->errmsg);
+  r = uv_timer_start(&timer, timer_cb, 1, 0);
+  ASSERT(r == 0);
 
-  errmsg = dlerror();
+  /* Start event loop, expect to see the timer handle in walk_cb. */
+  ASSERT(seen_timer_handle == 0);
+  r = uv_run(loop);
+  ASSERT(r == 0);
+  ASSERT(seen_timer_handle == 1);
 
-  if (errmsg) {
-    lib->errmsg = strdup(errmsg);
-    return -1;
-  }
-  else {
-    lib->errmsg = NULL;
-    return 0;
-  }
+  /* Loop is finished, walk_cb should not see our timer handle. */
+  seen_timer_handle = 0;
+  uv_walk(loop, walk_cb, magic_cookie);
+  ASSERT(seen_timer_handle == 0);
+
+  return 0;
 }

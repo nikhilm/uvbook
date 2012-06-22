@@ -26,6 +26,9 @@
 
 #include "uv.h"
 #include "internal.h"
+#include "handle-inl.h"
+#include "stream-inl.h"
+#include "req-inl.h"
 
 
 /* A zero-size buffer for use by uv_pipe_read */
@@ -71,9 +74,8 @@ static void uv_unique_pipe_name(char* ptr, char* name, size_t size) {
 
 
 int uv_pipe_init(uv_loop_t* loop, uv_pipe_t* handle, int ipc) {
-  uv_stream_init(loop, (uv_stream_t*)handle);
+  uv_stream_init(loop, (uv_stream_t*)handle, UV_NAMED_PIPE);
 
-  handle->type = UV_NAMED_PIPE;
   handle->reqs_pending = 0;
   handle->handle = INVALID_HANDLE_VALUE;
   handle->name = NULL;
@@ -164,7 +166,7 @@ int uv_stdio_pipe_server(uv_loop_t* loop, uv_pipe_t* handle, DWORD access,
   int err;
   char* ptr = (char*)handle;
 
-  while (TRUE) {
+  for (;;) {
     uv_unique_pipe_name(ptr, name, nameSize);
 
     pipeHandle = CreateNamedPipeA(name,
@@ -358,7 +360,6 @@ void uv_pipe_endgame(uv_loop_t* loop, uv_pipe_t* handle) {
   if (handle->flags & UV_HANDLE_CLOSING &&
       handle->reqs_pending == 0) {
     assert(!(handle->flags & UV_HANDLE_CLOSED));
-    handle->flags |= UV_HANDLE_CLOSED;
     uv__handle_stop(handle);
 
     if (handle->flags & UV_HANDLE_CONNECTION) {
@@ -385,9 +386,7 @@ void uv_pipe_endgame(uv_loop_t* loop, uv_pipe_t* handle) {
       handle->accept_reqs = NULL;
     }
 
-    if (handle->close_cb) {
-      handle->close_cb((uv_handle_t*)handle);
-    }
+    uv__handle_close(handle);
   }
 }
 
