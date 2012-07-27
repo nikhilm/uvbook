@@ -6,7 +6,8 @@ examples=\
 	onchange\
 	thread-create\
 	queue-work\
-	progress
+	progress\
+	tcp-echo-server
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
