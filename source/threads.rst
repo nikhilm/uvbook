@@ -110,7 +110,8 @@ otherwise behaving wrongly.
 Locks
 ~~~~~
 
-Read-write locks are the other synchronization primitive supported.
+Read-write locks are the other synchronization primitive supported. TODO some
+DB read/write example
 
 Others
 ~~~~~~
