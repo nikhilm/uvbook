@@ -7,7 +7,8 @@ examples=\
 	thread-create\
 	queue-work\
 	progress\
-	tcp-echo-server
+	tcp-echo-server\
+	dns
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a

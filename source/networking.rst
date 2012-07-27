@@ -58,4 +58,54 @@ be found in the code. Just remember to call ``uv_close`` when the socket isn't
 required. This can be done even in the ``uv_listen`` callback if you are not
 interested in accepting the connection.
 
-TCP, UDP, servers and clients, multicast
+TCP on the client-side
+----------------------
+
+Where you do bind/listen/accept, on the client side its simply a matter of
+calling ``uv_tcp_connect``. The same ``uv_connect_cb`` style callback of
+``uv_listen`` is used by ``uv_tcp_connect``. Try::
+
+    uv_tcp_t socket;
+    uv_tcp_init(loop, &socket);
+
+    uv_connect_t connect;
+
+    struct sockaddr_in dest = uv_ip4_addr("127.0.0.1", 80);
+
+    uv_tcp_connect(&connect, &socket, dest, on_connect);
+
+where ``on_connect`` will be called after the connection is established.
+
+Querying DNS
+------------
+
+libuv provides asynchronous DNS resolution. For this it provides its own
+``getaddrinfo`` replacement, backed by `c-ares`_. In the callback you can
+perform normal socket operations on the retrieved addresses. Let's connect to
+Freenode to see an example of DNS resolution.
+
+.. rubric:: dns/main.c
+.. literalinclude:: ../code/dns/main.c
+    :linenos:
+    :lines: 61-
+    :emphasize-lines: 12
+
+If ``uv_getaddrinfo`` returns non-zero, something went wrong in the setup and
+your callback won't be invoked at all. All arguments can be freed immediately
+after ``uv_getaddrinfo`` returns. The `hostname`, `servname` and `hints`
+structures are documented in `the getaddrinfo man page <getaddrinfo>`_.
+
+In the resolver callback, you can pick any IP from the linked list of ``struct
+addrinfo(s)``. This also demonstrates ``uv_tcp_connect``. It is necessary to
+call ``uv_freeaddrinfo`` in the callback.
+
+.. rubric:: dns/main.c
+.. literalinclude:: ../code/dns/main.c
+    :linenos:
+    :lines: 41-59
+    :emphasize-lines: 8,16
+
+.. _c-ares: http://c-ares.haxx.se
+.. _getaddrinfo: http://www.kernel.org/doc/man-pages/online/pages/man3/getaddrinfo.3.html
+
+TODO UDP, multicast
