@@ -34,7 +34,7 @@ void on_file_write(uv_write_t *req, int status) {
     free_write_req(req);
 }
 
-void write_data(uv_stream_t *dest, uv_buf_t buf, size_t size, uv_write_cb callback) {
+void write_data(uv_stream_t *dest, size_t size, uv_buf_t buf, uv_write_cb callback) {
     write_req_t *req = (write_req_t*) malloc(sizeof(write_req_t));
     req->buf = uv_buf_init((char*) malloc(size), size);
     memcpy(req->buf.base, buf.base, size);
@@ -51,8 +51,8 @@ void read_stdin(uv_stream_t *stream, ssize_t nread, uv_buf_t buf) {
     }
     else {
         if (nread > 0) {
-            write_data((uv_stream_t*)&stdout_pipe, buf, nread, on_stdout_write);
-            write_data((uv_stream_t*)&file_pipe, buf, nread, on_file_write);
+            write_data((uv_stream_t*)&stdout_pipe, nread, buf, on_stdout_write);
+            write_data((uv_stream_t*)&file_pipe, nread, buf, on_file_write);
         }
     }
     if (buf.base)
