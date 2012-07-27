@@ -49,7 +49,7 @@ extern "C" {
 
 
 #define UV_VERSION_MAJOR 0
-#define UV_VERSION_MINOR 6
+#define UV_VERSION_MINOR 8
 
 
 #include <stdint.h> /* int64_t */
@@ -316,8 +316,8 @@ typedef void (*uv_fs_event_cb)(uv_fs_event_t* handle, const char* filename,
 
 typedef void (*uv_fs_poll_cb)(uv_fs_poll_t* handle,
                               int status,
-                              uv_statbuf_t* prev,
-                              uv_statbuf_t* curr);
+                              const uv_statbuf_t* prev,
+                              const uv_statbuf_t* curr);
 
 typedef enum {
   UV_LEAVE_GROUP = 0,
