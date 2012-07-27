@@ -31,7 +31,21 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Glossary" href="glossary.html" />
-    <link rel="prev" title="Utilities" href="utilities.html" /> 
+    <link rel="prev" title="Utilities" href="utilities.html" />
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33699076-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
@@ -55,8 +69,20 @@
   <div class="section" id="patterns">
 <h1>Patterns<a class="headerlink" href="#patterns" title="Permalink to this headline">¶</a></h1>
 <p>Idle watcher pattern</p>
-<p>Thread communication using async_send pattern</p>
 <p>uv_ref/unref and allowing loop to quit</p>
+<p>The general pattern involves passing around
+a baton structure <a class="footnote-reference" href="#id2" id="id1">[1]</a> to get data to and fro between your application and the
+blocking function call:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">TODO</span> <span class="n">above</span>
+</pre></div>
+</div>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>I was first introduced to the term baton in this context, in Konstantin
+Käfer&#8217;s excellent slide set. <a class="reference external" href="http://kkaefer.github.com/node-cpp-modules/#baton">http://kkaefer.github.com/node-cpp-modules/#baton</a></td></tr>
+</tbody>
+</table>
 </div>
 
 

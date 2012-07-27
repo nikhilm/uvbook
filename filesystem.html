@@ -31,7 +31,21 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Networking" href="networking.html" />
-    <link rel="prev" title="Basics of libuv" href="basics.html" /> 
+    <link rel="prev" title="Basics of libuv" href="basics.html" />
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33699076-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
@@ -224,7 +238,7 @@ same patterns as the read/write/open calls, returning the result in the
 <p class="rubric">Filesystem operations</p>
 </div>
 <div class="section" id="buffers-and-streams">
-<h2>Buffers and Streams<a class="headerlink" href="#buffers-and-streams" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Buffers and Streams<a class="headerlink" href="#buffers-and-streams" title="Permalink to this headline">¶</a></h2>
 <p>The basic I/O tool in libuv is the stream (<tt class="docutils literal"><span class="pre">uv_stream_t</span></tt>). TCP sockets, UDP
 sockets, named pipes for file I/O and IPC are all treated as stream subclasses.</p>
 <p>Streams are initialized using custom functions for each subclass, then operated
@@ -334,8 +348,8 @@ these buffers.</p>
     <span class="p">}</span>
     <span class="k">else</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="n">on_stdout_write</span><span class="p">);</span>
-            <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="n">on_file_write</span><span class="p">);</span>
+            <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">on_stdout_write</span><span class="p">);</span>
+            <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">on_file_write</span><span class="p">);</span>
         <span class="p">}</span>
     <span class="p">}</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">)</span>
@@ -396,7 +410,7 @@ deallocation is application responsibility, so we free the data.</p>
     <span class="n">free_write_req</span><span class="p">(</span><span class="n">req</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">write_data</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">dest</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">callback</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">write_data</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">dest</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">callback</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">write_req_t</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">(</span><span class="n">write_req_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">write_req_t</span><span class="p">));</span>
     <span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
     <span class="n">memcpy</span><span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">,</span> <span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
@@ -413,7 +427,7 @@ unwrap it in the callbacks.</p>
 <h2>File change events<a class="headerlink" href="#file-change-events" title="Permalink to this headline">¶</a></h2>
 <p>All modern operating systems provide APIs to put watches on individual files or
 directories and be informed when the files are modified. libuv wraps common
-file change notification libraries <a class="footnote-reference" href="#fsnotify" id="id1">[1]</a>. This is one of the more
+file change notification libraries <a class="footnote-reference" href="#fsnotify" id="id2">[1]</a>. This is one of the more
 inconsistent parts of libuv. File change notification systems are themselves
 extremely varied across platforms so getting everything working everywhere is
 difficult. To demonstrate, I&#8217;m going to build a simple utility which runs
@@ -480,7 +494,7 @@ even on those platforms.</li>
 <table class="docutils footnote" frame="void" id="fsnotify" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
+<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
 Windows, event ports on Solaris, unsupported on Cygwin</td></tr>
 </tbody>
 </table>

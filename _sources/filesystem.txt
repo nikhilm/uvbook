@@ -136,6 +136,8 @@ same patterns as the read/write/open calls, returning the result in the
 .. literalinclude:: ../libuv/include/uv.h
     :lines: 1390-1466
 
+.. _buffers-and-streams:
+
 Buffers and Streams
 -------------------
 

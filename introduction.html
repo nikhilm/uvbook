@@ -31,7 +31,21 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Basics of libuv" href="basics.html" />
-    <link rel="prev" title="Table of Contents" href="index.html" /> 
+    <link rel="prev" title="Table of Contents" href="index.html" />
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33699076-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
@@ -54,38 +68,44 @@
         
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>An Introduction to libuv is a small set of tutorials about using <a class="reference internal" href="glossary.html#term-libuv"><em class="xref std std-term">libuv</em></a> as
+<p>This &#8216;book&#8217; is a small set of tutorials about using <a class="reference internal" href="glossary.html#term-libuv"><em class="xref std std-term">libuv</em></a> as
 a high performance evented I/O library which offers the same API on Windows and Unix and TODO</p>
-<p>This book is meant to cover the main areas of libuv, but is not a comprehensive
-reference discussing every function and structure.</p>
+<p>It is meant to cover the main areas of libuv, but is not a comprehensive
+reference discussing every function and data structure.</p>
 <div class="section" id="who-this-book-is-for">
 <h2>Who this book is for<a class="headerlink" href="#who-this-book-is-for" title="Permalink to this headline">¶</a></h2>
-<p>If you are reading this book, you are either a systems programmer, creating
-low-level programs such as daemons or network services and clients. You have
-found that the event loop approach is well suited for your application and
-decided to use libuv.</p>
-<p>You may also be a node.js module writer, who wants to wrap platform APIs
+<p>If you are reading this book, you are either:</p>
+<ol class="arabic simple">
+<li>a systems programmer, creating low-level programs such as daemons or network
+services and clients. You have found that the event loop approach is well
+suited for your application and decided to use libuv.</li>
+<li>a node.js module writer, who wants to wrap platform APIs
 written in C or C++ with a set of (a)synchronous APIs that are exposed to
-JavaScript.</p>
+JavaScript. You will use libuv purely in the context of node.js. For
+this you will require some other resources as the book does not cover parts
+specific to v8/node.js.</li>
+</ol>
 <p>This book assumes that you are comfortable with the C programming language.</p>
 </div>
 <div class="section" id="background">
 <h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
-<p>When the <a class="reference internal" href="glossary.html#term-node-js"><em class="xref std std-term">node.js</em></a> project began in 2009 as a JavaScript environment
-decoupled from the browser. Using Google&#8217;s V8 and Marc Lehmann&#8217;s libev (TODO:
-links) node.js combined a model of I/O &#8211; evented &#8211; with a language that was
-well suited to the style of programming due to the way it had been shaped by
-browsers. As node.js grew in popularity, there was a need to make it run on
-Windows, but libev ran only on Unix. Windows equivalent of kernel notification
-mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction around libev
-or IOCP depending on the platform, providing users an API based on libev.</p>
+<p>The <a class="reference internal" href="glossary.html#term-node-js"><em class="xref std std-term">node.js</em></a> project began in 2009 as a JavaScript environment decoupled
+from the browser. Using Google&#8217;s V8 and Marc Lehmann&#8217;s libev (TODO: links),
+node.js combined a model of I/O &#8211; evented &#8211; with a language that was well
+suited to the style of programming; due to the way it had been shaped by
+browsers. As node.js grew in popularity, it was important to make it work on
+Windows, but libev ran only on Unix. The Windows equivalent of kernel event
+notification mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction
+around libev or IOCP depending on the platform, providing users an API based on
+libev.</p>
 </div>
 <div class="section" id="code">
 <h2>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h2>
 <p>All the code from this book is included as part of the source of the book on
-Github. Clone/Download the book (TODO: link) and run <tt class="docutils literal"><span class="pre">make</span></tt> in the <tt class="docutils literal"><span class="pre">code/</span></tt>
+Github. <a class="reference external" href="https://github.com/nikhilm/uvbook">Clone</a>/<a class="reference external" href="https://github.com/nikhilm/uvbook/downloads">Download</a> the book and run <tt class="docutils literal"><span class="pre">make</span></tt> in the <tt class="docutils literal"><span class="pre">code/</span></tt>
 folder to compile all the examples. This book and the code is based on libuv
-version <tt class="docutils literal"><span class="pre">node-v0.7.9</span></tt> and a version is included in the <tt class="docutils literal"><span class="pre">code/</span></tt> folder.</p>
+version <cite>node-v0.8.0</cite> and a version is included in the <tt class="docutils literal"><span class="pre">libuv/</span></tt> folder
+which will be compiled automatically.</p>
 </div>
 </div>
 

@@ -31,7 +31,21 @@
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Processes" href="processes.html" />
-    <link rel="prev" title="Networking" href="networking.html" /> 
+    <link rel="prev" title="Networking" href="networking.html" />
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33699076-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="index.html">
@@ -72,6 +86,8 @@ loop and callback principles, threads are complete agnostic, they block as
 required, signal errors directly via return values and, as shown in the
 <a class="reference internal" href="#thread-create-example"><em>first example</em></a>, don&#8217;t even require a running
 event loop.</p>
+<p>libuv&#8217;s thread API is also very limited since the semantics and syntax of
+threads are different on all platforms, with different levels of completeness.</p>
 <p>This chapter makes the following assumption: <strong>There is only one event loop,
 running in one thread (the main thread)</strong>. No other thread interacts
 with the event loop (except using <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>). <a class="reference internal" href="multiple.html"><em>Multiple event loops</em></a> covers
@@ -144,29 +160,282 @@ catalogue any surprises in the libuv APIs here. For the rest you can look at
 the pthreads <a class="reference external" href="pthreads">man pages</a></p>
 <div class="section" id="mutexes">
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
-<p>Recursive mutexes not allowed</p>
+<p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
+<p class="rubric">libuv mutex functions</p>
+<p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on
+success, -1 on error instead of error codes.</p>
+<p>If <cite>libuv</cite> has been compiled with debugging enabled, <tt class="docutils literal"><span class="pre">uv_mutex_destroy()</span></tt>,
+<tt class="docutils literal"><span class="pre">uv_mutex_lock()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_unlock()</span></tt> will <tt class="docutils literal"><span class="pre">abort()</span></tt> on error.
+Similarly <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> will abort if the error is anything <em>other
+than</em> <tt class="docutils literal"><span class="pre">EAGAIN</span></tt>.</p>
+<p>Recursive mutexes are supported by some platforms, but you should not rely on
+them. The BSD mutex implementation will raise an error if a thread which has
+locked a mutex attempts to lock it again. For example, a construct like:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">a_mutex</span><span class="p">);</span>
+<span class="n">uv_thread_create</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">a_mutex</span><span class="p">);</span>
+<span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">a_mutex</span><span class="p">);</span>
+<span class="c1">// more things here</span>
+</pre></div>
+</div>
+<p>can be used to wait until another thread initializes some stuff and then
+unlocks <tt class="docutils literal"><span class="pre">a_mutex</span></tt> but will lead to your program crashing if in debug mode, or
+otherwise behaving wrongly.</p>
+<div class="admonition tip">
+<p class="first admonition-title">Tip</p>
+<p class="last">Mutexes on linux support attributes for a recursive mutex, but the API is
+not exposed via libuv.</p>
+</div>
 </div>
 <div class="section" id="locks">
 <h3>Locks<a class="headerlink" href="#locks" title="Permalink to this headline">¶</a></h3>
+<p>Read-write locks are the other synchronization primitive supported. TODO some
+DB read/write example</p>
 </div>
 <div class="section" id="others">
 <h3>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h3>
-<p>Semaphores not dne
-The problem with condition variables</p>
+<p>Semaphores and condition variables are not implemented yet. Their are a couple
+of patches for condition variable support in libuv TODO link, but since the
+Windows condition variable system is available only from Windows Vista and
+Windows Server 2008 onwards <a class="footnote-reference" href="#id3" id="id1">[1]</a>, its not in libuv yet.</p>
 </div>
 </div>
 <div class="section" id="libuv-work-queue">
 <h2>libuv work queue<a class="headerlink" href="#libuv-work-queue" title="Permalink to this headline">¶</a></h2>
-<p>uv_queue_work</p>
+<p><tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt> is a convenience function that allows an application to run
+a task in a separate thread, and have a callback that is triggered when the
+task is done. A seemingly simple function, what makes <tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt>
+tempting is that it allows potentially any third-party libraries to be used
+with the event-loop paradigm. When you use event loops, it is <em>imperative to
+make sure that no function which runs periodically in the loop thread blocks
+when performing I/O or is a serious CPU hog</em>, because this means the loop slows
+down and events are not being dealt with at full capacity.</p>
+<p>But a lot of existing code out there features blocking functions (for example
+a routine which performs I/O under the hood) to be used with threads if you
+want responsiveness (the classic &#8216;one thread per client&#8217; server model), and
+getting them to play with an event loop library generally involves rolling your
+own system of running the task in a separate thread.  libuv just provides
+a convenient abstraction for this.</p>
+<p>Here is a simple example inspired by <a class="reference external" href="https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html">node.js is cancer</a>. We are going to
+calculate fibonacci numbers, sleeping a bit along the way, but run it in
+a separate thread so that the blocking and CPU bound task does not prevent the
+event loop from performing other activities.</p>
+<p class="rubric">queue-work/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">random</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+    <span class="kt">long</span> <span class="n">fib</span> <span class="o">=</span> <span class="n">fib_</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%dth fibonacci is %lu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">fib</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">after_fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Done calculating %dth fibonacci</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The actual task function is simple, nothing to show that it is going to be
+run in a separate thread. The <tt class="docutils literal"><span class="pre">uv_work_t</span></tt> structure is the clue. You can pass
+arbitrary data through it using the <tt class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></tt> field and use it to
+communicate to and from the thread. But be sure you are using proper locks if
+you are changing things while both threads may be running.</p>
+<p>The trigger is <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>:</p>
+<p class="rubric">queue-work/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="kt">int</span> <span class="n">data</span><span class="p">[</span><span class="n">FIB_UNTIL</span><span class="p">];</span>
+    <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">[</span><span class="n">FIB_UNTIL</span><span class="p">];</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">FIB_UNTIL</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+        <span class="n">req</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fib</span><span class="p">,</span> <span class="n">after_fib</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The thread function will be launched in a separate thread, passed the
+<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> structure and once the function returns, the <em>after</em> function
+will be called, again with the same structure.</p>
+<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="patterns.html"><em>pattern</em></a>
+is to use a baton to exchange data.</p>
 </div>
 <div class="section" id="inter-thread-communication">
-<span id="id1"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
-<p>inter thread communication using uv_async
-synchronization
-parallel downloads example?</p>
-<p>note about recursive mutexes not supported
-note about bad error of just aborting
-uv_once</p>
+<span id="id2"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you want various threads to actually send each other messages <em>while</em>
+they are running. For example you might be running some long duration task in
+a separate thread (perhaps using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>) but want to notify progress
+to the main thread. This is a simple example of having a download manager
+informing the user of the status of running downloads.</p>
+<p class="rubric">progress/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="hll"><span class="n">uv_async_t</span> <span class="n">async</span><span class="p">;</span>
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">10240</span><span class="p">;</span>
+    <span class="n">req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">;</span>
+
+<span class="hll">    <span class="n">uv_async_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="n">print_progress</span><span class="p">);</span>
+</span>    <span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="n">fake_download</span><span class="p">,</span> <span class="n">after</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The async thread communication works <em>on loops</em> so although any thread can be
+the message sender, only threads with libuv loops can be receivers (or rather
+the loop is the receiver). libuv will invoke the callback (<tt class="docutils literal"><span class="pre">print_progress</span></tt>)
+with the async watcher whenever it receives a message.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">It is important to realize that the message send is <em>async</em>, the callback
+may be invoked immediately after <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is called in another
+thread, or it may be invoked after some time. It may also be invoked
+multiple times for a single <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> call. The only guarantee that
+libuv makes is &#8211; The callback function is called <em>at least once</em> after the
+call to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. So your callback should perform only idempotent
+operations.</p>
+</div>
+<p class="rubric">progress/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fake_download</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+    <span class="kt">int</span> <span class="n">downloaded</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">percentage</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">downloaded</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">percentage</span> <span class="o">=</span> <span class="n">downloaded</span><span class="o">*</span><span class="mf">100.0</span><span class="o">/</span><span class="n">size</span><span class="p">;</span>
+<span class="hll">        <span class="n">async</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">percentage</span><span class="p">;</span>
+</span><span class="hll">        <span class="n">uv_async_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">async</span><span class="p">);</span>
+</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="n">downloaded</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">200</span><span class="o">+</span><span class="n">random</span><span class="p">())</span><span class="o">%</span><span class="mi">1000</span><span class="p">;</span> <span class="c1">// can only download max 1000bytes/sec,</span>
+                                           <span class="c1">// but at least a 200;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>In the download function we modify the progress indicator and queue the message
+for delivery with <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Remember: <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is also
+non-blocking and will return immediately.</p>
+<p class="rubric">progress/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">print_progress</span><span class="p">(</span><span class="n">uv_async_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span> <span class="cm">/*UNUSED*/</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="n">percentage</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">double</span><span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Downloaded %.2f%%</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The callback is a standard libuv pattern, extracting the data from the watcher.</p>
+<p>Finally it is important to remember to clean up the watcher.</p>
+<p class="rubric">progress/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">after</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Download complete</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>One use case where uv_async_send is required is when interoperating with
+libraries that require thread affinity for their functionality. For example in
+node.js, a v8 engine instance, contexts and its objects are bound to the thread
+that the v8 instance was started in. Interacting with v8 data structures from
+another thread can lead to undefined results. Now consider some node.js module
+which binds a third party library. It may go something like this:</p>
+<ol class="arabic">
+<li><p class="first">In node, the third party library is set up with a JavaScript callback to be
+invoked for more information:</p>
+<div class="highlight-c"><pre>var lib = require('lib');
+lib.on_progress(function() {
+    console.log("Progress");
+});
+
+lib.do();
+
+// do other stuff</pre>
+</div>
+</li>
+<li><p class="first"><tt class="docutils literal"><span class="pre">lib.do</span></tt> is supposed to be non-blocking but the third party lib is
+blocking, so the binding uses <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>.</p>
+</li>
+<li><p class="first">The actual work being done in a separate thread wants to invoke the progress
+callback, but cannot directly call into v8 to interact with JavaScript. So
+it uses <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>.</p>
+</li>
+<li><p class="first">The async callback, invoked in the main loop thread, which is the v8 thread,
+then interacts with v8 to invoke the JavaScript callback.</p>
+</li>
+</ol>
+<p>TODO: can modifying data lead to a callback not receiving a value if the
+scheduling is not in its favour?</p>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx</a></td></tr>
+</tbody>
+</table>
 </div>
 </div>
 

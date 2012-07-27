@@ -30,7 +30,21 @@
     <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="#" />
-    <link rel="next" title="Introduction" href="introduction.html" /> 
+    <link rel="next" title="Introduction" href="introduction.html" />
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-33699076-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
   </head>
   <body>
       <div class="header"><h1 class="heading"><a href="#">
@@ -74,7 +88,12 @@
 <li class="toctree-l2"><a class="reference internal" href="filesystem.html#file-change-events">File change events</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="networking.html">Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="networking.html">Networking</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#tcp">TCP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#tcp-on-the-client-side">TCP on the client-side</a></li>
+<li class="toctree-l2"><a class="reference internal" href="networking.html#querying-dns">Querying DNS</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="threads.html">Threads</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="threads.html#core-thread-operations">Core thread operations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="threads.html#synchronization-primitives">Synchronization Primitives</a></li>
