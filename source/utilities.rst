@@ -1,4 +1,6 @@
 Utilities
 =========
 
-idle watchers & techniques
+idle watchers
+timers
+check & prepare watchers
