@@ -175,13 +175,89 @@ is to use a baton to exchange data.
 Inter-thread communication
 --------------------------
 
-inter thread communication using uv_async
-synchronization
-parallel downloads example?
+Sometimes you want various threads to actually send each other messages *while*
+they are running. For example you might be running some long duration task in
+a separate thread (perhaps using ``uv_queue_work``) but want to notify progress
+to the main thread. This is a simple example of having a download manager
+informing the user of the status of running downloads.
 
-note about recursive mutexes not supported
-note about bad error of just aborting
-uv_once
+.. rubric:: progress/main.c
+.. literalinclude:: ../code/progress/main.c
+    :linenos:
+    :lines: 7-8,34-
+    :emphasize-lines: 2,11
+
+The async thread communication works *on loops* so although any thread can be
+the message sender, only threads with libuv loops can be receivers (or rather
+the loop is the receiver). libuv will invoke the callback (``print_progress``)
+with the async watcher whenever it receives a message.
+
+.. warning::
+
+    It is important to realize that the message send is *async*, the callback
+    may be invoked immediately after ``uv_async_send`` is called in another
+    thread, or it may be invoked after some time. It may also be invoked
+    multiple times for a single ``uv_async_send`` call. The only guarantee that
+    libuv makes is -- The callback function is called *at least once* after the
+    call to ``uv_async_send``. So your callback should perform only idempotent
+    operations.
+
+.. rubric:: progress/main.c
+.. literalinclude:: ../code/progress/main.c
+    :linenos:
+    :lines: 10-23
+    :emphasize-lines: 7-8
+
+In the download function we modify the progress indicator and queue the message
+for delivery with ``uv_async_send``. Remember: ``uv_async_send`` is also
+non-blocking and will return immediately.
+
+.. rubric:: progress/main.c
+.. literalinclude:: ../code/progress/main.c
+    :linenos:
+    :lines: 30-33
+
+The callback is a standard libuv pattern, extracting the data from the watcher.
+
+Finally it is important to remember to clean up the watcher.
+
+.. rubric:: progress/main.c
+.. literalinclude:: ../code/progress/main.c
+    :linenos:
+    :lines: 25-28
+    :emphasize-lines: 3
+
+One use case where uv_async_send is required is when interoperating with
+libraries that require thread affinity for their functionality. For example in
+node.js, a v8 engine instance, contexts and its objects are bound to the thread
+that the v8 instance was started in. Interacting with v8 data structures from
+another thread can lead to undefined results. Now consider some node.js module
+which binds a third party library. It may go something like this:
+
+1. In node, the third party library is set up with a JavaScript callback to be
+   invoked for more information::
+
+    var lib = require('lib');
+    lib.on_progress(function() {
+        console.log("Progress");
+    });
+
+    lib.do();
+
+    // do other stuff
+
+2. ``lib.do`` is supposed to be non-blocking but the third party lib is
+   blocking, so the binding uses ``uv_queue_work``.
+
+3. The actual work being done in a separate thread wants to invoke the progress
+   callback, but cannot directly call into v8 to interact with JavaScript. So
+   it uses ``uv_async_send``.
+
+4. The async callback, invoked in the main loop thread, which is the v8 thread,
+   then interacts with v8 to invoke the JavaScript callback.
+
+TODO: can modifying data lead to a callback not receiving a value if the
+scheduling is not in its favour?
 
 .. _pthreads: http://man7.org/linux/man-pages/man7/pthreads.7.html
 
