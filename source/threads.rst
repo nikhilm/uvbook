@@ -134,16 +134,17 @@ down and events are not being dealt with at full capacity.
 
 But a lot of existing code out there features blocking functions (for example
 a routine which performs I/O under the hood) to be used with threads if you
-want responsiveness (the classic one thread per client server model), and
+want responsiveness (the classic 'one thread per client' server model), and
 getting them to play with an event loop library generally involves rolling your
 own system of running the task in a separate thread.  libuv just provides
 a convenient abstraction for this.
 
-Here is a simple example inspired by "node.js is cancer" [#]_. We are going to
+Here is a simple example inspired by `node.js is cancer`_. We are going to
 calculate fibonacci numbers, sleeping a bit along the way, but run it in
 a separate thread so that the blocking and CPU bound task does not prevent the
 event loop from performing other activities.
 
+.. rubric:: queue-work/main.c
 .. literalinclude:: ../code/queue-work/main.c
     :linenos:
     :lines: 17-29
@@ -156,6 +157,7 @@ you are changing things while both threads may be running.
 
 The trigger is ``uv_queue_work``:
 
+.. rubric:: queue-work/main.c
 .. literalinclude:: ../code/queue-work/main.c
     :linenos:
     :lines: 31-44
@@ -185,4 +187,4 @@ uv_once
 
 .. rubric:: Footnotes
 .. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
-.. [#] https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
+.. _node.js is cancer: https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
