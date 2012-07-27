@@ -1,3 +1,12 @@
+examples=\
+	helloworld\
+	idle-basic\
+	uvcat\
+	uvtee\
+	onchange\
+	thread-create\
+	queue-work
+
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
 
@@ -10,15 +19,6 @@ endif
 ifeq (Linux, $(uname_S))
 CFLAGS+=-lrt
 endif
-
-examples=\
-	helloworld\
-	idle-basic\
-	uvcat\
-	uvtee\
-	onchange\
-	thread-create
-
 all: libuv
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c; cd ..; done
 
