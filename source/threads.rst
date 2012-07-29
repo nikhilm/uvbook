@@ -197,11 +197,15 @@ with the async watcher whenever it receives a message.
 
     It is important to realize that the message send is *async*, the callback
     may be invoked immediately after ``uv_async_send`` is called in another
-    thread, or it may be invoked after some time. It may also be invoked
-    multiple times for a single ``uv_async_send`` call. The only guarantee that
-    libuv makes is -- The callback function is called *at least once* after the
-    call to ``uv_async_send``. So your callback should perform only idempotent
-    operations.
+    thread, or it may be invoked after some time. libuv may also combine
+    multiple calls to ``uv_async_send`` and invoke your callback only once. The
+    only guarantee that libuv makes is -- The callback function is called *at
+    least once* after the call to ``uv_async_send``. If you have no pending
+    calls to ``uv_async_send``, the callback won't be called. If you make two
+    or more calls, and libuv hasn't had a chance to run the callback yet, it
+    *may* invoke your callback *only once* for the multiple invocations of
+    ``uv_async_send``. Your callback will never be called twice for just one
+    event.
 
 .. rubric:: progress/main.c
 .. literalinclude:: ../code/progress/main.c
