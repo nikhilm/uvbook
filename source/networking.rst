@@ -159,7 +159,7 @@ Local loopback of multicast packets is enabled by default [#]_, use
 ``uv_udp_set_multicast_loop to switch it off``.
 
 The packet time-to-live for multicast packets can be changed using
-``uv_udp_set_multicast_ttl`.
+``uv_udp_set_multicast_ttl``.
 
 Querying DNS
 ------------
