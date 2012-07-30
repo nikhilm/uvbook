@@ -336,11 +336,15 @@ with the async watcher whenever it receives a message.</p>
 <p class="first admonition-title">Warning</p>
 <p class="last">It is important to realize that the message send is <em>async</em>, the callback
 may be invoked immediately after <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is called in another
-thread, or it may be invoked after some time. It may also be invoked
-multiple times for a single <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> call. The only guarantee that
-libuv makes is &#8211; The callback function is called <em>at least once</em> after the
-call to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. So your callback should perform only idempotent
-operations.</p>
+thread, or it may be invoked after some time. libuv may also combine
+multiple calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> and invoke your callback only once. The
+only guarantee that libuv makes is &#8211; The callback function is called <em>at
+least once</em> after the call to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. If you have no pending
+calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>, the callback won&#8217;t be called. If you make two
+or more calls, and libuv hasn&#8217;t had a chance to run the callback yet, it
+<em>may</em> invoke your callback <em>only once</em> for the multiple invocations of
+<tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Your callback will never be called twice for just one
+event.</p>
 </div>
 <p class="rubric">progress/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
