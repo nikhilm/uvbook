@@ -162,6 +162,13 @@ the pthreads <a class="reference external" href="pthreads">man pages</a></p>
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
 <p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
 <p class="rubric">libuv mutex functions</p>
+<div class="highlight-c"><pre>   */
+ UV_FS_EVENT_WATCH_ENTRY = 1,
+
+  /*
+   * By default uv_fs_event will try to use a kernel interface such as inotify
+</pre>
+</div>
 <p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on
 success, -1 on error instead of error codes.</p>
 <p>If <cite>libuv</cite> has been compiled with debugging enabled, <tt class="docutils literal"><span class="pre">uv_mutex_destroy()</span></tt>,
