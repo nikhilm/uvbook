@@ -43,6 +43,8 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	$(MAKE) -C code $@
+	$(MAKE) -C libuv $@
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
