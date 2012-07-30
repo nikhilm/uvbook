@@ -82,38 +82,6 @@ calling ``uv_tcp_connect``. The same ``uv_connect_cb`` style callback of
 
 where ``on_connect`` will be called after the connection is established.
 
-Querying DNS
-------------
-
-libuv provides asynchronous DNS resolution. For this it provides its own
-``getaddrinfo`` replacement, backed by `c-ares`_. In the callback you can
-perform normal socket operations on the retrieved addresses. Let's connect to
-Freenode to see an example of DNS resolution.
-
-.. rubric:: dns/main.c
-.. literalinclude:: ../code/dns/main.c
-    :linenos:
-    :lines: 61-
-    :emphasize-lines: 12
-
-If ``uv_getaddrinfo`` returns non-zero, something went wrong in the setup and
-your callback won't be invoked at all. All arguments can be freed immediately
-after ``uv_getaddrinfo`` returns. The `hostname`, `servname` and `hints`
-structures are documented in `the getaddrinfo man page <getaddrinfo>`_.
-
-In the resolver callback, you can pick any IP from the linked list of ``struct
-addrinfo(s)``. This also demonstrates ``uv_tcp_connect``. It is necessary to
-call ``uv_freeaddrinfo`` in the callback.
-
-.. rubric:: dns/main.c
-.. literalinclude:: ../code/dns/main.c
-    :linenos:
-    :lines: 41-59
-    :emphasize-lines: 8,16
-
-.. _c-ares: http://c-ares.haxx.se
-.. _getaddrinfo: http://www.kernel.org/doc/man-pages/online/pages/man3/getaddrinfo.3.html
-
 UDP
 ---
 
@@ -192,6 +160,38 @@ Local loopback of multicast packets is enabled by default [#]_, use
 
 The packet time-to-live for multicast packets can be changed using
 ``uv_udp_set_multicast_ttl`.
+
+Querying DNS
+------------
+
+libuv provides asynchronous DNS resolution. For this it provides its own
+``getaddrinfo`` replacement, backed by `c-ares`_. In the callback you can
+perform normal socket operations on the retrieved addresses. Let's connect to
+Freenode to see an example of DNS resolution.
+
+.. rubric:: dns/main.c
+.. literalinclude:: ../code/dns/main.c
+    :linenos:
+    :lines: 61-
+    :emphasize-lines: 12
+
+If ``uv_getaddrinfo`` returns non-zero, something went wrong in the setup and
+your callback won't be invoked at all. All arguments can be freed immediately
+after ``uv_getaddrinfo`` returns. The `hostname`, `servname` and `hints`
+structures are documented in `the getaddrinfo man page <getaddrinfo>`_.
+
+In the resolver callback, you can pick any IP from the linked list of ``struct
+addrinfo(s)``. This also demonstrates ``uv_tcp_connect``. It is necessary to
+call ``uv_freeaddrinfo`` in the callback.
+
+.. rubric:: dns/main.c
+.. literalinclude:: ../code/dns/main.c
+    :linenos:
+    :lines: 41-59
+    :emphasize-lines: 8,16
+
+.. _c-ares: http://c-ares.haxx.se
+.. _getaddrinfo: http://www.kernel.org/doc/man-pages/online/pages/man3/getaddrinfo.3.html
 
 .. _User Datagram Protocol: http://en.wikipedia.org/wiki/User_Datagram_Protocol
 .. _DHCP: http://tools.ietf.org/html/rfc2131
