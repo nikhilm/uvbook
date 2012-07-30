@@ -12,6 +12,12 @@ The ``uv_tcp_t`` and ``uv_udp_t`` structures are used for network I/O.
 TCP
 ---
 
+TCP is a connection oriented, stream protocol and is therefore based on the
+libuv streams infrastructure.
+
+Server
+++++++
+
 Server sockets proceed by:
 
 1. ``uv_tcp_init`` the TCP watcher.
@@ -58,8 +64,8 @@ be found in the code. Just remember to call ``uv_close`` when the socket isn't
 required. This can be done even in the ``uv_listen`` callback if you are not
 interested in accepting the connection.
 
-TCP on the client-side
-----------------------
+Client
+++++++
 
 Where you do bind/listen/accept, on the client side its simply a matter of
 calling ``uv_tcp_connect``. The same ``uv_connect_cb`` style callback of
