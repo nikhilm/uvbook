@@ -13,7 +13,35 @@ check & prepare watchers
 Idle watcher pattern
 --------------------
 
-Idle watchers are invoked
+The callbacks of idle watchers are only invoked when the event loop has no
+other pending events. In such a situation they are invoked once every iteration
+of the loop. The idle callback can be used to perform some very low priority
+activity. For example, you could dispatch a summary of the daily application
+performance to the developers for analysis during periods of idleness, or use
+the application's CPU time to perform SETI calculations :) An idle watcher is
+also useful in a GUI application. Say you are using an event loop for a file
+download. If the TCP socket is still being established and no other events are
+present your event loop will pause (**block**), which means your progress bar
+will freeze and the user will think the application crashed. In such a case
+queue up and idle watcher to keep the UI operational.
+
+.. rubric:: idle-compute/main.c
+.. literalinclude:: ../code/idle-compute/main.c
+    :linenos:
+    :lines: 5-9, 32-
+    :emphasize-lines: 38
+
+Here we initialize the idle watcher and queue it up along with the actual
+events we are interested in. ``crunch_away`` will now be called repeatedly
+until the user types something and presses Return. Then it will be interrupted
+for a brief amount as the loop deals with the input data, after which it will
+keep calling the idle callback again.
+
+.. rubric:: idle-compute/main.c
+.. literalinclude:: ../code/idle-compute/main.c
+    :linenos:
+    :lines: 10-19
+
 
 Reference count tweaking
 ------------------------

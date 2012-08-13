@@ -9,7 +9,8 @@ examples=\
 	progress\
 	tcp-echo-server\
 	dns\
-	udp-dhcp
+	udp-dhcp\
+	idle-compute
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
