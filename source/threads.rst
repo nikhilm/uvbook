@@ -4,8 +4,7 @@ Threads
 Wait a minute? Why are we on threads? Aren't event loops supposed to be **the
 way** to do *web-scale programming*? Well no. Threads are still the medium in
 which the processor does its job, and threads are mighty useful sometimes, even
-though you might have to wade through scary looking mutexes. TODO rework this
-a bit
+though you might have to wade through synchronization primitives.
 
 Threads are used internally to fake the asynchronous nature of all the system
 calls. libuv also uses threads to allow you, the application, to perform a task
