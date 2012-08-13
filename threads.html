@@ -71,8 +71,7 @@
 <p>Wait a minute? Why are we on threads? Aren&#8217;t event loops supposed to be <strong>the
 way</strong> to do <em>web-scale programming</em>? Well no. Threads are still the medium in
 which the processor does its job, and threads are mighty useful sometimes, even
-though you might have to wade through scary looking mutexes. TODO rework this
-a bit</p>
+though you might have to wade through synchronization primitives.</p>
 <p>Threads are used internally to fake the asynchronous nature of all the system
 calls. libuv also uses threads to allow you, the application, to perform a task
 asynchronously that is actually blocking, by spawning a thread and collecting
@@ -201,9 +200,9 @@ DB read/write example</p>
 <div class="section" id="others">
 <h3>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h3>
 <p>Semaphores and condition variables are not implemented yet. Their are a couple
-of patches for condition variable support in libuv TODO link, but since the
+of patches for condition variable support in libuv <a class="footnote-reference" href="#id5" id="id1">[1]</a> <a class="footnote-reference" href="#id6" id="id2">[2]</a>, but since the
 Windows condition variable system is available only from Windows Vista and
-Windows Server 2008 onwards <a class="footnote-reference" href="#id3" id="id1">[1]</a>, its not in libuv yet.</p>
+Windows Server 2008 onwards <a class="footnote-reference" href="#id7" id="id3">[3]</a>, its not in libuv yet.</p>
 </div>
 </div>
 <div class="section" id="libuv-work-queue">
@@ -297,7 +296,7 @@ will be called, again with the same structure.</p>
 is to use a baton to exchange data.</p>
 </div>
 <div class="section" id="inter-thread-communication">
-<span id="id2"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
+<span id="id4"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes you want various threads to actually send each other messages <em>while</em>
 they are running. For example you might be running some long duration task in
 a separate thread (perhaps using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>) but want to notify progress
@@ -440,10 +439,22 @@ then interacts with v8 to invoke the JavaScript callback.</p>
 </li>
 </ol>
 <p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://github.com/nikhilm/libuv/compare/condvar">https://github.com/nikhilm/libuv/compare/condvar</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="https://github.com/bnoordhuis/libuv/compare/uv_cond">https://github.com/bnoordhuis/libuv/compare/uv_cond</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx</a></td></tr>
 </tbody>
 </table>
 </div>
