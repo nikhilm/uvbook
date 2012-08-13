@@ -205,7 +205,8 @@ with the async watcher whenever it receives a message.
     or more calls, and libuv hasn't had a chance to run the callback yet, it
     *may* invoke your callback *only once* for the multiple invocations of
     ``uv_async_send``. Your callback will never be called twice for just one
-    event.
+    event. This means that only the *latest* value stored in the watcher's
+    ``data`` field will be visible to the callback.
 
 .. rubric:: progress/main.c
 .. literalinclude:: ../code/progress/main.c
@@ -260,9 +261,6 @@ which binds a third party library. It may go something like this:
 
 4. The async callback, invoked in the main loop thread, which is the v8 thread,
    then interacts with v8 to invoke the JavaScript callback.
-
-TODO: can modifying data lead to a callback not receiving a value if the
-scheduling is not in its favour?
 
 .. _pthreads: http://man7.org/linux/man-pages/man7/pthreads.7.html
 
