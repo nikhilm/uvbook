@@ -159,7 +159,7 @@ handles [#]_ using::
     void uv_unref(uv_handle_t*);
 
 This is mostly used when a loop shouldn't wait around for certain watchers,
-even if they are active. See :doc:`patterns` for an example.
+even if they are active. See :doc:`utilities` for an example.
 
 Semantics of event loops
 
