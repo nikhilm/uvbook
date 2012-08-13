@@ -66,9 +66,6 @@ loop.
     node.js uses the default loop as its main loop. If you are writing bindings
     you should be aware of this.
 
-TODO does ev limitation of ev_child only on default loop extend to libuv? Check
-this
-
 Watchers
 --------
 
