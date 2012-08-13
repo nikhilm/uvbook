@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This 'book' is a small set of tutorials about using :term:`libuv` as
+This 'book' is a small set of tutorials about using libuv_ as
 a high performance evented I/O library which offers the same API on Windows and Unix.
 
 It is meant to cover the main areas of libuv, but is not a comprehensive
@@ -27,7 +27,7 @@ This book assumes that you are comfortable with the C programming language.
 Background
 ----------
 
-The :term:`node.js` project began in 2009 as a JavaScript environment decoupled
+The node.js_ project began in 2009 as a JavaScript environment decoupled
 from the browser. Using Google's V8_ and Marc Lehmann's libev_, node.js
 combined a model of I/O -- evented -- with a language that was well suited to
 the style of programming; due to the way it had been shaped by browsers. As
@@ -50,3 +50,5 @@ which will be compiled automatically.
 .. _node-v0.8.0: https://github.com/joyent/libuv/tags
 .. _V8: http://code.google.com/p/v8/
 .. _libev: http://software.schmorp.de/pkg/libev.html
+.. _libuv: https://github.com/joyent/libuv
+.. _node.js: http://www.nodejs.org

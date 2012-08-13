@@ -153,7 +153,7 @@ The event loop only runs (i.e. ``uv_run()`` blocks) as long as there are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
-:term:`handles <handle>` using::
+handles [#]_ using::
 
     void uv_ref(uv_handle_t*);
     void uv_unref(uv_handle_t*);
@@ -168,3 +168,4 @@ void \*data pattern
 note about not necessarily creating type structs on the stack
 
 .. [#] Depending on the capacity of the hardware of course.
+.. [#] Synonymous with watchers

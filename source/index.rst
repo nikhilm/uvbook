@@ -18,7 +18,6 @@ Table of Contents
    multiple
    utilities
    patterns
-   glossary
    about
 
 
