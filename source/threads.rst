@@ -116,7 +116,7 @@ Others
 ~~~~~~
 
 Semaphores and condition variables are not implemented yet. Their are a couple
-of patches for condition variable support in libuv TODO link, but since the
+of patches for condition variable support in libuv [#]_ [#]_, but since the
 Windows condition variable system is available only from Windows Vista and
 Windows Server 2008 onwards [#]_, its not in libuv yet.
 
@@ -264,5 +264,7 @@ which binds a third party library. It may go something like this:
 .. _pthreads: http://man7.org/linux/man-pages/man7/pthreads.7.html
 
 .. rubric:: Footnotes
+.. [#] https://github.com/nikhilm/libuv/compare/condvar
+.. [#] https://github.com/bnoordhuis/libuv/compare/uv_cond
 .. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
 .. _node.js is cancer: https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
