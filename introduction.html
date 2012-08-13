@@ -68,8 +68,8 @@
         
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>This &#8216;book&#8217; is a small set of tutorials about using <a class="reference internal" href="glossary.html#term-libuv"><em class="xref std std-term">libuv</em></a> as
-a high performance evented I/O library which offers the same API on Windows and Unix and TODO</p>
+<p>This &#8216;book&#8217; is a small set of tutorials about using <a class="reference external" href="https://github.com/joyent/libuv">libuv</a> as
+a high performance evented I/O library which offers the same API on Windows and Unix.</p>
 <p>It is meant to cover the main areas of libuv, but is not a comprehensive
 reference discussing every function and data structure.</p>
 <div class="section" id="who-this-book-is-for">
@@ -89,15 +89,14 @@ specific to v8/node.js.</li>
 </div>
 <div class="section" id="background">
 <h2>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="glossary.html#term-node-js"><em class="xref std std-term">node.js</em></a> project began in 2009 as a JavaScript environment decoupled
-from the browser. Using Google&#8217;s V8 and Marc Lehmann&#8217;s libev (TODO: links),
-node.js combined a model of I/O &#8211; evented &#8211; with a language that was well
-suited to the style of programming; due to the way it had been shaped by
-browsers. As node.js grew in popularity, it was important to make it work on
-Windows, but libev ran only on Unix. The Windows equivalent of kernel event
-notification mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction
-around libev or IOCP depending on the platform, providing users an API based on
-libev.</p>
+<p>The <a class="reference external" href="http://www.nodejs.org">node.js</a> project began in 2009 as a JavaScript environment decoupled
+from the browser. Using Google&#8217;s <a class="reference external" href="http://code.google.com/p/v8/">V8</a> and Marc Lehmann&#8217;s <a class="reference external" href="http://software.schmorp.de/pkg/libev.html">libev</a>, node.js
+combined a model of I/O &#8211; evented &#8211; with a language that was well suited to
+the style of programming; due to the way it had been shaped by browsers. As
+node.js grew in popularity, it was important to make it work on Windows, but
+libev ran only on Unix. The Windows equivalent of kernel event notification
+mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction around libev
+or IOCP depending on the platform, providing users an API based on libev.</p>
 </div>
 <div class="section" id="code">
 <h2>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h2>

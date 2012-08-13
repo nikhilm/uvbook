@@ -1,25 +1,19 @@
 Basics of libuv
 ===============
 
-libuv offers core utilities like timers, non-blocking networking support,
-asynchronous file system access, child processes and more in an **always
-asynchronous** manner. It uses a driven process to function in a single thread.
-
-TODO clear up about async and threads
-
-Async
------
+libuv enforces an **asynchronous**, **event-driven** style of programming.  Its
+core job is to provide an event loop and callback based notifications of I/O
+and other activities.  libuv offers core utilities like timers, non-blocking
+networking support, asynchronous file system access, child processes and more.
 
 Event loops
 -----------
 
-libuv is based on an *event-driven* model of programming. The idea is to
-express interest in certain events and respond to them when they occur. The
-responsibility of gathering events from the operating system or monitoring
-other sources of events is handled by libuv, and the user can register
-callbacks to be invoked when an event occurs. An event-loop is a loop that
-keeps running *forever*, watching out for events and notifying the user via
-callbacks. In pseudocode:
+In event-driven programming, an application express interest in certain events
+and respond to them when they occur. The responsibility of gathering events
+from the operating system or monitoring other sources of events is handled by
+libuv, and the user can register callbacks to be invoked when an event occurs.
+The event-loop usually keeps running *forever*. In pseudocode:
 
 .. code-block:: python
 
@@ -34,11 +28,43 @@ Some examples of events are:
 * A socket has data ready to be read
 * A timer has timed out
 
-This event loop is encapsulated by ``uv_run()`` the end-all function when using
-libuv. A standard program using libuv
+This event loop is encapsulated by ``uv_run()`` -- the end-all function when using
+libuv.
 
-Basics of the evented I/O model
-Event loop lifecycle
+The most common activity of systems programs is to deal with input and output,
+rather than a lot of number-crunching. The problem with using conventional
+input/output functions (``read``, ``fprintf``, etc.) is that they are
+**blocking**. The actual write to a hard disk or reading from a network, takes
+a disproportionately long time compared to the speed of the processor. The
+functions don't return until the task is done, so that your program is doing
+nothing. For programs which require high performance this is a major roadblock
+as other activities and other I/O operations are kept waiting.
+
+One of the standard solutions is to use threads. Each blocking I/O operation is
+started in a separate thread (or in a thread pool). When the blocking function
+gets invoked in the thread, the processor can schedule another thread to run,
+which actually needs the CPU.
+
+The approach followed by libuv uses another style, which is the **asynchronous,
+non-blocking** style. Most modern operating systems provide event notification
+subsystems. For example, a normal ``read`` call on a socket would block until
+the sender actually sent something. Instead, the application can request the
+operating system to watch the socket and put an event notification in the
+queue. The application can inspect the events at its convenience (perhaps doing
+some number crunching before to use the processor to the maximum) and grab the
+data. It is **asynchronous** because the application expressed interest at one
+point, then used the data at another point (in time and space). It is
+**non-blocking** because the application process was free to do other tasks.
+This fits in well with libuv's event-loop approach, since the operating system
+events can be treated as just another libuv event. The non-blocking ensures
+that other events can continue to be handled as fast they come in [#]_.
+
+.. NOTE::
+
+    How the I/O is run in the background is not of our concern, but due to the
+    way our computer hardware works, with the thread as the basic unit of the
+    processor, libuv and OSes will usually run background/worker threads and/or
+    polling to perform tasks in a non-blocking manner.
 
 Hello World
 -----------
@@ -65,9 +91,6 @@ loop.
 
     node.js uses the default loop as its main loop. If you are writing bindings
     you should be aware of this.
-
-TODO does ev limitation of ev_child only on default loop extend to libuv? Check
-this
 
 Watchers
 --------
@@ -126,13 +149,11 @@ exits since no event watchers are active.
 Reference counting
 ------------------
 
-TODO move section to some other chapter?
-
-The event loop only runs (i.e. ``uv_run()`` blocks) as long as their are active
+The event loop only runs (i.e. ``uv_run()`` blocks) as long as there are active
 watchers. This system works by having every watcher increase the reference
 count of the event loop when it is started and decreasing the reference count
 when stopped. It is also possible to manually change the reference count of
-:term:`handles <handle>` using::
+handles [#]_ using::
 
     void uv_ref(uv_handle_t*);
     void uv_unref(uv_handle_t*);
@@ -145,3 +166,6 @@ Semantics of event loops
 void \*data pattern
 
 note about not necessarily creating type structs on the stack
+
+.. [#] Depending on the capacity of the hardware of course.
+.. [#] Synonymous with watchers

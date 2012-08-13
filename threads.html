@@ -351,7 +351,8 @@ calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt
 or more calls, and libuv hasn&#8217;t had a chance to run the callback yet, it
 <em>may</em> invoke your callback <em>only once</em> for the multiple invocations of
 <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Your callback will never be called twice for just one
-event.</p>
+event. This means that only the <em>latest</em> value stored in the watcher&#8217;s
+<tt class="docutils literal"><span class="pre">data</span></tt> field will be visible to the callback.</p>
 </div>
 <p class="rubric">progress/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -438,8 +439,6 @@ it uses <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>
 then interacts with v8 to invoke the JavaScript callback.</p>
 </li>
 </ol>
-<p>TODO: can modifying data lead to a callback not receiving a value if the
-scheduling is not in its favour?</p>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
