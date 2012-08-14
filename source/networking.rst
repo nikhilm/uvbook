@@ -190,6 +190,11 @@ call ``uv_freeaddrinfo`` in the callback.
     :lines: 41-59
     :emphasize-lines: 8,16
 
+Network interfaces
+------------------
+
+TODO
+
 .. _c-ares: http://c-ares.haxx.se
 .. _getaddrinfo: http://www.kernel.org/doc/man-pages/online/pages/man3/getaddrinfo.3.html
 
