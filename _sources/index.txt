@@ -17,7 +17,6 @@ Table of Contents
    processes
    multiple
    utilities
-   patterns
    about
 
 

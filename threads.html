@@ -292,7 +292,7 @@ you are changing things while both threads may be running.</p>
 <p>The thread function will be launched in a separate thread, passed the
 <tt class="docutils literal"><span class="pre">uv_work_t</span></tt> structure and once the function returns, the <em>after</em> function
 will be called, again with the same structure.</p>
-<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="patterns.html"><em>pattern</em></a>
+<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="utilities.html#baton"><em>pattern</em></a>
 is to use a baton to exchange data.</p>
 </div>
 <div class="section" id="inter-thread-communication">
@@ -350,8 +350,7 @@ calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt
 or more calls, and libuv hasn&#8217;t had a chance to run the callback yet, it
 <em>may</em> invoke your callback <em>only once</em> for the multiple invocations of
 <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Your callback will never be called twice for just one
-event. This means that only the <em>latest</em> value stored in the watcher&#8217;s
-<tt class="docutils literal"><span class="pre">data</span></tt> field will be visible to the callback.</p>
+event.</p>
 </div>
 <p class="rubric">progress/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -408,6 +407,15 @@ non-blocking and will return immediately.</p>
 </span><span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
+<p>After this example, which showed the abuse of the <tt class="docutils literal"><span class="pre">data</span></tt> field, <a class="reference external" href="https://github.com/bnoordhuis">bnoordhuis</a>
+pointed out that using the <tt class="docutils literal"><span class="pre">data</span></tt> field is not thread safe, and
+<tt class="docutils literal"><span class="pre">uv_async_send()</span></tt> is actually only meant to wake up another thread. Use
+a mutex or rwlock to ensure accesses are performed in the right order.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">mutexes and rwlocks <strong>DO NOT</strong> work inside a signal handler, whereas
+<tt class="docutils literal"><span class="pre">uv_async_send</span></tt> does.</p>
+</div>
 <p>One use case where uv_async_send is required is when interoperating with
 libraries that require thread affinity for their functionality. For example in
 node.js, a v8 engine instance, contexts and its objects are bound to the thread

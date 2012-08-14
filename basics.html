@@ -116,7 +116,7 @@ point, then used the data at another point (in time and space). It is
 <strong>non-blocking</strong> because the application process was free to do other tasks.
 This fits in well with libuv&#8217;s event-loop approach, since the operating system
 events can be treated as just another libuv event. The non-blocking ensures
-that other events can continue to be handled as fast they come in <a class="footnote-reference" href="#id3" id="id1">[1]</a>.</p>
+that other events can continue to be handled as fast they come in <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">How the I/O is run in the background is not of our concern, but due to the
@@ -256,36 +256,15 @@ exits since no event watchers are active.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="reference-counting">
-<h2>Reference counting<a class="headerlink" href="#reference-counting" title="Permalink to this headline">¶</a></h2>
-<p>The event loop only runs (i.e. <tt class="docutils literal"><span class="pre">uv_run()</span></tt> blocks) as long as there are active
-watchers. This system works by having every watcher increase the reference
-count of the event loop when it is started and decreasing the reference count
-when stopped. It is also possible to manually change the reference count of
-handles <a class="footnote-reference" href="#id4" id="id2">[2]</a> using:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">uv_ref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
-<span class="kt">void</span> <span class="n">uv_unref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>This is mostly used when a loop shouldn&#8217;t wait around for certain watchers,
-even if they are active. See <a class="reference internal" href="patterns.html"><em>Patterns</em></a> for an example.</p>
-<p>Semantics of event loops</p>
 <p>void *data pattern</p>
 <p>note about not necessarily creating type structs on the stack</p>
-<table class="docutils footnote" frame="void" id="id3" rules="none">
+<table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Depending on the capacity of the hardware of course.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Synonymous with watchers</td></tr>
-</tbody>
-</table>
+</div>
 </div>
 </div>
 

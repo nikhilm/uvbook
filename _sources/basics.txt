@@ -146,26 +146,8 @@ exits since no event watchers are active.
 .. literalinclude:: ../code/idle-basic/main.c
     :emphasize-lines: 6,10,14-17
 
-Reference counting
-------------------
-
-The event loop only runs (i.e. ``uv_run()`` blocks) as long as there are active
-watchers. This system works by having every watcher increase the reference
-count of the event loop when it is started and decreasing the reference count
-when stopped. It is also possible to manually change the reference count of
-handles [#]_ using::
-
-    void uv_ref(uv_handle_t*);
-    void uv_unref(uv_handle_t*);
-
-This is mostly used when a loop shouldn't wait around for certain watchers,
-even if they are active. See :doc:`patterns` for an example.
-
-Semantics of event loops
-
 void \*data pattern
 
 note about not necessarily creating type structs on the stack
 
 .. [#] Depending on the capacity of the hardware of course.
-.. [#] Synonymous with watchers
