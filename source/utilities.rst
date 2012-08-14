@@ -78,16 +78,67 @@ We initialize the garbage collector timer, then immediately ``unref`` it.
 Observe how after 9 seconds, when the fake job is done, the program
 automatically exits, even though the garbage collector is still running.
 
-Async baton
------------
+.. _baton:
 
-The general pattern involves passing around
-a baton structure [#]_ to get data to and fro between your application and the
-blocking function call::
+Passing data to worker thread
+-----------------------------
 
-    TODO above
+When using ``uv_queue_work`` you'll usually need to pass complex data through
+to the worker thread. The solution is to use a ``struct`` and set
+``uv_work_t.data`` to point to it. A slight variation is to have the
+``uv_work_t`` itself as the first member of this struct (called a baton [#]_).
+This allows cleaning up the work request and all the data in one free call.
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 2
+
+    struct ftp_baton {
+        uv_work_t req;
+        char *host;
+        int port;
+        char *username;
+        char *password;
+    }
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 2
+
+    ftp_baton *baton = (ftp_baton*) malloc(sizeof(ftp_baton));
+    baton->req.data = (void*) baton;
+    baton->host = strdup("my.webhost.com");
+    baton->port = 21;
+    // ...
+
+    uv_queue_work(loop, &baton->req, ftp_session, ftp_cleanup);
+
+Here we create the baton and queue the task.
+
+Now the task function can extract the data it needs:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 2, 12
+
+    void ftp_session(uv_work_t *req) {
+        ftp_baton *baton = (ftp_baton*) req->data;
+
+        fprintf(stderr, "Connecting to %s\n", baton->host);
+    }
+
+    void ftp_cleanup(uv_work_t *req) {
+        ftp_baton *baton = (ftp_baton*) req->data;
+
+        free(baton->host);
+        // ...
+        free(baton);
+    }
+
+We then free the baton which also frees the watcher.
 
 .. [#] I was first introduced to the term baton in this context, in Konstantin
-       Käfer's excellent slide set. http://kkaefer.github.com/node-cpp-modules/#baton
+       Käfer's excellent slides on writing node.js bindings --
+       http://kkaefer.github.com/node-cpp-modules/#baton
 
 .. _libev man page: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#COMMON_OR_USEFUL_IDIOMS_OR_BOTH

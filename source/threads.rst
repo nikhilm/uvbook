@@ -167,7 +167,7 @@ The thread function will be launched in a separate thread, passed the
 ``uv_work_t`` structure and once the function returns, the *after* function
 will be called, again with the same structure.
 
-For writing wrappers to blocking libraries, a common :doc:`pattern <utilities>`
+For writing wrappers to blocking libraries, a common :ref:`pattern <baton>`
 is to use a baton to exchange data.
 
 .. _inter-thread-communication:
