@@ -124,7 +124,130 @@ old <tt class="docutils literal"><span class="pre">repeat</span></tt> value. If 
 </div>
 <div class="section" id="loading-libraries">
 <h2>Loading libraries<a class="headerlink" href="#loading-libraries" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
+<p>libuv provides a cross platform API to dynamically load <a class="reference external" href="http://en.wikipedia.org/wiki/Shared_library#Shared_libraries">shared libraries</a>.
+This can be used to implement your own plugin/extension/module system and is
+used by node.js to implement <tt class="docutils literal"><span class="pre">require()</span></tt> support for bindings. The usage is
+quite simple as long as your library exports the right symbols. Be careful with
+sanity and security checks when loading third party code, otherwise your
+program will behave unpredicatably. This example implements a very simple
+plugin system which does nothing except print the name of the plugin.</p>
+<p>Let us first look at the interface provided to plugin authors.</p>
+<p class="rubric">plugin/plugin.h</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#ifndef UVBOOK_PLUGIN_SYSTEM</span>
+<span class="cp">#define UVBOOK_PLUGIN_SYSTEM</span>
+
+<span class="kt">void</span> <span class="n">mfp_register</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+
+<span class="cp">#endif</span>
+</pre></div>
+</td></tr></table></div>
+<p class="rubric">plugin/plugin.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="kt">void</span> <span class="nf">mfp_register</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Registered plugin </span><span class="se">\&quot;</span><span class="s">%s</span><span class="se">\&quot;\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>You can similarly add more functions that plugin authors can use to do useful
+things in your application <a class="footnote-reference" href="#id3" id="id1">[1]</a>. A sample plugin using this API is:</p>
+<p class="rubric">plugin/hello.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &quot;plugin.h&quot;</span>
+
+<span class="kt">void</span> <span class="nf">initialize</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">mfp_register</span><span class="p">(</span><span class="s">&quot;Hello World!&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Our interface defines that all plugins should have an <tt class="docutils literal"><span class="pre">initialize</span></tt> function
+which will be called by the application. This plugin is compiled as a shared
+library and can be loaded by running our application:</p>
+<div class="highlight-c"><pre>$ ./plugin libhello.dylib
+Loading libhello.dylib
+Registered plugin "Hello World!"</pre>
+</div>
+<p>This is done by using <tt class="docutils literal"><span class="pre">uv_dlopen</span></tt> to first load the shared library
+<tt class="docutils literal"><span class="pre">libhello.dylib</span></tt>. Then we get access to the <tt class="docutils literal"><span class="pre">initialize</span></tt> function using
+<tt class="docutils literal"><span class="pre">uv_dlsym</span></tt> and invoke it.</p>
+<p class="rubric">plugin/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &quot;plugin.h&quot;</span>
+
+<span class="k">typedef</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">init_plugin_function</span><span class="p">)();</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Usage: %s [plugin1] [plugin2] ...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">uv_lib_t</span> <span class="o">*</span><span class="n">lib</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_lib_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_lib_t</span><span class="p">));</span>
+    <span class="k">while</span> <span class="p">(</span><span class="o">--</span><span class="n">argc</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Loading %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">]);</span>
+<span class="hll">        <span class="k">if</span> <span class="p">(</span><span class="n">uv_dlopen</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">lib</span><span class="p">))</span> <span class="p">{</span>
+</span>            <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_dlerror</span><span class="p">(</span><span class="n">lib</span><span class="p">));</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">init_plugin_function</span> <span class="n">init_plugin</span><span class="p">;</span>
+<span class="hll">        <span class="k">if</span> <span class="p">(</span><span class="n">uv_dlsym</span><span class="p">(</span><span class="n">lib</span><span class="p">,</span> <span class="s">&quot;initialize&quot;</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">init_plugin</span><span class="p">))</span> <span class="p">{</span>
+</span>            <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;dlsym error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_dlerror</span><span class="p">(</span><span class="n">lib</span><span class="p">));</span>
+            <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+<span class="hll">        <span class="n">init_plugin</span><span class="p">();</span>
+</span>    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p><tt class="docutils literal"><span class="pre">uv_dlopen</span></tt> expects a path to the shared library and sets the opaque
+<tt class="docutils literal"><span class="pre">uv_lib_t</span></tt> pointer. It returns 0 on success, -1 on error. Use <tt class="docutils literal"><span class="pre">uv_dlerror</span></tt>
+to get the error message.</p>
+<p><tt class="docutils literal"><span class="pre">uv_dlsym</span></tt> stores a pointer to the symbol in the second argument in the third
+argument. <tt class="docutils literal"><span class="pre">init_plugin_function</span></tt> is a function pointer to the sort of
+function we are looking for in the application&#8217;s plugins.</p>
 </div>
 <div class="section" id="idle-watcher-pattern">
 <h2>Idle watcher pattern<a class="headerlink" href="#idle-watcher-pattern" title="Permalink to this headline">¶</a></h2>
@@ -262,7 +385,7 @@ automatically exits, even though the garbage collector is still running.</p>
 <p>When using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt> you&#8217;ll usually need to pass complex data through
 to the worker thread. The solution is to use a <tt class="docutils literal"><span class="pre">struct</span></tt> and set
 <tt class="docutils literal"><span class="pre">uv_work_t.data</span></tt> to point to it. A slight variation is to have the
-<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> itself as the first member of this struct (called a baton <a class="footnote-reference" href="#id2" id="id1">[1]</a>).
+<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> itself as the first member of this struct (called a baton <a class="footnote-reference" href="#id4" id="id2">[2]</a>).
 This allows cleaning up the work request and all the data in one free call.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -324,10 +447,16 @@ This allows cleaning up the work request and all the data in one free call.</p>
 </pre></div>
 </td></tr></table></div>
 <p>We then free the baton which also frees the watcher.</p>
-<table class="docutils footnote" frame="void" id="id2" rules="none">
+<table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>I was first introduced to the term baton in this context, in Konstantin
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>mfp is My Fancy Plugin</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>I was first introduced to the term baton in this context, in Konstantin
 Käfer&#8217;s excellent slides on writing node.js bindings &#8211;
 <a class="reference external" href="http://kkaefer.github.com/node-cpp-modules/#baton">http://kkaefer.github.com/node-cpp-modules/#baton</a></td></tr>
 </tbody>
