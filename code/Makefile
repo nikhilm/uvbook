@@ -43,5 +43,6 @@ libuv:
 clean:
 	for dir in $(examples); do cd $$dir; rm -f $$dir; cd ..; done
 	rm -rf plugin/*.o plugin/libhello.*
+	rm -rf plugin/plugin
 
 .PHONY: clean
