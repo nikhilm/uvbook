@@ -204,8 +204,7 @@ with the async watcher whenever it receives a message.
     or more calls, and libuv hasn't had a chance to run the callback yet, it
     *may* invoke your callback *only once* for the multiple invocations of
     ``uv_async_send``. Your callback will never be called twice for just one
-    event. This means that only the *latest* value stored in the watcher's
-    ``data`` field will be visible to the callback.
+    event.
 
 .. rubric:: progress/main.c
 .. literalinclude:: ../code/progress/main.c
@@ -231,6 +230,16 @@ Finally it is important to remember to clean up the watcher.
     :linenos:
     :lines: 25-28
     :emphasize-lines: 3
+
+After this example, which showed the abuse of the ``data`` field, bnoordhuis_
+pointed out that using the ``data`` field is not thread safe, and
+``uv_async_send()`` is actually only meant to wake up another thread. Use
+a mutex or rwlock to ensure accesses are performed in the right order.
+
+.. warning::
+
+    mutexes and rwlocks **DO NOT** work inside a signal handler, whereas
+    ``uv_async_send`` does.
 
 One use case where uv_async_send is required is when interoperating with
 libraries that require thread affinity for their functionality. For example in
@@ -268,3 +277,4 @@ which binds a third party library. It may go something like this:
 .. [#] https://github.com/bnoordhuis/libuv/compare/uv_cond
 .. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
 .. _node.js is cancer: https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
+.. _bnoordhuis: https://github.com/bnoordhuis
