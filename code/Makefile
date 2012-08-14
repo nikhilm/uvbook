@@ -20,18 +20,22 @@ uname_S=$(shell uname -s)
 
 ifeq (Darwin, $(uname_S))
 CFLAGS+=-framework CoreServices
+SHARED_LIB_FLAGS=-bundle -undefined dynamic_lookup -o plugin/libhello.dylib
 endif
 
 ifeq (Linux, $(uname_S))
-CFLAGS+=-lrt
+CFLAGS+=-lrt -ldl -lm -lev -pthread
+SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
+PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
+
 all: libuv plugin-example
-	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c; cd ..; done
+	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
 
 plugin-example: plugin/hello.c
-	gcc $(CFLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c
+	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/uv.a
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
-	gcc -bundle -undefined dynamic_lookup -o plugin/libhello.dylib plugin/hello.o
+	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
 libuv:
 	make -C ../libuv
