@@ -25,13 +25,19 @@ endif
 ifeq (Linux, $(uname_S))
 CFLAGS+=-lrt
 endif
-all: libuv
+all: libuv plugin-example
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c; cd ..; done
+
+plugin-example: plugin/hello.c
+	gcc $(CFLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c
+	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
+	gcc -bundle -undefined dynamic_lookup -o plugin/libhello.dylib plugin/hello.o
 
 libuv:
 	make -C ../libuv
 
 clean:
 	for dir in $(examples); do cd $$dir; rm -f $$dir; cd ..; done
+	rm -rf plugin/*.o plugin/libhello.dylib
 
 .PHONY: clean
