@@ -70,7 +70,58 @@ TODO
 Loading libraries
 -----------------
 
-TODO
+libuv provides a cross platform API to dynamically load `shared libraries`_.
+This can be used to implement your own plugin/extension/module system and is
+used by node.js to implement ``require()`` support for bindings. The usage is
+quite simple as long as your library exports the right symbols. Be careful with
+sanity and security checks when loading third party code, otherwise your
+program will behave unpredicatably. This example implements a very simple
+plugin system which does nothing except print the name of the plugin.
+
+Let us first look at the interface provided to plugin authors.
+
+.. rubric:: plugin/plugin.h
+.. literalinclude:: ../code/plugin/plugin.h
+    :linenos:
+
+.. rubric:: plugin/plugin.c
+.. literalinclude:: ../code/plugin/plugin.c
+    :linenos:
+
+You can similarly add more functions that plugin authors can use to do useful
+things in your application [#]_. A sample plugin using this API is:
+
+.. rubric:: plugin/hello.c
+.. literalinclude:: ../code/plugin/hello.c
+    :linenos:
+
+Our interface defines that all plugins should have an ``initialize`` function
+which will be called by the application. This plugin is compiled as a shared
+library and can be loaded by running our application::
+
+    $ ./plugin libhello.dylib
+    Loading libhello.dylib
+    Registered plugin "Hello World!"
+
+This is done by using ``uv_dlopen`` to first load the shared library
+``libhello.dylib``. Then we get access to the ``initialize`` function using
+``uv_dlsym`` and invoke it.
+
+.. rubric:: plugin/main.c
+.. literalinclude:: ../code/plugin/main.c
+    :linenos:
+    :lines: 7-
+    :emphasize-lines: 14, 20, 25
+
+``uv_dlopen`` expects a path to the shared library and sets the opaque
+``uv_lib_t`` pointer. It returns 0 on success, -1 on error. Use ``uv_dlerror``
+to get the error message.
+
+``uv_dlsym`` stores a pointer to the symbol in the second argument in the third
+argument. ``init_plugin_function`` is a function pointer to the sort of
+function we are looking for in the application's plugins.
+
+.. _shared libraries: http://en.wikipedia.org/wiki/Shared_library#Shared_libraries
 
 Idle watcher pattern
 --------------------
@@ -201,6 +252,7 @@ Now the task function can extract the data it needs:
 
 We then free the baton which also frees the watcher.
 
+.. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
        Käfer's excellent slides on writing node.js bindings --
        http://kkaefer.github.com/node-cpp-modules/#baton
