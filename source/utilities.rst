@@ -9,6 +9,54 @@ don't require entire chapters dedicated to them.
 Timers
 ------
 
+Timers invoke the callback after a certain time has elapsed since the timer was
+started. libuv timers can also be set to invoke at regular intervals instead of
+just once.
+
+Simple use is to init a watcher and start it with a ``timeout``, and optional ``repeat``.
+Timers can be stopped at any time.
+
+.. code-block:: c
+
+    uv_timer_t timer_req;
+
+    uv_timer_init(loop, &timer_req);
+    uv_timer_start(&timer_req, callback, 5000, 2000);
+
+will start a repeating timer, which first starts 5 seconds (the ``timeout``) after the execution
+of ``uv_timer_start``, then repeats every 2 seconds (the ``repeat``). Use:
+
+.. code-block:: c
+
+    uv_timer_stop(&timer_req);
+
+to stop the timer. This can be used safely from within the callback as well.
+
+The repeat interval can be modified at any time with::
+
+    uv_timer_set_repeat(uv_timer_t *timer, int64_t repeat);
+
+which will take effect **when possible**. If this function is called from
+a timer callback, it means:
+
+* If the timer was non-repeating, the timer has already been stopped. Use
+  ``uv_timer_start`` again.
+* If the timer is repeating, the next timeout has already been scheduled, so
+  the old repeat interval will be used once more before the timer switches to
+  the new interval.
+
+The utility function::
+
+    int uv_timer_again(uv_timer_t *)
+
+applies **only to repeating timers** and is equivalent to stopping the timer
+and then starting it with both initial ``timeout`` and ``repeat`` set to the
+old ``repeat`` value. If the timer hasn't been started it fails (error code
+``UV_EINVAL``) and returns -1.
+
+An actual timer example is in the :ref:`reference count section
+<reference-count>`.
+
 Check & Prepare watchers
 ------------------------
 
@@ -55,6 +103,8 @@ keep calling the idle callback again.
 .. literalinclude:: ../code/idle-compute/main.c
     :linenos:
     :lines: 10-19
+
+.. _reference-count:
 
 Event loop reference count
 --------------------------
