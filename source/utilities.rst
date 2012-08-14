@@ -6,9 +6,9 @@ The `libev man page`_ already covers some patterns which can be adopted to
 libuv through simple API changes.  It also covers parts of the libuv API that
 don't require entire chapters dedicated to them.
 
-idle watchers
 timers
 check & prepare watchers
+poll_t
 
 Idle watcher pattern
 --------------------
