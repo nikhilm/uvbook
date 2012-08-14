@@ -42,9 +42,41 @@ keep calling the idle callback again.
     :linenos:
     :lines: 10-19
 
+Event loop reference count
+--------------------------
 
-Reference count tweaking
-------------------------
+The event loop only runs as long as there are active watchers. This system
+works by having every watcher increase the reference count of the event loop
+when it is started and decreasing the reference count when stopped. It is also
+possible to manually change the reference count of handles using::
+
+    void uv_ref(uv_handle_t*);
+    void uv_unref(uv_handle_t*);
+
+These functions can be used to allow a loop to exit even when a watcher is
+active or to use custom objects to keep the loop alive.
+
+The former can be used with interval timers. You might have a garbage collector
+which runs every X seconds, or your network service might send a heartbeat to
+others periodically, but you don't want to have to stop them along all clean
+exit paths or error scenarios. Or you want the program to exit when all your
+other watchers are done. In that case just unref the timer immediately after
+creation so that if it is the only watcher running then ``uv_run`` will still
+exit.
+
+The later is used in node.js where some libuv methods are being bubbled up to
+the JS API. A ``uv_handle_t`` (the superclass of all watchers) is created per
+JS object and can be ref/unrefed.
+
+.. rubric:: ref-timer/main.c
+.. literalinclude:: ../code/ref-timer/main.c
+    :linenos:
+    :lines: 5-8, 17-
+    :emphasize-lines: 9
+
+We initialize the garbage collector timer, then immediately ``unref`` it.
+Observe how after 9 seconds, when the fake job is done, the program
+automatically exits, even though the garbage collector is still running.
 
 Async baton
 -----------

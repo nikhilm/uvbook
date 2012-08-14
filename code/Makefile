@@ -10,7 +10,8 @@ examples=\
 	tcp-echo-server\
 	dns\
 	udp-dhcp\
-	idle-compute
+	idle-compute\
+	ref-timer
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
