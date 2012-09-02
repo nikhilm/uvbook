@@ -11,7 +11,8 @@ examples=\
 	dns\
 	udp-dhcp\
 	idle-compute\
-	ref-timer
+	ref-timer\
+	spawn
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
