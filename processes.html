@@ -68,11 +68,164 @@
         
   <div class="section" id="processes">
 <h1>Processes<a class="headerlink" href="#processes" title="Permalink to this headline">¶</a></h1>
-<p>uv_spawn
-streams
+<p>libuv offers considerable child process management, abstracting the platform
+differences and allowing communication with the child process using streams or
+named pipes.</p>
+<div class="section" id="spawning-child-processes">
+<h2>Spawning child processes<a class="headerlink" href="#spawning-child-processes" title="Permalink to this headline">¶</a></h2>
+<p>The simplest case is when you simply want to launch a process and know when it
+exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_spawn</span></tt>.</p>
+<p class="rubric">spawn/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_process_t</span> <span class="n">child_req</span><span class="p">;</span>
+<span class="n">uv_process_options_t</span> <span class="n">options</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;mkdir&quot;</span><span class="p">;</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test-dir&quot;</span><span class="p">;</span>
+<span class="hll">    <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span>
+<span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="s">&quot;mkdir&quot;</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
+</span><span class="hll">
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the watcher, all options are set via
+<tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. To simply launch a process, you need to set only the
+<tt class="docutils literal"><span class="pre">file</span></tt> and <tt class="docutils literal"><span class="pre">args</span></tt> fields. <tt class="docutils literal"><span class="pre">file</span></tt> is the program to execute. Since
+<tt class="docutils literal"><span class="pre">uv_spawn</span></tt> uses <tt class="docutils literal"><span class="pre">execvp</span></tt> internally, there is no need to supply the full
+path. Finally as per underlying conventions, the arguments array <em>has</em> to be
+one larger than the number of arguments, with the last element being <tt class="docutils literal"><span class="pre">NULL</span></tt>.</p>
+<p>After the call to <tt class="docutils literal"><span class="pre">uv_spawn</span></tt>, <tt class="docutils literal"><span class="pre">uv_process_t.pid</span></tt> will contain the process
+ID of the child process.</p>
+<p>The exit callback will be invoked with the <em>exit status</em> and the type of <em>signal</em>
+which caused the exit.</p>
+<p class="rubric">spawn/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_exit</span><span class="p">(</span><span class="n">uv_process_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">exit_status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">term_signal</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Process exited with status %d, signal %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">term_signal</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+</span><span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>It is <strong>required</strong> to close the process watcher after the process exits.</p>
+</div>
+<div class="section" id="changing-the-process-parameters">
+<h2>Changing the process parameters<a class="headerlink" href="#changing-the-process-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Before the child process is launched you can control the execution environment
+using fields in <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>.</p>
+<div class="section" id="change-execution-directory">
+<h3>Change execution directory<a class="headerlink" href="#change-execution-directory" title="Permalink to this headline">¶</a></h3>
+<p>Set <tt class="docutils literal"><span class="pre">uv_process_options_t.cwd</span></tt> to the corresponding directory.</p>
+</div>
+<div class="section" id="set-environment-variables">
+<h3>Set environment variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">uv_process_options_t.env</span></tt> is an array of strings, each of the form
+<tt class="docutils literal"><span class="pre">VAR=VALUE</span></tt> used to set up the environment variables for the process. Set
+this to <tt class="docutils literal"><span class="pre">NULL</span></tt> to inherit the environment from the parent (this) process.</p>
+</div>
+<div class="section" id="option-flags">
+<h3>Option flags<a class="headerlink" href="#option-flags" title="Permalink to this headline">¶</a></h3>
+<p>Setting <tt class="docutils literal"><span class="pre">uv_process_options_t.flags</span></tt> to a bitwise OR of the following flags,
+modifies the child process behaviour:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">UV_PROCESS_SETUID</span></tt> - sets the child&#8217;s execution user ID to <tt class="docutils literal"><span class="pre">uv_process_options_t.uid</span></tt>.</li>
+<li><tt class="docutils literal"><span class="pre">UV_PROCESS_SETGID</span></tt> - sets the child&#8217;s execution group ID to <tt class="docutils literal"><span class="pre">uv_process_options_t.gid</span></tt>.</li>
+</ul>
+<p>Changing the UID/GID is only supported on Unix, <tt class="docutils literal"><span class="pre">uv_spawn</span></tt> will fail on
+Windows with <tt class="docutils literal"><span class="pre">UV_ENOTSUP</span></tt>.</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS</span></tt> - No quoting or escaping of
+<tt class="docutils literal"><span class="pre">uv_process_options_t.args</span></tt> is done on Windows. Ignored on Unix.</li>
+<li><tt class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></tt> - Starts the child process in a new session, which
+will keep running after the parent process exits. See example below.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="detaching-processes">
+<h2>Detaching processes<a class="headerlink" href="#detaching-processes" title="Permalink to this headline">¶</a></h2>
+<p>Passing the flag <tt class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></tt> can be used to launch daemons, or
+child processes which are independent of the parent so that the parent exiting
+does not affect it.</p>
+<p class="rubric">detach/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;sleep&quot;</span><span class="p">;</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;100&quot;</span><span class="p">;</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+
+    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="s">&quot;sleep&quot;</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
+<span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_PROCESS_DETACHED</span><span class="p">;</span>
+</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Launched sleep with PID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">child_req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">);</span>
+</span></pre></div>
+</td></tr></table></div>
+<p>Just remember that the watcher is still monitoring the child, so your program
+won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
+<p>Let&#8217;s create a simple online programming contest platform (called uvcoder).
+When a contestant submits C code, you want to compile it using <cite>gcc</cite>. <cite>gcc</cite>
+exits with success if the compilation succeeded.</p>
+<p>streams
 named pipes IPC
 does ev limitation of ev_child only on default loop extend to libuv? yes it
 does for now</p>
+</div>
 </div>
 
 
