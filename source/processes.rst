@@ -73,6 +73,18 @@ These are available only on Unix, ``uv_spawn`` will fail on Windows with
 Detaching processes
 -------------------
 
+Passing the flag ``UV_PROCESS_DETACHED`` can be used to launch daemons, or
+child processes which are independent of the parent so that the parent exiting
+does not affect it.
+
+.. rubric:: detach/main.c
+.. literalinclude:: ../code/detach/main.c
+    :linenos:
+    :lines: 12-27
+    :emphasize-lines: 9,16
+
+Just remember that the watcher is still monitoring the child, so your program
+won't exit. Use ``uv_unref()`` if you want to be more *fire-and-forget*.
 
 Let's create a simple online programming contest platform (called uvcoder).
 When a contestant submits C code, you want to compile it using `gcc`. `gcc`
