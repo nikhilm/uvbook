@@ -24,6 +24,9 @@ The ``uv_process_t`` struct only acts as the watcher, all options are set via
 path. Finally as per underlying conventions, the arguments array *has* to be
 one larger than the number of arguments, with the last element being ``NULL``.
 
+After the call to ``uv_spawn``, ``uv_process_t.pid`` will contain the process
+ID of the child process.
+
 The exit callback will be invoked with the *exit status* and the type of *signal*
 which caused the exit.
 
