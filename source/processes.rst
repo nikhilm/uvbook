@@ -65,8 +65,8 @@ modifies the child process behaviour:
 * ``UV_PROCESS_SETUID`` - sets the child's execution user ID to ``uv_process_options_t.uid``.
 * ``UV_PROCESS_SETGID`` - sets the child's execution group ID to ``uv_process_options_t.gid``.
 
-These are available only on Unix, ``uv_spawn`` will fail on Windows with
-``UV_ENOTSUP``.
+Changing the UID/GID is only supported on Unix, ``uv_spawn`` will fail on
+Windows with ``UV_ENOTSUP``.
 
 * ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS`` - No quoting or escaping of
   ``uv_process_options_t.args`` is done on Windows. Ignored on Unix.
