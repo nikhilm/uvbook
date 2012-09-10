@@ -13,7 +13,9 @@ examples=\
 	idle-compute\
 	ref-timer\
 	spawn\
-	detach
+	detach\
+	proc-streams\
+	cgi
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
@@ -31,13 +33,19 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: libuv plugin-example
+all: libuv plugin-example proc-streams-example tick
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
 
 plugin-example: plugin/hello.c
 	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/uv.a
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
 	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
+
+proc-streams-example: proc-streams/test.c
+	gcc -g -Wall -o proc-streams/test proc-streams/test.c
+
+tick: cgi/tick.c
+	gcc -g -Wall -o cgi/tick cgi/tick.c
 
 libuv:
 	make -C ../libuv
