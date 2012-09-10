@@ -218,13 +218,225 @@ does not affect it.</p>
 </td></tr></table></div>
 <p>Just remember that the watcher is still monitoring the child, so your program
 won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
-<p>Let&#8217;s create a simple online programming contest platform (called uvcoder).
-When a contestant submits C code, you want to compile it using <cite>gcc</cite>. <cite>gcc</cite>
-exits with success if the compilation succeeded.</p>
-<p>streams
-named pipes IPC
-does ev limitation of ev_child only on default loop extend to libuv? yes it
+</div>
+<div class="section" id="signals-and-termination">
+<h2>Signals and termination<a class="headerlink" href="#signals-and-termination" title="Permalink to this headline">¶</a></h2>
+<p>libuv wraps the standard <tt class="docutils literal"><span class="pre">kill(2)</span></tt> system call on Unix and implements one
+with similar semantics on Windows, with <em>one caveat</em>. <tt class="docutils literal"><span class="pre">uv_kill</span></tt> on Windows
+only supports <tt class="docutils literal"><span class="pre">SIGTERM</span></tt>, <tt class="docutils literal"><span class="pre">SIGINT</span></tt> and <tt class="docutils literal"><span class="pre">SIGKILL</span></tt>, all of which lead to
+termination of the process. The signature of <tt class="docutils literal"><span class="pre">uv_kill</span></tt> is:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_err_t</span> <span class="n">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For processes started using libuv, you may use <tt class="docutils literal"><span class="pre">uv_process_kill</span></tt> instead,
+which accepts the <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> watcher as the first argument, rather than
+the pid. In this case, <strong>remember to call</strong> <tt class="docutils literal"><span class="pre">uv_close</span></tt> on the watcher.</p>
+</div>
+<div class="section" id="process-i-o">
+<h2>Process I/O<a class="headerlink" href="#process-i-o" title="Permalink to this headline">¶</a></h2>
+<p>libuv allows child processes to share the input/output streams or file
+descriptors of the parent. It also supports named pipes as an IPC mechanism
+amongst the processes. In addition, libuv allows pipes to be written across an
+IPC border TODO</p>
+<div class="section" id="inherited-i-o">
+<h3>Inherited I/O<a class="headerlink" href="#inherited-i-o" title="Permalink to this headline">¶</a></h3>
+<p>A normal, newly spawned process has its own set of file descriptors, with 0,
+1 and 2 being <tt class="docutils literal"><span class="pre">stdin</span></tt>, <tt class="docutils literal"><span class="pre">stdout</span></tt> and <tt class="docutils literal"><span class="pre">stderr</span></tt> respectively. Sometimes you
+may want to share file descriptors with the child. For example, perhaps your
+applications launches a sub-command and you want any errors to go in the log
+file, but ignore <tt class="docutils literal"><span class="pre">stdout</span></tt>. For this you&#8217;d like to have <tt class="docutils literal"><span class="pre">stderr</span></tt> of the
+child to be displayed. In this case, libuv supports <em>inheriting</em> file
+descriptors. In this sample, we invoke the test program, which is:</p>
+<p class="rubric">proc-streams/test.c</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;This is stderr</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;This is stdout</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The actual program <tt class="docutils literal"><span class="pre">proc-streams</span></tt> runs this while inheriting only <tt class="docutils literal"><span class="pre">stderr</span></tt>.
+The file descriptors of the child process are set using the <tt class="docutils literal"><span class="pre">stdio</span></tt> field in
+<tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
+file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
+<tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
+  <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
+
+  <span class="k">union</span> <span class="p">{</span>
+    <span class="n">uv_stream_t</span><span class="o">*</span> <span class="n">stream</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
+  <span class="p">}</span> <span class="n">data</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">uv_stdio_container_t</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
+used. If the first three <tt class="docutils literal"><span class="pre">stdio</span></tt> fields are marked as <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> they&#8217;ll
+redirect to <tt class="docutils literal"><span class="pre">/dev/null</span></tt>.</p>
+<p>Since we want to pass on an existing descriptor, we&#8217;ll use <tt class="docutils literal"><span class="pre">UV_INHERIT_FD</span></tt>.
+Then we set the <tt class="docutils literal"><span class="pre">fd</span></tt> to <tt class="docutils literal"><span class="pre">stderr</span></tt>.</p>
+<p class="rubric">proc-streams/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="cm">/* ... */</span>
+
+<span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">stdio_count</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span>    <span class="n">uv_stdio_container_t</span> <span class="n">child_stdio</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_IGNORE</span><span class="p">;</span>
+    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_IGNORE</span><span class="p">;</span>
+<span class="hll">    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_INHERIT_FD</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">data</span><span class="p">.</span><span class="n">fd</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">stdio</span> <span class="o">=</span> <span class="n">child_stdio</span><span class="p">;</span>
+</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
+
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>If you run <tt class="docutils literal"><span class="pre">proc-stream</span></tt> you&#8217;ll see that only the line &#8220;This is stderr&#8221; will
+be displayed. Try marking <tt class="docutils literal"><span class="pre">stdout</span></tt> as being inherited and see the output.</p>
+<p>It is dead simple to apply this redirection to streams.  By setting <tt class="docutils literal"><span class="pre">flags</span></tt>
+to <tt class="docutils literal"><span class="pre">UV_INHERIT_STREAM</span></tt> and setting <tt class="docutils literal"><span class="pre">data.stream</span></tt> to the stream in the
+parent process, the child process can treat that stream as standard I/O. This
+can be used to implement something like <a class="reference external" href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">CGI</a>.</p>
+<p>A sample CGI script/executable is:</p>
+<p class="rubric">cgi/tick.c</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;unistd.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;tick</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+        <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The CGI server combines the concepts from this chapter and <a class="reference internal" href="networking.html"><em>Networking</em></a> so
+that every client is sent ten ticks after which that connection is closed.</p>
+<p class="rubric">cgi/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_tcp_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_tcp_t</span><span class="p">));</span>
+    <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">        <span class="n">invoke_cgi_script</span><span class="p">(</span><span class="n">client</span><span class="p">);</span>
+</span>    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+        <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Here we simply accept the TCP connection and pass on the socket (<em>stream</em>) to
+<tt class="docutils literal"><span class="pre">invoke_cgi_script</span></tt>.</p>
+<p class="rubric">cgi/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">invoke_cgi_script</span><span class="p">(</span><span class="n">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="cm">/* ... finding the executable path and setting up arguments ... */</span>
+
+    <span class="n">options</span><span class="p">.</span><span class="n">stdio_count</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">uv_stdio_container_t</span> <span class="n">child_stdio</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_IGNORE</span><span class="p">;</span>
+<span class="hll">    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_INHERIT_STREAM</span><span class="p">;</span>
+</span><span class="hll">    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="n">data</span><span class="p">.</span><span class="n">stream</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">;</span>
+</span>    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_IGNORE</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">stdio</span> <span class="o">=</span> <span class="n">child_stdio</span><span class="p">;</span>
+
+    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
+
+<span class="hll">    <span class="n">child_req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The <tt class="docutils literal"><span class="pre">stdout</span></tt> of the CGI script is set to the socket so that whatever our tick
+script prints gets sent to the client. By using processes, we can offload the
+read/write buffering to the operating system, so in terms of convenience this
+is great. Just be warned that creating processes is a costly task.</p>
+</div>
+<div class="section" id="pipes">
+<h3>Pipes<a class="headerlink" href="#pipes" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="uv-write2-todo-chapter-name">
+<h3>uv_write2 TODO chapter name<a class="headerlink" href="#uv-write2-todo-chapter-name" title="Permalink to this headline">¶</a></h3>
+<p>does ev limitation of ev_child only on default loop extend to libuv? yes it
 does for now</p>
+</div>
 </div>
 </div>
 
