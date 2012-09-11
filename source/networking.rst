@@ -165,7 +165,7 @@ Querying DNS
 ------------
 
 libuv provides asynchronous DNS resolution. For this it provides its own
-``getaddrinfo`` replacement, backed by `c-ares`_. In the callback you can
+``getaddrinfo`` replacement [#]_. In the callback you can
 perform normal socket operations on the retrieved addresses. Let's connect to
 Freenode to see an example of DNS resolution.
 
@@ -205,3 +205,5 @@ TODO
 .. [#] http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast
 .. [#] on Windows only supported on Windows Vista and later.
 .. [#] http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1
+.. [#] libuv v0.8.0 and earlier use c-ares_. Newer versions use the system
+    ``getaddrinfo`` in the libuv threadpool.
