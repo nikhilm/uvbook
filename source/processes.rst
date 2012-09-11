@@ -177,6 +177,8 @@ script prints gets sent to the client. By using processes, we can offload the
 read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.
 
+.. _pipes:
+
 Pipes
 -----
 

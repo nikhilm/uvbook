@@ -164,10 +164,11 @@ a collection of a pointer to bytes (``uv_buf_t.base``) and the length
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.
 
-To demonstrate streams using pipes, here is a simple tee utility using libuv.
-Doing all operations asynchronously shows the power of evented I/O. The two
-writes won't block each other, but we've to be careful to copy over the buffer
-data to ensure we don't free a buffer until it has been written.
+To demonstrate streams we will need to use ``uv_pipe_t``. This allows streaming
+local files [#]_. Here is a simple tee utility using libuv.  Doing all operations
+asynchronously shows the power of evented I/O. The two writes won't block each
+other, but we've to be careful to copy over the buffer data to ensure we don't
+free a buffer until it has been written.
 
 The program is to be executed as::
 
@@ -283,3 +284,4 @@ In our example we simply print the arguments and run the command using
 .. rubric:: Footnotes
 .. [#fsnotify] inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
     Windows, event ports on Solaris, unsupported on Cygwin
+.. [#] see :ref:`pipes`
