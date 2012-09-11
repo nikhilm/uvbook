@@ -142,7 +142,7 @@ Buffers and Streams
 -------------------
 
 The basic I/O tool in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
-sockets, named pipes for file I/O and IPC are all treated as stream subclasses.
+sockets, and pipes for file I/O and IPC are all treated as stream subclasses.
 
 Streams are initialized using custom functions for each subclass, then operated
 upon using
