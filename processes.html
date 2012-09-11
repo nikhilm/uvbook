@@ -232,14 +232,8 @@ termination of the process. The signature of <tt class="docutils literal"><span 
 which accepts the <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> watcher as the first argument, rather than
 the pid. In this case, <strong>remember to call</strong> <tt class="docutils literal"><span class="pre">uv_close</span></tt> on the watcher.</p>
 </div>
-<div class="section" id="process-i-o">
-<h2>Process I/O<a class="headerlink" href="#process-i-o" title="Permalink to this headline">¶</a></h2>
-<p>libuv allows child processes to share the input/output streams or file
-descriptors of the parent. It also supports named pipes as an IPC mechanism
-amongst the processes. In addition, libuv allows pipes to be written across an
-IPC border TODO</p>
-<div class="section" id="inherited-i-o">
-<h3>Inherited I/O<a class="headerlink" href="#inherited-i-o" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="child-process-i-o">
+<h2>Child Process I/O<a class="headerlink" href="#child-process-i-o" title="Permalink to this headline">¶</a></h2>
 <p>A normal, newly spawned process has its own set of file descriptors, with 0,
 1 and 2 being <tt class="docutils literal"><span class="pre">stdin</span></tt>, <tt class="docutils literal"><span class="pre">stdout</span></tt> and <tt class="docutils literal"><span class="pre">stderr</span></tt> respectively. Sometimes you
 may want to share file descriptors with the child. For example, perhaps your
@@ -430,10 +424,31 @@ read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.</p>
 </div>
 <div class="section" id="pipes">
-<h3>Pipes<a class="headerlink" href="#pipes" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h2>Pipes<a class="headerlink" href="#pipes" title="Permalink to this headline">¶</a></h2>
+<p>libuv&#8217;s <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> structure is slightly confusing to Unix programmers,
+because it immediately conjures up <tt class="docutils literal"><span class="pre">|</span></tt> and <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/pipe.7.html">pipe(7)</a>. But <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> is
+not related to anonymous pipes, rather it has two uses:</p>
+<ol class="arabic simple">
+<li>Stream API - It acts as the concrete implementation of the <tt class="docutils literal"><span class="pre">uv_stream_t</span></tt>
+API for providing a FIFO, streaming interface to local file I/O. This is
+performed using <tt class="docutils literal"><span class="pre">uv_pipe_open</span></tt> as covered in <a class="reference internal" href="filesystem.html#buffers-and-streams"><em>Buffers and Streams</em></a>.
+You could also use it for TCP/UDP, but there are already convenience functions
+and structures for them.</li>
+<li>IPC mechanism - <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> can be backed by a <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/unix.7.html">Unix Domain Socket</a> or
+<a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365590(v=vs.85).aspx">Windows Named Pipe</a> to allow multiple processes to communicate. This is
+discussed below.</li>
+</ol>
+<div class="section" id="parent-child-ipc">
+<h3>Parent-child IPC<a class="headerlink" href="#parent-child-ipc" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
 </div>
-<div class="section" id="uv-write2-todo-chapter-name">
-<h3>uv_write2 TODO chapter name<a class="headerlink" href="#uv-write2-todo-chapter-name" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="arbitrary-process-ipc">
+<h3>Arbitrary process IPC<a class="headerlink" href="#arbitrary-process-ipc" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
+</div>
+<div class="section" id="sending-file-descriptors-over-pipes">
+<h3>Sending file descriptors over pipes<a class="headerlink" href="#sending-file-descriptors-over-pipes" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
 <p>does ev limitation of ev_child only on default loop extend to libuv? yes it
 does for now</p>
 </div>

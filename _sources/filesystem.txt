@@ -142,7 +142,7 @@ Buffers and Streams
 -------------------
 
 The basic I/O tool in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
-sockets, named pipes for file I/O and IPC are all treated as stream subclasses.
+sockets, and pipes for file I/O and IPC are all treated as stream subclasses.
 
 Streams are initialized using custom functions for each subclass, then operated
 upon using
@@ -164,10 +164,11 @@ a collection of a pointer to bytes (``uv_buf_t.base``) and the length
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.
 
-To demonstrate streams using pipes, here is a simple tee utility using libuv.
-Doing all operations asynchronously shows the power of evented I/O. The two
-writes won't block each other, but we've to be careful to copy over the buffer
-data to ensure we don't free a buffer until it has been written.
+To demonstrate streams we will need to use ``uv_pipe_t``. This allows streaming
+local files [#]_. Here is a simple tee utility using libuv.  Doing all operations
+asynchronously shows the power of evented I/O. The two writes won't block each
+other, but we've to be careful to copy over the buffer data to ensure we don't
+free a buffer until it has been written.
 
 The program is to be executed as::
 
@@ -215,6 +216,18 @@ deallocation is application responsibility, so we free the data.
 buffer does not get passed through to the callback trigged on write completion.
 To get around this we wrap a write request and a buffer in ``write_req_t`` and
 unwrap it in the callbacks.
+
+.. WARNING::
+
+    If your program is meant to be used with other programs it may knowingly or
+    unknowingly be writing to a pipe. This makes it susceptible to `aborting on
+    receiving a SIGPIPE`_. It is a good idea to insert::
+
+        signal(SIGPIPE, SIG_IGN)
+
+    in the initialization stages of your application.
+
+.. _aborting on receiving a SIGPIPE: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#The_special_problem_of_SIGPIPE
 
 File change events
 ------------------
@@ -271,3 +284,4 @@ In our example we simply print the arguments and run the command using
 .. rubric:: Footnotes
 .. [#fsnotify] inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
     Windows, event ports on Solaris, unsupported on Cygwin
+.. [#] see :ref:`pipes`

@@ -318,7 +318,7 @@ same patterns as the read/write/open calls, returning the result in the
 <div class="section" id="buffers-and-streams">
 <span id="id1"></span><h2>Buffers and Streams<a class="headerlink" href="#buffers-and-streams" title="Permalink to this headline">¶</a></h2>
 <p>The basic I/O tool in libuv is the stream (<tt class="docutils literal"><span class="pre">uv_stream_t</span></tt>). TCP sockets, UDP
-sockets, named pipes for file I/O and IPC are all treated as stream subclasses.</p>
+sockets, and pipes for file I/O and IPC are all treated as stream subclasses.</p>
 <p>Streams are initialized using custom functions for each subclass, then operated
 upon using</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_read_start</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_alloc_cb</span> <span class="n">alloc_cb</span><span class="p">,</span> <span class="n">uv_read_cb</span> <span class="n">read_cb</span><span class="p">);</span>
@@ -335,10 +335,11 @@ a collection of a pointer to bytes (<tt class="docutils literal"><span class="pr
 (<tt class="docutils literal"><span class="pre">uv_buf_t.len</span></tt>). The <tt class="docutils literal"><span class="pre">uv_buf_t</span></tt> is lightweight and passed around by value.
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.</p>
-<p>To demonstrate streams using pipes, here is a simple tee utility using libuv.
-Doing all operations asynchronously shows the power of evented I/O. The two
-writes won&#8217;t block each other, but we&#8217;ve to be careful to copy over the buffer
-data to ensure we don&#8217;t free a buffer until it has been written.</p>
+<p>To demonstrate streams we will need to use <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt>. This allows streaming
+local files <a class="footnote-reference" href="#id4" id="id2">[2]</a>. Here is a simple tee utility using libuv.  Doing all operations
+asynchronously shows the power of evented I/O. The two writes won&#8217;t block each
+other, but we&#8217;ve to be careful to copy over the buffer data to ensure we don&#8217;t
+free a buffer until it has been written.</p>
 <p>The program is to be executed as:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">uvtee</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
 </pre></div>
@@ -500,12 +501,22 @@ deallocation is application responsibility, so we free the data.</p>
 buffer does not get passed through to the callback trigged on write completion.
 To get around this we wrap a write request and a buffer in <tt class="docutils literal"><span class="pre">write_req_t</span></tt> and
 unwrap it in the callbacks.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>If your program is meant to be used with other programs it may knowingly or
+unknowingly be writing to a pipe. This makes it susceptible to <a class="reference external" href="http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#The_special_problem_of_SIGPIPE">aborting on
+receiving a SIGPIPE</a>. It is a good idea to insert:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">signal</span><span class="p">(</span><span class="n">SIGPIPE</span><span class="p">,</span> <span class="n">SIG_IGN</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="last">in the initialization stages of your application.</p>
+</div>
 </div>
 <div class="section" id="file-change-events">
 <h2>File change events<a class="headerlink" href="#file-change-events" title="Permalink to this headline">¶</a></h2>
 <p>All modern operating systems provide APIs to put watches on individual files or
 directories and be informed when the files are modified. libuv wraps common
-file change notification libraries <a class="footnote-reference" href="#fsnotify" id="id2">[1]</a>. This is one of the more
+file change notification libraries <a class="footnote-reference" href="#fsnotify" id="id3">[1]</a>. This is one of the more
 inconsistent parts of libuv. File change notification systems are themselves
 extremely varied across platforms so getting everything working everywhere is
 difficult. To demonstrate, I&#8217;m going to build a simple utility which runs
@@ -576,8 +587,14 @@ even on those platforms.</li>
 <table class="docutils footnote" frame="void" id="fsnotify" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[1]</a></td><td>inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
+<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
 Windows, event ports on Solaris, unsupported on Cygwin</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>see <a class="reference internal" href="processes.html#pipes"><em>Pipes</em></a></td></tr>
 </tbody>
 </table>
 </div>

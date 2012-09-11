@@ -266,7 +266,7 @@ randomly assigns a port.</p>
 client) and start a read watcher on it. Then we setup a similar send socket and
 use <tt class="docutils literal"><span class="pre">uv_udp_send</span></tt> to send a <em>broadcast message</em> on port 67 (DHCP server).</p>
 <p>It is <strong>necessary</strong> to set the broadcast flag, otherwise you will get an
-<tt class="docutils literal"><span class="pre">EACCES</span></tt> error <a class="footnote-reference" href="#id4" id="id1">[1]</a>. The exact message being sent is irrelevant to this book
+<tt class="docutils literal"><span class="pre">EACCES</span></tt> error <a class="footnote-reference" href="#id5" id="id1">[1]</a>. The exact message being sent is irrelevant to this book
 and you can study the code if you are interested. As usual the read and write
 callbacks will receive a status code of -1 if something went wrong.</p>
 <p>Since UDP sockets are not connected to a particular peer, the read callback
@@ -317,7 +317,7 @@ data that could not fit</em> (That&#8217;s UDP for you!).</p>
 <h4>IPv6 stack only<a class="headerlink" href="#ipv6-stack-only" title="Permalink to this headline">¶</a></h4>
 <p>IPv6 sockets can be used for both IPv4 and IPv6 communication. If you want to
 restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span class="pre">UV_UDP_IPV6ONLY</span></tt> flag to
-<tt class="docutils literal"><span class="pre">uv_udp_bind6</span></tt> <a class="footnote-reference" href="#id5" id="id2">[2]</a>.</p>
+<tt class="docutils literal"><span class="pre">uv_udp_bind6</span></tt> <a class="footnote-reference" href="#id6" id="id2">[2]</a>.</p>
 </div>
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
@@ -326,7 +326,7 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
 </pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">membership</span></tt> is <tt class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></tt> or <tt class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></tt>.</p>
-<p>Local loopback of multicast packets is enabled by default <a class="footnote-reference" href="#id6" id="id3">[3]</a>, use
+<p>Local loopback of multicast packets is enabled by default <a class="footnote-reference" href="#id7" id="id3">[3]</a>, use
 <tt class="docutils literal"><span class="pre">uv_udp_set_multicast_loop</span> <span class="pre">to</span> <span class="pre">switch</span> <span class="pre">it</span> <span class="pre">off</span></tt>.</p>
 <p>The packet time-to-live for multicast packets can be changed using
 <tt class="docutils literal"><span class="pre">uv_udp_set_multicast_ttl</span></tt>.</p>
@@ -336,7 +336,7 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
 <div class="section" id="querying-dns">
 <h2>Querying DNS<a class="headerlink" href="#querying-dns" title="Permalink to this headline">¶</a></h2>
 <p>libuv provides asynchronous DNS resolution. For this it provides its own
-<tt class="docutils literal"><span class="pre">getaddrinfo</span></tt> replacement, backed by <a class="reference external" href="http://c-ares.haxx.se">c-ares</a>. In the callback you can
+<tt class="docutils literal"><span class="pre">getaddrinfo</span></tt> replacement <a class="footnote-reference" href="#id8" id="id4">[4]</a>. In the callback you can
 perform normal socket operations on the retrieved addresses. Let&#8217;s connect to
 Freenode to see an example of DNS resolution.</p>
 <p class="rubric">dns/main.c</p>
@@ -431,22 +431,30 @@ call <tt class="docutils literal"><span class="pre">uv_freeaddrinfo</span></tt> 
 <h2>Network interfaces<a class="headerlink" href="#network-interfaces" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
 <p class="rubric">Footnotes</p>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast">http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast</a></td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>on Windows only supported on Windows Vista and later.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id6" rules="none">
+<table class="docutils footnote" frame="void" id="id7" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1">http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1</a></td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>libuv use the system <tt class="docutils literal"><span class="pre">getaddrinfo</span></tt> in the libuv threadpool. libuv
+v0.8.0 and earlier also included <a class="reference external" href="http://c-ares.haxx.se">c-ares</a> as an alternative, but this has been
+removed in v0.9.0.</td></tr>
 </tbody>
 </table>
 </div>
