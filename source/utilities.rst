@@ -252,6 +252,11 @@ Now the task function can extract the data it needs:
 
 We then free the baton which also frees the watcher.
 
+TTY
+---
+
+TODO
+
 .. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
        Käfer's excellent slides on writing node.js bindings --
