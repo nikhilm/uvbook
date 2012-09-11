@@ -5,7 +5,10 @@ This 'book' is a small set of tutorials about using libuv_ as
 a high performance evented I/O library which offers the same API on Windows and Unix.
 
 It is meant to cover the main areas of libuv, but is not a comprehensive
-reference discussing every function and data structure.
+reference discussing every function and data structure. The `official libuv
+documentation`_ is included directly in the libuv header file.
+
+.. _official libuv documentation: https://github.com/joyent/libuv/blob/master/include/uv.h
 
 Who this book is for
 --------------------
