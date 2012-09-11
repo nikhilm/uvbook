@@ -10,6 +10,9 @@ documentation`_ is included directly in the libuv header file.
 
 .. _official libuv documentation: https://github.com/joyent/libuv/blob/master/include/uv.h
 
+This book is still a work in progress, so sections may be incomplete, but
+I hope you will enjoy it as it grows.
+
 Who this book is for
 --------------------
 
