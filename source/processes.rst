@@ -103,16 +103,8 @@ For processes started using libuv, you may use ``uv_process_kill`` instead,
 which accepts the ``uv_process_t`` watcher as the first argument, rather than
 the pid. In this case, **remember to call** ``uv_close`` on the watcher.
 
-Process I/O
------------
-
-libuv allows child processes to share the input/output streams or file
-descriptors of the parent. It also supports named pipes as an IPC mechanism
-amongst the processes. In addition, libuv allows pipes to be written across an
-IPC border TODO
-
-Inherited I/O
-+++++++++++++
+Child Process I/O
+-----------------
 
 A normal, newly spawned process has its own set of file descriptors, with 0,
 1 and 2 being ``stdin``, ``stdout`` and ``stderr`` respectively. Sometimes you
@@ -186,7 +178,7 @@ read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.
 
 Pipes
-+++++
+-----
 
 uv_write2 TODO chapter name
 +++++++++++++++++++++++++++
