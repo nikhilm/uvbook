@@ -216,6 +216,18 @@ buffer does not get passed through to the callback trigged on write completion.
 To get around this we wrap a write request and a buffer in ``write_req_t`` and
 unwrap it in the callbacks.
 
+.. WARNING::
+
+    If your program is meant to be used with other programs it may knowingly or
+    unknowingly be writing to a pipe. This makes it susceptible to `aborting on
+    receiving a SIGPIPE`_. It is a good idea to insert::
+
+        signal(SIGPIPE, SIG_IGN)
+
+    in the initialization stages of your application.
+
+.. _aborting on receiving a SIGPIPE: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#The_special_problem_of_SIGPIPE
+
 File change events
 ------------------
 
