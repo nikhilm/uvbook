@@ -180,8 +180,38 @@ is great. Just be warned that creating processes is a costly task.
 Pipes
 -----
 
-uv_write2 TODO chapter name
-+++++++++++++++++++++++++++
+libuv's ``uv_pipe_t`` structure is slightly confusing to Unix programmers,
+because it immediately conjures up ``|`` and `pipe(7)`_. But ``uv_pipe_t`` is
+not related to anonymous pipes, rather it has two uses:
+
+#. Stream API - It acts as the concrete implementation of the ``uv_stream_t``
+   API for providing a FIFO, streaming interface to local file I/O. This is
+   performed using ``uv_pipe_open`` as covered in :ref:`buffers-and-streams`.
+   You could also use it for TCP/UDP, but there are already convenience functions
+   and structures for them.
+
+#. IPC mechanism - ``uv_pipe_t`` can be backed by a `Unix Domain Socket`_ or
+   `Windows Named Pipe`_ to allow multiple processes to communicate. This is
+   discussed below.
+
+.. _pipe(7): http://www.kernel.org/doc/man-pages/online/pages/man7/pipe.7.html
+.. _Unix Domain Socket: http://www.kernel.org/doc/man-pages/online/pages/man7/unix.7.html
+.. _Windows Named Pipe: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365590(v=vs.85).aspx
+
+Parent-child IPC
+++++++++++++++++
+
+TODO
+
+Arbitrary process IPC
++++++++++++++++++++++
+
+TODO
+
+Sending file descriptors over pipes
++++++++++++++++++++++++++++++++++++
+
+TODO
 
 does ev limitation of ev_child only on default loop extend to libuv? yes it
 does for now
