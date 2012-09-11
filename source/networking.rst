@@ -205,5 +205,6 @@ TODO
 .. [#] http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast
 .. [#] on Windows only supported on Windows Vista and later.
 .. [#] http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1
-.. [#] libuv v0.8.0 and earlier use c-ares_. Newer versions use the system
-    ``getaddrinfo`` in the libuv threadpool.
+.. [#] libuv use the system ``getaddrinfo`` in the libuv threadpool. libuv
+    v0.8.0 and earlier also included c-ares_ as an alternative, but this has been
+    removed in v0.9.0.
