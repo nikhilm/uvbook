@@ -208,7 +208,36 @@ TODO
 Arbitrary process IPC
 +++++++++++++++++++++
 
-TODO
+Since domain sockets [#]_ can have a well known name and a location in the
+file-system they can be used for IPC between unrelated processes. The D-BUS
+system used by open source desktop environments uses domain sockets for event
+notification. Various applications can then react when a contact comes online
+or new hardware is detected. The MySQL server also runs a domain socket on
+which clients can interact with it.
+
+When using domain sockets, a client-server pattern is usually followed with the
+creator/owner of the socket acting as the server. After the initial setup,
+messaging is no different from TCP, so we'll re-use the echo server example.
+
+.. rubric:: pipe-echo-server/main.c
+.. literalinclude:: ../code/pipe-echo-server/main.c
+    :linenos:
+    :lines: 56-
+    :emphasize-lines: 5,9,13
+
+We name the socket ``echo.sock`` which means it will be created in the local
+directory. This socket now behaves no different from TCP sockets as far as
+the stream API is concerned. You can test this server using `netcat`_::
+
+    $ nc -U /path/to/echo.sock
+
+A client which wants to connect to a domain socket will use::
+
+    void uv_pipe_connect(uv_connect_t *req, uv_pipe_t *handle, const char *name, uv_connect_cb cb);
+
+where ``name`` will be ``echo.sock`` or similar.
+
+.. _netcat: http://netcat.sf.net
 
 Sending file descriptors over pipes
 +++++++++++++++++++++++++++++++++++
@@ -217,3 +246,6 @@ TODO
 
 does ev limitation of ev_child only on default loop extend to libuv? yes it
 does for now
+
+.. [#] In this section domain sockets stands in for named pipes on Windows as
+    well.

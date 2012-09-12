@@ -15,7 +15,8 @@ examples=\
 	spawn\
 	detach\
 	proc-streams\
-	cgi
+	cgi\
+	pipe-echo-server
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
