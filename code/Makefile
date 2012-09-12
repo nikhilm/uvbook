@@ -16,7 +16,8 @@ examples=\
 	detach\
 	proc-streams\
 	cgi\
-	pipe-echo-server
+	pipe-echo-server\
+	multi-echo-server
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
@@ -34,7 +35,7 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: libuv plugin-example proc-streams-example tick
+all: libuv plugin-example proc-streams-example tick multi-echo-server-worker
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
 
 plugin-example: plugin/hello.c
@@ -47,6 +48,9 @@ proc-streams-example: proc-streams/test.c
 
 tick: cgi/tick.c
 	gcc -g -Wall -o cgi/tick cgi/tick.c
+
+multi-echo-server-worker: multi-echo-server/worker.c
+	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_PATH)/uv.a
 
 libuv:
 	make -C ../libuv
