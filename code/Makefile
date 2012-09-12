@@ -59,5 +59,8 @@ clean:
 	for dir in $(examples); do cd $$dir; rm -f $$dir; cd ..; done
 	rm -rf plugin/*.o plugin/libhello.*
 	rm -rf plugin/plugin
+	rm -rf proc-streams/test
+	rm -rf cgi/tick
+	rm -rf multi-echo-server/worker
 
 .PHONY: clean
