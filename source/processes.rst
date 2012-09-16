@@ -203,7 +203,10 @@ not related to anonymous pipes, rather it has two uses:
 Parent-child IPC
 ++++++++++++++++
 
-TODO
+A parent and child can have one or two way communication over a pipe created by
+settings ``uv_stdio_container_t.flags`` to a bit-wise combination of
+``UV_CREATE_PIPE`` and ``UV_READABLE_PIPE`` or ``UV_WRITABLE_PIPE``. The
+read/write flag is from the perspective of the child process.
 
 Arbitrary process IPC
 +++++++++++++++++++++
@@ -242,10 +245,89 @@ where ``name`` will be ``echo.sock`` or similar.
 Sending file descriptors over pipes
 +++++++++++++++++++++++++++++++++++
 
-TODO
+The cool thing about domain sockets is that file descriptors can be exchanged
+between processes by sending them over a domain socket. This allows processes
+to hand off their I/O to other processes. Applications include load-balancing
+servers, worker processes and other ways to make optimum use of CPU.
 
-does ev limitation of ev_child only on default loop extend to libuv? yes it
-does for now
+.. warning::
+
+    On Windows, only file descriptors representing TCP sockets can be passed
+    around.
+
+To demonstrate, we will look at a echo server implementation that hands of
+clients to worker processes in a round-robin fashion. This program is a bit
+involved, and while only snippets are included in the book, it is recommended
+to read the full code to really understand it.
+
+The worker process is quite simple, since the file-descriptor is handed over to
+it by the master.
+
+.. rubric:: multi-echo-server/worker.c
+.. literalinclude:: ../code/multi-echo-server/worker.c
+    :linenos:
+    :lines: 7-9,53-
+    :emphasize-lines: 7-9
+
+``queue`` is the pipe connected to the master process on the other end, along
+which new file descriptors get sent. We use the ``read2`` function to express
+interest in file descriptors. It is important to set the ``ipc`` argument of
+``uv_pipe_init`` to 1 to indicate this pipe will be used for inter-process
+communication! Since the master will write the file handle to the standard
+input of the worker, we connect the pipe to ``stdin`` using ``uv_pipe_open``.
+
+.. rubric:: multi-echo-server/worker.c
+.. literalinclude:: ../code/multi-echo-server/worker.c
+    :linenos:
+    :lines: 36-52
+    :emphasize-lines: 9
+
+Although ``accept`` seems odd in this code, it actually makes sense. What
+``accept`` traditionally does is get a file descriptor (the client) from
+another file descriptor (The listening socket). Which is exactly what we do
+here. Fetch the file descriptor (``client``) from ``queue``. From this point
+the worker does standard echo server stuff.
+
+Turning now to the master, let's take a look at how the workers are launched to
+allow load balancing.
+
+.. rubric:: multi-echo-server/main.c
+.. literalinclude:: ../code/multi-echo-server/main.c
+    :linenos:
+    :lines: 6-13
+
+The ``child_worker`` structure wraps the process, and the pipe between the
+master and the individual process.
+
+.. rubric:: multi-echo-server/main.c
+.. literalinclude:: ../code/multi-echo-server/main.c
+    :linenos:
+    :lines: 49,61-93
+    :emphasize-lines: 15,18-19
+
+In setting up the workers, we use the nifty libuv function ``uv_cpu_info`` to
+get the number of CPUs so we can launch an equal number of workers. Again it is
+important to initialize the pipe acting as the IPC channel with the third
+argument as 1. We then indicate that the child process' ``stdin`` is to be
+a readable pipe (from the point of view of the child). Everything is
+straightforward till here. The workers are launched and waiting for file
+descriptors to be written to their pipes.
+
+It is in ``on_new_connection`` (the TCP infrastructure is initialized in
+``main()``), that we accept the client socket and pass it along to the next
+worker in the round-robin.
+
+.. rubric:: multi-echo-server/main.c
+.. literalinclude:: ../code/multi-echo-server/main.c
+    :linenos:
+    :lines: 29-47
+    :emphasize-lines: 9,12-13
+
+Again, the ``uv_write2`` call handles all the abstraction and it is simply
+a matter of passing in the file descriptor as the right argument. With this our
+multi-process echo server is operational.
+
+TODO what do the write2/read2 functions do with the buffers?
 
 .. [#] In this section domain sockets stands in for named pipes on Windows as
     well.
