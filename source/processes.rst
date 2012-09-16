@@ -5,6 +5,20 @@ libuv offers considerable child process management, abstracting the platform
 differences and allowing communication with the child process using streams or
 named pipes.
 
+A common idiom in Unix is for every process to do one thing and do it well. In
+such a case, a process often uses multiple child processes to achieve tasks
+(similar to using pipes in shells). A multi-process model with messages
+may also be easier to reason about compared to one with threads and shared
+memory.
+
+A common refrain against event-based programs is that they cannot take
+advantage of multiple cores in modern computers. In a multi-threaded program
+the kernel can perform scheduling and assign different threads to different
+cores, improving performance. But an event loop has only one thread.  The
+workaround can be to launch multiple processes instead, with each process
+running an event loop, and each process getting assigned to a separate CPU
+core.
+
 Spawning child processes
 ------------------------
 
