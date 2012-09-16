@@ -11,11 +11,11 @@ struct child_worker {
     uv_pipe_t pipe;
 } *workers;
 
-char worker_path[500];
-uv_buf_t dummy_buf;
 int round_robin_counter;
 int child_worker_count;
-int total_count;
+
+uv_buf_t dummy_buf;
+char worker_path[500];
 
 void on_exit(uv_process_t *req, int exit_status, int term_signal) {
     fprintf(stderr, "Process exited with status %d, signal %d\n", exit_status, term_signal);
@@ -35,10 +35,8 @@ void on_new_connection(uv_stream_t *server, int status) {
     uv_pipe_t *client = (uv_pipe_t*) malloc(sizeof(uv_pipe_t));
     uv_pipe_init(loop, client, 0);
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
-        total_count++;
         uv_write_t *write_req = (uv_write_t*) malloc(sizeof(uv_write_t));
         dummy_buf = uv_buf_init(".", 1);
-        fprintf(stderr, "Connection number %d\n", total_count);
         struct child_worker *worker = &workers[round_robin_counter];
         uv_write2(write_req, (uv_stream_t*) &worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
         round_robin_counter = (round_robin_counter + 1) % child_worker_count;
@@ -58,15 +56,16 @@ void setup_workers() {
     args[0] = worker_path;
     args[1] = NULL;
 
+    round_robin_counter = 0;
+
+    // ...
+
     // launch same number of workers as number of CPUs
     uv_cpu_info_t *info;
     int cpu_count;
     uv_cpu_info(&info, &cpu_count);
     uv_free_cpu_info(info, cpu_count);
 
-    fprintf(stderr, "No. of CPUs: %d\n", cpu_count);
-    round_robin_counter = 0;
-    total_count = 0;
     child_worker_count = cpu_count;
 
     workers = calloc(sizeof(struct child_worker), cpu_count);
