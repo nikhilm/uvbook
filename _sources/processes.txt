@@ -343,5 +343,7 @@ multi-process echo server is operational.
 
 TODO what do the write2/read2 functions do with the buffers?
 
+----
+
 .. [#] In this section domain sockets stands in for named pipes on Windows as
     well.

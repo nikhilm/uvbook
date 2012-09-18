@@ -429,8 +429,82 @@ call <tt class="docutils literal"><span class="pre">uv_freeaddrinfo</span></tt> 
 </div>
 <div class="section" id="network-interfaces">
 <h2>Network interfaces<a class="headerlink" href="#network-interfaces" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
-<p class="rubric">Footnotes</p>
+<p>Information about the system&#8217;s network interfaces can be obtained through libuv
+using <tt class="docutils literal"><span class="pre">uv_interface_addresses</span></tt>. This simple program just prints out all the
+interface details so you get an idea of the fields that are available. This is
+useful to allow your service to bind to IP addresses when it starts.</p>
+<p class="rubric">interfaces/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">512</span><span class="p">];</span>
+    <span class="n">uv_interface_address_t</span> <span class="o">*</span><span class="n">info</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">count</span><span class="p">,</span> <span class="n">i</span><span class="p">;</span>
+
+<span class="hll">    <span class="n">uv_interface_addresses</span><span class="p">(</span><span class="o">&amp;</span><span class="n">info</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">count</span><span class="p">);</span>
+</span>    <span class="n">i</span> <span class="o">=</span> <span class="n">count</span><span class="p">;</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Number of interfaces: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">i</span><span class="o">--</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">uv_interface_address_t</span> <span class="n">interface</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Name: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">interface</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
+<span class="hll">        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Internal? %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">interface</span><span class="p">.</span><span class="n">is_internal</span> <span class="o">?</span> <span class="s">&quot;Yes&quot;</span> <span class="o">:</span> <span class="s">&quot;No&quot;</span><span class="p">);</span>
+</span>        
+        <span class="k">if</span> <span class="p">(</span><span class="n">interface</span><span class="p">.</span><span class="n">address</span><span class="p">.</span><span class="n">address4</span><span class="p">.</span><span class="n">sin_family</span> <span class="o">==</span> <span class="n">AF_INET</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">uv_ip4_name</span><span class="p">(</span><span class="o">&amp;</span><span class="n">interface</span><span class="p">.</span><span class="n">address</span><span class="p">.</span><span class="n">address4</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;IPv4 address: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">interface</span><span class="p">.</span><span class="n">address</span><span class="p">.</span><span class="n">address4</span><span class="p">.</span><span class="n">sin_family</span> <span class="o">==</span> <span class="n">AF_INET6</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">uv_ip6_name</span><span class="p">(</span><span class="o">&amp;</span><span class="n">interface</span><span class="p">.</span><span class="n">address</span><span class="p">.</span><span class="n">address6</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buf</span><span class="p">));</span>
+            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;IPv6 address: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">buf</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">uv_free_interface_addresses</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p><tt class="docutils literal"><span class="pre">is_internal</span></tt> is true for loopback interfaces. Note that if a physical
+interface has multiple IPv4/IPv6 addresses, the name will be reported multiple
+times, with each address being reported once.</p>
+<hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">

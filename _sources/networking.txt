@@ -193,7 +193,19 @@ call ``uv_freeaddrinfo`` in the callback.
 Network interfaces
 ------------------
 
-TODO
+Information about the system's network interfaces can be obtained through libuv
+using ``uv_interface_addresses``. This simple program just prints out all the
+interface details so you get an idea of the fields that are available. This is
+useful to allow your service to bind to IP addresses when it starts.
+
+.. rubric:: interfaces/main.c
+.. literalinclude:: ../code/interfaces/main.c
+    :linenos:
+    :emphasize-lines: 9,17
+
+``is_internal`` is true for loopback interfaces. Note that if a physical
+interface has multiple IPv4/IPv6 addresses, the name will be reported multiple
+times, with each address being reported once.
 
 .. _c-ares: http://c-ares.haxx.se
 .. _getaddrinfo: http://www.kernel.org/doc/man-pages/online/pages/man3/getaddrinfo.3.html
@@ -201,7 +213,8 @@ TODO
 .. _User Datagram Protocol: http://en.wikipedia.org/wiki/User_Datagram_Protocol
 .. _DHCP: http://tools.ietf.org/html/rfc2131
 
-.. rubric:: Footnotes
+----
+
 .. [#] http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast
 .. [#] on Windows only supported on Windows Vista and later.
 .. [#] http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1

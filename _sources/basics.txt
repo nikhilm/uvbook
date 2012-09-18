@@ -150,4 +150,6 @@ void \*data pattern
 
 note about not necessarily creating type structs on the stack
 
+----
+
 .. [#] Depending on the capacity of the hardware of course.

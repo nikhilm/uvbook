@@ -272,7 +272,8 @@ which binds a third party library. It may go something like this:
 
 .. _pthreads: http://man7.org/linux/man-pages/man7/pthreads.7.html
 
-.. rubric:: Footnotes
+----
+
 .. [#] https://github.com/nikhilm/libuv/compare/condvar
 .. [#] https://github.com/bnoordhuis/libuv/compare/uv_cond
 .. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
