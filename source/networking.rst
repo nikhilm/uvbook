@@ -201,7 +201,8 @@ TODO
 .. _User Datagram Protocol: http://en.wikipedia.org/wiki/User_Datagram_Protocol
 .. _DHCP: http://tools.ietf.org/html/rfc2131
 
-.. rubric:: Footnotes
+----
+
 .. [#] http://beej.us/guide/bgnet/output/html/multipage/advanced.html#broadcast
 .. [#] on Windows only supported on Windows Vista and later.
 .. [#] http://www.tldp.org/HOWTO/Multicast-HOWTO-6.html#ss6.1

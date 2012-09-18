@@ -281,7 +281,8 @@ In our example we simply print the arguments and run the command using
     :linenos:
     :lines: 9-18
 
-.. rubric:: Footnotes
+----
+
 .. [#fsnotify] inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
     Windows, event ports on Solaris, unsupported on Cygwin
 .. [#] see :ref:`pipes`

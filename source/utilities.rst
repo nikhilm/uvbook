@@ -320,6 +320,8 @@ can try `ncurses`_.
 
 .. _ncurses: http://www.gnu.org/software/ncurses/ncurses.html
 
+----
+
 .. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
        Käfer's excellent slides on writing node.js bindings --
