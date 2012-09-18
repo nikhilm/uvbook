@@ -56,6 +56,5 @@ int main() {
     uv_pipe_init(loop, &queue, 1);
     uv_pipe_open(&queue, 0);
     uv_read2_start(&queue, alloc_buffer, on_new_connection);
-    fprintf(stderr, "BOO\n");
     return uv_run(loop);
 }
