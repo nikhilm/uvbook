@@ -19,7 +19,8 @@ examples=\
 	pipe-echo-server\
 	multi-echo-server\
 	tty\
-	tty-gravity
+	tty-gravity\
+	interfaces
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
