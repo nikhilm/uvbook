@@ -17,7 +17,8 @@ examples=\
 	proc-streams\
 	cgi\
 	pipe-echo-server\
-	multi-echo-server
+	multi-echo-server\
+	tty
 
 UV_PATH=$(shell pwd)/../libuv
 CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a

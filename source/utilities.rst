@@ -255,7 +255,42 @@ We then free the baton which also frees the watcher.
 TTY
 ---
 
-TODO
+Text terminals have supported basic formatting for a long time, with a `pretty
+standardised`_ command set. This formatting is often used by programs to
+improve the readability of terminal output. For example ``grep --colour``.
+libuv provides the ``uv_tty_t`` abstraction (a stream) and related functions to
+implement the ANSI escape codes across all platforms. By this I mean that libuv
+converts ANSI codes to the Windows equivalent, and provides functions to get
+terminal information.
+
+.. _pretty standardised: http://en.wikipedia.org/wiki/ANSI_escape_sequences
+
+The first thing to do is to initialize a ``uv_tty_t`` with the file descriptor
+it reads/writes from. This is achieved with::
+
+    int uv_tty_init(uv_loop_t*, uv_tty_t*, uv_file fd, int readable)
+
+If ``readable`` is false, ``uv_write`` calls to this stream will be
+**blocking**.
+
+It is then best to ``uv_tty_set_mode`` to set the mode to *normal* (0)
+which enables most TTY formatting, flow-control and other settings. *raw* mode
+(1) is also supported.
+
+Remember to call ``uv_tty_reset_mode`` when your program exits to restore the
+state of the terminal. Just good manners. Another set of good manners is to be
+aware of redirection. If the user redirects the output of your command to
+a file, control sequences should not be written as they impede readability and
+``grep``. To check if the file descriptor is indeed a TTY, call
+``uv_guess_handle`` with the file descriptor and compare the return value with
+``UV_TTY``.
+
+Here is a simple example which prints white text on a red background:
+
+.. rubric:: tty/main.c
+.. literalinclude:: ../code/tty/main.c
+    :linenos:
+    :emphasize-lines: 11-12,14,17,27
 
 .. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
