@@ -292,6 +292,34 @@ Here is a simple example which prints white text on a red background:
     :linenos:
     :emphasize-lines: 11-12,14,17,27
 
+The final TTY helper is ``uv_tty_get_winsize()`` which is used to get the
+width and height of the terminal and returns ``0`` on success. Here is a small
+program which does some animation using the function and character position
+escape codes.
+
+.. rubric:: tty-gravity/main.c
+.. literalinclude:: ../code/tty-gravity/main.c
+    :linenos:
+    :emphasize-lines: 19,25,38
+
+The escape codes are:
+
+======  =======================
+Code    Meaning
+======  =======================
+*2* J    Clear part of the screen, 2 is entire screen
+H        Moves cursor to certain position, default top-left
+*n* B    Moves cursor down by n lines
+*n* C    Moves cursor right by n columns
+m        Obeys string of display settings, in this case green background (40+2), white text (30+7)
+======  =======================
+
+As you can see this is very useful to produce nicely formatted output, or even
+console based arcade games if that tickles your fancy. For fancier control you
+can try `ncurses`_.
+
+.. _ncurses: http://www.gnu.org/software/ncurses/ncurses.html
+
 .. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
        Käfer's excellent slides on writing node.js bindings --
