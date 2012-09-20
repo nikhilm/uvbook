@@ -68,5 +68,6 @@ clean:
 	rm -rf proc-streams/test
 	rm -rf cgi/tick
 	rm -rf multi-echo-server/worker
+	rm -rf uvwget/uvwget
 
 .PHONY: clean
