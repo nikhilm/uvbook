@@ -8,5 +8,6 @@ int main() {
         fflush(stdout);
         sleep(1);
     }
+    printf("BOOM!\n");
     return 0;
 }
