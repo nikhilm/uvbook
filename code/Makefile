@@ -38,27 +38,27 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: libuv plugin-example proc-streams-example tick multi-echo-server-worker uvwget/uvwget
+all: $(UV_PATH)/uv.a plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
 
-plugin-example: plugin/hello.c
+plugin/plugin: plugin/*.c
 	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/uv.a
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
 	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
-proc-streams-example: proc-streams/test.c
+proc-streams/test: proc-streams/test.c
 	gcc -g -Wall -o proc-streams/test proc-streams/test.c
 
-tick: cgi/tick.c
+cgi/tick: cgi/tick.c
 	gcc -g -Wall -o cgi/tick cgi/tick.c
 
-multi-echo-server-worker: multi-echo-server/worker.c
+multi-echo-server/worker: multi-echo-server/worker.c
 	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_PATH)/uv.a
 
 uvwget/uvwget: uvwget/main.c
 	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_PATH)/uv.a
 
-libuv:
+$(UV_PATH)/uv.a:
 	make -C ../libuv
 
 clean:
