@@ -65,7 +65,103 @@ TODO
 External I/O with polling
 -------------------------
 
-TODO
+Usually third-party libraries will handle their own I/O, and keep track of
+their sockets and other files internally. In this case it isn't possible to use
+the standard stream I/O operations, but the library can still be integrated
+into the libuv event loop. All that is required is that the library allow you
+to access the underlying file descriptors and provide functions that process
+tasks in small increments as decided by your application. Some libraries though
+will not allow such access, providing only a standard blocking function which
+will perform the entire I/O transaction and only then return. It is unwise to
+use these in the event loop thread, use the :ref:`libuv-work-queue` instead. Of
+course this will also mean losing granular control on the library.
+
+The ``uv_poll`` section of libuv simply watches file descriptors using the
+operating system notification mechanism. In some sense, all the I/O operations
+that libuv implements itself are also backed by ``uv_poll`` like code. Whenever
+the OS notices a change of state in file descriptors being polled, libuv will
+invoke the associated callback.
+
+Here we will walk through a simple download manager that will use libcurl_ to
+download files. Rather than give all control to libcurl, we'll instead be
+using the libuv event loop, and use the non-blocking, async multi_ interface to
+progress with the download whenever libuv notifies of I/O readiness.
+
+.. _libcurl: http://curl.haxx.se/libcurl/
+.. _multi: http://curl.haxx.se/libcurl/c/libcurl-multi.html
+
+.. rubric:: uvwget/main.c - The setup
+.. literalinclude:: ../code/uvwget/main.c
+    :linenos:
+    :lines: 1-10,104-
+    :emphasize-lines: 8,22,25-26
+
+The way each library is integrated with libuv will vary. In the case of
+libcurl, we can register two callbacks. The socket callback ``handle_socket``
+is invoked whenever the state of a socket changes and we have to start polling
+it. ``start_timeout`` is called by libcurl to notify us of the next timeout
+interval, after which we should drive libcurl forward regardless of I/O status.
+This is so that libcurl can handle errors or do whatever else is required to
+get the download moving.
+
+Our downloader is to be invoked as::
+
+    $ ./uvwget [url1] [url2] ...
+
+So we add each argument as an URL
+
+.. rubric:: uvwget/main.c - Adding urls
+.. literalinclude:: ../code/uvwget/main.c
+    :linenos:
+    :lines: 11-27
+    :emphasize-lines: 15
+
+We let libcurl directly write the data to a file, but much more is possible if
+you so desire.
+
+``start_timeout`` will be called immediately the first time by libcurl, so
+things are set in motion. This simply starts a libuv `timer <Timers>`_ which
+drives ``curl_multi_socket_action`` with ``CURL_SOCKET_TIMEOUT`` whenever it
+times out. ``curl_multi_socket_action`` is what drives libcurl, and what we
+call whenever sockets change state. But before we go into that, we need to poll
+on sockets whenever ``handle_socket`` is called.
+
+.. rubric:: uvwget/main.c - Setting up polling
+.. literalinclude:: ../code/uvwget/main.c
+    :linenos:
+    :lines: 70-102
+    :emphasize-lines: 9,11,16,19,23
+
+We are interested in the socket fd ``s``, and the ``action``. For every socket
+we create a ``uv_poll_t`` handle if it doesn't exist, and associate it with the
+socket using ``curl_multi_assign``. This way ``socketp`` points to it whenever
+the callback is invoked.
+
+In the case that the download is done or fails, libcurl requests removal of the
+poll. So we stop and free the poll handle.
+
+Depending on what events libcurl wishes to watch for, we start polling with
+``UV_READABLE`` or ``UV_WRITABLE``. Now libuv will invoke the poll callback
+whenever the socket is ready for reading or writing. Calling ``uv_poll_start``
+multiple times on the same handle is acceptable, it will just update the events
+mask with the new value. ``curl_perform`` is the crux of this program.
+
+.. rubric:: uvwget/main.c - Setting up polling
+.. literalinclude:: ../code/uvwget/main.c
+    :linenos:
+    :lines: 29-57
+    :emphasize-lines: 2,5-6,8,14,16
+
+The first thing we do is to stop the timer, since there has been some progress
+in the interval. Then depending on what event triggered the callback, we inform
+libcurl of the same. Then we call ``curl_multi_socket_action`` with the socket
+that progressed and the flags informing about what events happened. At this
+point libcurl does all of its internal tasks in small increments, and will
+attempt to return as fast as possible, which is exactly what an evented program
+wants in its main thread. libcurl keeps queueing messages into its own queue
+about transfer progress. In our case we are only interested in transfers that
+are completed. So we extract these messages, and clean up handles whose
+transfers are done.
 
 Loading libraries
 -----------------

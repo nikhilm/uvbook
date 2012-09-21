@@ -120,6 +120,8 @@ of patches for condition variable support in libuv [#]_ [#]_, but since the
 Windows condition variable system is available only from Windows Vista and
 Windows Server 2008 onwards [#]_, its not in libuv yet.
 
+.. _libuv-work-queue:
+
 libuv work queue
 ----------------
 
