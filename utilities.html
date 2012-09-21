@@ -70,7 +70,7 @@
 <h1>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h1>
 <p>This chapter catalogues tools and techniques which are useful for common tasks.
 The <a class="reference external" href="http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#COMMON_OR_USEFUL_IDIOMS_OR_BOTH">libev man page</a> already covers some patterns which can be adopted to
-libuv through simple API changes.  It also covers parts of the libuv API that
+libuv through simple API changes. It also covers parts of the libuv API that
 don&#8217;t require entire chapters dedicated to them.</p>
 <div class="section" id="timers">
 <h2>Timers<a class="headerlink" href="#timers" title="Permalink to this headline">¶</a></h2>
@@ -114,12 +114,306 @@ old <tt class="docutils literal"><span class="pre">repeat</span></tt> value. If 
 <tt class="docutils literal"><span class="pre">UV_EINVAL</span></tt>) and returns -1.</p>
 <p>An actual timer example is in the <a class="reference internal" href="#reference-count"><em>reference count section</em></a>.</p>
 </div>
-<div class="section" id="check-prepare-watchers">
-<h2>Check &amp; Prepare watchers<a class="headerlink" href="#check-prepare-watchers" title="Permalink to this headline">¶</a></h2>
-<p>TODO</p>
-</div>
 <div class="section" id="external-i-o-with-polling">
 <h2>External I/O with polling<a class="headerlink" href="#external-i-o-with-polling" title="Permalink to this headline">¶</a></h2>
+<p>Usually third-party libraries will handle their own I/O, and keep track of
+their sockets and other files internally. In this case it isn&#8217;t possible to use
+the standard stream I/O operations, but the library can still be integrated
+into the libuv event loop. All that is required is that the library allow you
+to access the underlying file descriptors and provide functions that process
+tasks in small increments as decided by your application. Some libraries though
+will not allow such access, providing only a standard blocking function which
+will perform the entire I/O transaction and only then return. It is unwise to
+use these in the event loop thread, use the <a class="reference internal" href="threads.html#libuv-work-queue"><em>libuv work queue</em></a> instead. Of
+course this will also mean losing granular control on the library.</p>
+<p>The <tt class="docutils literal"><span class="pre">uv_poll</span></tt> section of libuv simply watches file descriptors using the
+operating system notification mechanism. In some sense, all the I/O operations
+that libuv implements itself are also backed by <tt class="docutils literal"><span class="pre">uv_poll</span></tt> like code. Whenever
+the OS notices a change of state in file descriptors being polled, libuv will
+invoke the associated callback.</p>
+<p>Here we will walk through a simple download manager that will use <a class="reference external" href="http://curl.haxx.se/libcurl/">libcurl</a> to
+download files. Rather than give all control to libcurl, we&#8217;ll instead be
+using the libuv event loop, and use the non-blocking, async <a class="reference external" href="http://curl.haxx.se/libcurl/c/libcurl-multi.html">multi</a> interface to
+progress with the download whenever libuv notifies of I/O readiness.</p>
+<p class="rubric">uvwget/main.c - The setup</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="cp">#include &lt;sys/select.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+<span class="cp">#include &lt;curl/curl.h&gt;</span>
+
+<span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="hll"><span class="n">CURLM</span> <span class="o">*</span><span class="n">curl_handle</span><span class="p">;</span>
+</span><span class="n">uv_timer_t</span> <span class="n">timeout</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">curl_global_init</span><span class="p">(</span><span class="n">CURL_GLOBAL_ALL</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Could not init cURL</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="hll">    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+</span>
+    <span class="n">curl_handle</span> <span class="o">=</span> <span class="n">curl_multi_init</span><span class="p">();</span>
+<span class="hll">    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_SOCKETFUNCTION</span><span class="p">,</span> <span class="n">handle_socket</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_TIMERFUNCTION</span><span class="p">,</span> <span class="n">start_timeout</span><span class="p">);</span>
+</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">argc</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">add_download</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">argc</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">curl_multi_cleanup</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The way each library is integrated with libuv will vary. In the case of
+libcurl, we can register two callbacks. The socket callback <tt class="docutils literal"><span class="pre">handle_socket</span></tt>
+is invoked whenever the state of a socket changes and we have to start polling
+it. <tt class="docutils literal"><span class="pre">start_timeout</span></tt> is called by libcurl to notify us of the next timeout
+interval, after which we should drive libcurl forward regardless of I/O status.
+This is so that libcurl can handle errors or do whatever else is required to
+get the download moving.</p>
+<p>Our downloader is to be invoked as:</p>
+<div class="highlight-c"><pre>$ ./uvwget [url1] [url2] ...</pre>
+</div>
+<p>So we add each argument as an URL</p>
+<p class="rubric">uvwget/main.c - Adding urls</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">add_download</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">,</span> <span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">filename</span><span class="p">[</span><span class="mi">50</span><span class="p">];</span>
+    <span class="n">sprintf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;%d.download&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">file</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Error opening %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">CURL</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="n">curl_easy_init</span><span class="p">();</span>
+    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_WRITEDATA</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
+    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_URL</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+<span class="hll">    <span class="n">curl_multi_add_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+</span>    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Added download %s -&gt; %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>We let libcurl directly write the data to a file, but much more is possible if
+you so desire.</p>
+<p><tt class="docutils literal"><span class="pre">start_timeout</span></tt> will be called immediately the first time by libcurl, so
+things are set in motion. This simply starts a libuv <a class="reference external" href="Timers">timer</a> which
+drives <tt class="docutils literal"><span class="pre">curl_multi_socket_action</span></tt> with <tt class="docutils literal"><span class="pre">CURL_SOCKET_TIMEOUT</span></tt> whenever it
+times out. <tt class="docutils literal"><span class="pre">curl_multi_socket_action</span></tt> is what drives libcurl, and what we
+call whenever sockets change state. But before we go into that, we need to poll
+on sockets whenever <tt class="docutils literal"><span class="pre">handle_socket</span></tt> is called.</p>
+<p class="rubric">uvwget/main.c - Setting up polling</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">handle_socket</span><span class="p">(</span><span class="n">CURL</span> <span class="o">*</span><span class="n">easy</span><span class="p">,</span> <span class="n">curl_socket_t</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">uv_poll_t</span> <span class="o">*</span><span class="n">poll_fd</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_IN</span> <span class="o">||</span> <span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_OUT</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">poll_fd</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_poll_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+            <span class="n">poll_fd</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_poll_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_poll_t</span><span class="p">));</span>
+<span class="hll">            <span class="n">uv_poll_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">poll_fd</span><span class="p">,</span> <span class="n">s</span><span class="p">);</span>
+</span>        <span class="p">}</span>
+<span class="hll">        <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">poll_fd</span><span class="p">);</span>
+</span>    <span class="p">}</span>
+
+    <span class="k">switch</span> <span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_IN</span>:
+<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="n">poll_fd</span><span class="p">,</span> <span class="n">UV_READABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+</span>            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_OUT</span>:
+<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="n">poll_fd</span><span class="p">,</span> <span class="n">UV_WRITABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+</span>            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_REMOVE</span>:
+            <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">                <span class="n">uv_poll_stop</span><span class="p">((</span><span class="n">uv_poll_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">);</span>
+</span>                <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_close_cb</span><span class="p">)</span> <span class="n">free</span><span class="p">);</span>
+                <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="nl">default:</span>
+            <span class="n">abort</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>We are interested in the socket fd <tt class="docutils literal"><span class="pre">s</span></tt>, and the <tt class="docutils literal"><span class="pre">action</span></tt>. For every socket
+we create a <tt class="docutils literal"><span class="pre">uv_poll_t</span></tt> handle if it doesn&#8217;t exist, and associate it with the
+socket using <tt class="docutils literal"><span class="pre">curl_multi_assign</span></tt>. This way <tt class="docutils literal"><span class="pre">socketp</span></tt> points to it whenever
+the callback is invoked.</p>
+<p>In the case that the download is done or fails, libcurl requests removal of the
+poll. So we stop and free the poll handle.</p>
+<p>Depending on what events libcurl wishes to watch for, we start polling with
+<tt class="docutils literal"><span class="pre">UV_READABLE</span></tt> or <tt class="docutils literal"><span class="pre">UV_WRITABLE</span></tt>. Now libuv will invoke the poll callback
+whenever the socket is ready for reading or writing. Calling <tt class="docutils literal"><span class="pre">uv_poll_start</span></tt>
+multiple times on the same handle is acceptable, it will just update the events
+mask with the new value. <tt class="docutils literal"><span class="pre">curl_perform</span></tt> is the crux of this program.</p>
+<p class="rubric">uvwget/main.c - Setting up polling</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">curl_perform</span><span class="p">(</span><span class="n">uv_poll_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="n">uv_timer_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+</span>    <span class="kt">int</span> <span class="n">running_handles</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_READABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_IN</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_WRITABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_OUT</span><span class="p">;</span>
+</span>
+<span class="hll">    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
+</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">done_url</span><span class="p">;</span>
+
+    <span class="n">CURLMsg</span> <span class="o">*</span><span class="n">message</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">pending</span><span class="p">;</span>
+<span class="hll">    <span class="k">while</span> <span class="p">((</span><span class="n">message</span> <span class="o">=</span> <span class="n">curl_multi_info_read</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pending</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="k">switch</span> <span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">            <span class="k">case</span> <span class="n">CURLMSG_DONE</span>:
+</span>                <span class="n">curl_easy_getinfo</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">,</span> <span class="n">CURLINFO_EFFECTIVE_URL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">done_url</span><span class="p">);</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s DONE</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">done_url</span><span class="p">);</span>
+
+                <span class="n">curl_multi_remove_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
+                <span class="n">curl_easy_cleanup</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="nl">default:</span>
+                <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;CURLMSG default</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                <span class="n">abort</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>The first thing we do is to stop the timer, since there has been some progress
+in the interval. Then depending on what event triggered the callback, we inform
+libcurl of the same. Then we call <tt class="docutils literal"><span class="pre">curl_multi_socket_action</span></tt> with the socket
+that progressed and the flags informing about what events happened. At this
+point libcurl does all of its internal tasks in small increments, and will
+attempt to return as fast as possible, which is exactly what an evented program
+wants in its main thread. libcurl keeps queueing messages into its own queue
+about transfer progress. In our case we are only interested in transfers that
+are completed. So we extract these messages, and clean up handles whose
+transfers are done.</p>
+</div>
+<div class="section" id="check-prepare-watchers">
+<h2>Check &amp; Prepare watchers<a class="headerlink" href="#check-prepare-watchers" title="Permalink to this headline">¶</a></h2>
 <p>TODO</p>
 </div>
 <div class="section" id="loading-libraries">

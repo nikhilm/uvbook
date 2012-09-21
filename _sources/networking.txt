@@ -156,7 +156,7 @@ A socket can (un)subscribe to a multicast group using:
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
 
 Local loopback of multicast packets is enabled by default [#]_, use
-``uv_udp_set_multicast_loop to switch it off``.
+``uv_udp_set_multicast_loop`` to switch it off.
 
 The packet time-to-live for multicast packets can be changed using
 ``uv_udp_set_multicast_ttl``.
