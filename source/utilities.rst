@@ -3,7 +3,7 @@ Utilities
 
 This chapter catalogues tools and techniques which are useful for common tasks.
 The `libev man page`_ already covers some patterns which can be adopted to
-libuv through simple API changes.  It also covers parts of the libuv API that
+libuv through simple API changes. It also covers parts of the libuv API that
 don't require entire chapters dedicated to them.
 
 Timers
