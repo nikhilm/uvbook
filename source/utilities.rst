@@ -57,11 +57,6 @@ old ``repeat`` value. If the timer hasn't been started it fails (error code
 An actual timer example is in the :ref:`reference count section
 <reference-count>`.
 
-Check & Prepare watchers
-------------------------
-
-TODO
-
 External I/O with polling
 -------------------------
 
@@ -162,6 +157,11 @@ wants in its main thread. libcurl keeps queueing messages into its own queue
 about transfer progress. In our case we are only interested in transfers that
 are completed. So we extract these messages, and clean up handles whose
 transfers are done.
+
+Check & Prepare watchers
+------------------------
+
+TODO
 
 Loading libraries
 -----------------
