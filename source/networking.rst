@@ -30,7 +30,7 @@ Server sockets proceed by:
 
 Here is a simple echo server
 
-.. rubric:: tcp-echo-server/main.c
+.. rubric:: tcp-echo-server/main.c - The listen socket
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
     :lines: 50-
@@ -53,7 +53,7 @@ When a connection is initiated by clients, the callback is required to set up
 a watcher for the client socket and associate the watcher using ``uv_accept``.
 In this case we also establish interest in reading from this stream.
 
-.. rubric:: tcp-echo-server/main.c
+.. rubric:: tcp-echo-server/main.c - Accepting the client
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
     :lines: 34-48
@@ -99,7 +99,7 @@ Discover.
     You will have to run `udp-dhcp` as **root** since it uses well known port
     numbers below 1024.
 
-.. rubric:: udp-dhcp/main.c
+.. rubric:: udp-dhcp/main.c - Setup and send UDP packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
     :lines: 7-10,105-
@@ -127,7 +127,7 @@ parameter may be ``UV_UDP_PARTIAL`` if the buffer provided by your allocator
 was not large enough to hold the data. *In this case the OS will discard the
 data that could not fit* (That's UDP for you!).
 
-.. rubric:: udp-dhcp/main.c
+.. rubric:: udp-dhcp/main.c - Reading packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
     :lines: 15-27,38-41

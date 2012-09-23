@@ -244,7 +244,7 @@ a command whenever any of the watched files change::
 
 The file change notification is started using ``uv_fs_event_init()``:
 
-.. rubric:: onchange/main.c
+.. rubric:: onchange/main.c - The setup
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
     :lines: 29-32

@@ -146,7 +146,7 @@ calculate fibonacci numbers, sleeping a bit along the way, but run it in
 a separate thread so that the blocking and CPU bound task does not prevent the
 event loop from performing other activities.
 
-.. rubric:: queue-work/main.c
+.. rubric:: queue-work/main.c - lazy fibonacci
 .. literalinclude:: ../code/queue-work/main.c
     :linenos:
     :lines: 17-29
