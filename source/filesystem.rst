@@ -254,7 +254,7 @@ The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1501,1510
+    :lines: 1507-1510
 
 but both are currently unimplemented on all platforms.
 

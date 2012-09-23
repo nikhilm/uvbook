@@ -97,8 +97,8 @@ does not affect it.
 .. rubric:: detach/main.c
 .. literalinclude:: ../code/detach/main.c
     :linenos:
-    :lines: 12-27
-    :emphasize-lines: 9,16
+    :lines: 9-30
+    :emphasize-lines: 12,19
 
 Just remember that the watcher is still monitoring the child, so your program
 won't exit. Use ``uv_unref()`` if you want to be more *fire-and-forget*.

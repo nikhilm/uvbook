@@ -102,7 +102,7 @@ Discover.
 .. rubric:: udp-dhcp/main.c - Setup and send UDP packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
-    :lines: 7-10,105-
+    :lines: 7-10,104-
     :emphasize-lines: 8,10-11,14,15,21
 
 .. note::
@@ -151,7 +151,7 @@ Multicast
 A socket can (un)subscribe to a multicast group using:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 738
+    :lines: 738-740
 
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
 
