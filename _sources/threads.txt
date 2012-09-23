@@ -69,7 +69,7 @@ Synchronization Primitives
 
 This section is purposely spartan. This book is not about threads, so I only
 catalogue any surprises in the libuv APIs here. For the rest you can look at
-the pthreads `man pages <pthreads>`_
+the pthreads `man pages <pthreads>`_.
 
 Mutexes
 ~~~~~~~
@@ -78,7 +78,7 @@ The mutex functions are a **direct** map to the pthread equivalents.
 
 .. rubric:: libuv mutex functions
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1578-1582
+    :lines: 1672-1676
 
 The ``uv_mutex_init()`` and ``uv_mutex_trylock()`` functions will return 0 on
 success, -1 on error instead of error codes.
@@ -99,9 +99,9 @@ locked a mutex attempts to lock it again. For example, a construct like::
 
 can be used to wait until another thread initializes some stuff and then
 unlocks ``a_mutex`` but will lead to your program crashing if in debug mode, or
-otherwise behaving wrongly.
+return an error in the second call to ``uv_mutex_lock()``.
 
-.. tip::
+.. note::
 
     Mutexes on linux support attributes for a recursive mutex, but the API is
     not exposed via libuv.
@@ -118,7 +118,7 @@ Others
 Semaphores and condition variables are not implemented yet. Their are a couple
 of patches for condition variable support in libuv [#]_ [#]_, but since the
 Windows condition variable system is available only from Windows Vista and
-Windows Server 2008 onwards [#]_, its not in libuv yet.
+Windows Server 2008 onwards [#]_, the patches haven't been merged.
 
 .. _libuv-work-queue:
 
@@ -146,7 +146,7 @@ calculate fibonacci numbers, sleeping a bit along the way, but run it in
 a separate thread so that the blocking and CPU bound task does not prevent the
 event loop from performing other activities.
 
-.. rubric:: queue-work/main.c
+.. rubric:: queue-work/main.c - lazy fibonacci
 .. literalinclude:: ../code/queue-work/main.c
     :linenos:
     :lines: 17-29
@@ -235,7 +235,7 @@ Finally it is important to remember to clean up the watcher.
 
 After this example, which showed the abuse of the ``data`` field, bnoordhuis_
 pointed out that using the ``data`` field is not thread safe, and
-``uv_async_send()`` is actually only meant to wake up another thread. Use
+``uv_async_send()`` is actually only meant to wake up the event loop. Use
 a mutex or rwlock to ensure accesses are performed in the right order.
 
 .. warning::
@@ -243,7 +243,7 @@ a mutex or rwlock to ensure accesses are performed in the right order.
     mutexes and rwlocks **DO NOT** work inside a signal handler, whereas
     ``uv_async_send`` does.
 
-One use case where uv_async_send is required is when interoperating with
+One use case where ``uv_async_send`` is required is when interoperating with
 libraries that require thread affinity for their functionality. For example in
 node.js, a v8 engine instance, contexts and its objects are bound to the thread
 that the v8 instance was started in. Interacting with v8 data structures from

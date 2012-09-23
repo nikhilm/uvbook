@@ -2,7 +2,7 @@ Networking
 ==========
 
 Networking in libuv is not much different from directly using the BSD socket
-interface, some things are easier, all are non-blocking but the concepts stay
+interface, some things are easier, all are non-blocking, but the concepts stay
 the same. In addition libuv offers utility functions to abstract the annoying,
 repetitive and low-level tasks like setting up sockets using the BSD socket
 structures, DNS lookup, and tweaking various socket parameters.
@@ -30,7 +30,7 @@ Server sockets proceed by:
 
 Here is a simple echo server
 
-.. rubric:: tcp-echo-server/main.c
+.. rubric:: tcp-echo-server/main.c - The listen socket
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
     :lines: 50-
@@ -53,7 +53,7 @@ When a connection is initiated by clients, the callback is required to set up
 a watcher for the client socket and associate the watcher using ``uv_accept``.
 In this case we also establish interest in reading from this stream.
 
-.. rubric:: tcp-echo-server/main.c
+.. rubric:: tcp-echo-server/main.c - Accepting the client
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
     :lines: 34-48
@@ -86,23 +86,22 @@ UDP
 ---
 
 The `User Datagram Protocol`_ offers connectionless, unreliable network
-communication. Hence, unlike TCP, it doesn't offer a stream abstraction since
-each packet is independent. libuv provides non-blocking UDP support via the
-`uv_udp_t` (for receiving) and `uv_udp_send_t` (for sending) structures and
-related functions. That said, the actual API for reading/writing is very
-similar to normal stream reads. To look at how UDP can be used, the example
-shows the first stage of obtaining an IP address from a `DHCP`_ server -- DHCP
-Discover.
+communication. Hence libuv doesn't offer a stream. Instead libuv provides
+non-blocking UDP support via the `uv_udp_t` (for receiving) and `uv_udp_send_t`
+(for sending) structures and related functions.  That said, the actual API for
+reading/writing is very similar to normal stream reads. To look at how UDP can
+be used, the example shows the first stage of obtaining an IP address from
+a `DHCP`_ server -- DHCP Discover.
 
 .. note::
 
     You will have to run `udp-dhcp` as **root** since it uses well known port
     numbers below 1024.
 
-.. rubric:: udp-dhcp/main.c
+.. rubric:: udp-dhcp/main.c - Setup and send UDP packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
-    :lines: 7-10,105-
+    :lines: 7-10,104-
     :emphasize-lines: 8,10-11,14,15,21
 
 .. note::
@@ -127,7 +126,7 @@ parameter may be ``UV_UDP_PARTIAL`` if the buffer provided by your allocator
 was not large enough to hold the data. *In this case the OS will discard the
 data that could not fit* (That's UDP for you!).
 
-.. rubric:: udp-dhcp/main.c
+.. rubric:: udp-dhcp/main.c - Reading packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
     :lines: 15-27,38-41
@@ -135,6 +134,9 @@ data that could not fit* (That's UDP for you!).
 
 UDP Options
 +++++++++++
+
+Time-to-live
+~~~~~~~~~~~~
 
 The TTL of packets sent on the socket can be changed using ``uv_udp_set_ttl``.
 
@@ -151,7 +153,7 @@ Multicast
 A socket can (un)subscribe to a multicast group using:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 738
+    :lines: 738-740
 
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
 

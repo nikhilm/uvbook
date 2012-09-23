@@ -114,6 +114,205 @@ old <tt class="docutils literal"><span class="pre">repeat</span></tt> value. If 
 <tt class="docutils literal"><span class="pre">UV_EINVAL</span></tt>) and returns -1.</p>
 <p>An actual timer example is in the <a class="reference internal" href="#reference-count"><em>reference count section</em></a>.</p>
 </div>
+<div class="section" id="event-loop-reference-count">
+<span id="reference-count"></span><h2>Event loop reference count<a class="headerlink" href="#event-loop-reference-count" title="Permalink to this headline">¶</a></h2>
+<p>The event loop only runs as long as there are active watchers. This system
+works by having every watcher increase the reference count of the event loop
+when it is started and decreasing the reference count when stopped. It is also
+possible to manually change the reference count of handles using:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">uv_ref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+<span class="kt">void</span> <span class="n">uv_unref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>These functions can be used to allow a loop to exit even when a watcher is
+active or to use custom objects to keep the loop alive.</p>
+<p>The former can be used with interval timers. You might have a garbage collector
+which runs every X seconds, or your network service might send a heartbeat to
+others periodically, but you don&#8217;t want to have to stop them along all clean
+exit paths or error scenarios. Or you want the program to exit when all your
+other watchers are done. In that case just unref the timer immediately after
+creation so that if it is the only watcher running then <tt class="docutils literal"><span class="pre">uv_run</span></tt> will still
+exit.</p>
+<p>The later is used in node.js where some libuv methods are being bubbled up to
+the JS API. A <tt class="docutils literal"><span class="pre">uv_handle_t</span></tt> (the superclass of all watchers) is created per
+JS object and can be ref/unrefed.</p>
+<p class="rubric">ref-timer/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">gc_req</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">fake_job_req</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
+</span>
+    <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gc_req</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">);</span>
+
+    <span class="c1">// could actually be a TCP download or something</span>
+    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fake_job_req</span><span class="p">);</span>
+    <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">fake_job_req</span><span class="p">,</span> <span class="n">fake_job</span><span class="p">,</span> <span class="mi">9000</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>We initialize the garbage collector timer, then immediately <tt class="docutils literal"><span class="pre">unref</span></tt> it.
+Observe how after 9 seconds, when the fake job is done, the program
+automatically exits, even though the garbage collector is still running.</p>
+</div>
+<div class="section" id="idle-watcher-pattern">
+<h2>Idle watcher pattern<a class="headerlink" href="#idle-watcher-pattern" title="Permalink to this headline">¶</a></h2>
+<p>The callbacks of idle watchers are only invoked when the event loop has no
+other pending events. In such a situation they are invoked once every iteration
+of the loop. The idle callback can be used to perform some very low priority
+activity. For example, you could dispatch a summary of the daily application
+performance to the developers for analysis during periods of idleness, or use
+the application&#8217;s CPU time to perform SETI calculations :) An idle watcher is
+also useful in a GUI application. Say you are using an event loop for a file
+download. If the TCP socket is still being established and no other events are
+present your event loop will pause (<strong>block</strong>), which means your progress bar
+will freeze and the user will think the application crashed. In such a case
+queue up and idle watcher to keep the UI operational.</p>
+<p class="rubric">idle-compute/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_fs_t</span> <span class="n">stdin_watcher</span><span class="p">;</span>
+<span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
+<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
+
+    <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdin_watcher</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_type</span><span class="p">);</span>
+    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">crunch_away</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Here we initialize the idle watcher and queue it up along with the actual
+events we are interested in. <tt class="docutils literal"><span class="pre">crunch_away</span></tt> will now be called repeatedly
+until the user types something and presses Return. Then it will be interrupted
+for a brief amount as the loop deals with the input data, after which it will
+keep calling the idle callback again.</p>
+<p class="rubric">idle-compute/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">crunch_away</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Compute extra-terrestrial life</span>
+    <span class="c1">// fold proteins</span>
+    <span class="c1">// computer another digit of PI</span>
+    <span class="c1">// or similar</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Computing PI...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="c1">// just to avoid overwhelming your terminal emulator</span>
+    <span class="n">uv_idle_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="passing-data-to-worker-thread">
+<span id="baton"></span><h2>Passing data to worker thread<a class="headerlink" href="#passing-data-to-worker-thread" title="Permalink to this headline">¶</a></h2>
+<p>When using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt> you&#8217;ll usually need to pass complex data through
+to the worker thread. The solution is to use a <tt class="docutils literal"><span class="pre">struct</span></tt> and set
+<tt class="docutils literal"><span class="pre">uv_work_t.data</span></tt> to point to it. A slight variation is to have the
+<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> itself as the first member of this struct (called a baton <a class="footnote-reference" href="#id3" id="id1">[1]</a>).
+This allows cleaning up the work request and all the data in one free call.</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">struct</span> <span class="n">ftp_baton</span> <span class="p">{</span>
+<span class="hll">    <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
+</span>    <span class="kt">char</span> <span class="o">*</span><span class="n">host</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">port</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">username</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">password</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">ftp_baton</span><span class="p">));</span>
+<span class="hll"><span class="n">baton</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">baton</span><span class="p">;</span>
+</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span> <span class="o">=</span> <span class="n">strdup</span><span class="p">(</span><span class="s">&quot;my.webhost.com&quot;</span><span class="p">);</span>
+<span class="n">baton</span><span class="o">-&gt;</span><span class="n">port</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+<span class="c1">// ...</span>
+
+<span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">,</span> <span class="n">ftp_session</span><span class="p">,</span> <span class="n">ftp_cleanup</span><span class="p">);</span>
+</pre></div>
+</td></tr></table></div>
+<p>Here we create the baton and queue the task.</p>
+<p>Now the task function can extract the data it needs:</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">ftp_session</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Connecting to %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">ftp_cleanup</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
+
+    <span class="n">free</span><span class="p">(</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
+    <span class="c1">// ...</span>
+<span class="hll">    <span class="n">free</span><span class="p">(</span><span class="n">baton</span><span class="p">);</span>
+</span><span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>We then free the baton which also frees the watcher.</p>
+</div>
 <div class="section" id="external-i-o-with-polling">
 <h2>External I/O with polling<a class="headerlink" href="#external-i-o-with-polling" title="Permalink to this headline">¶</a></h2>
 <p>Usually third-party libraries will handle their own I/O, and keep track of
@@ -453,7 +652,7 @@ plugin system which does nothing except print the name of the plugin.</p>
 </pre></div>
 </td></tr></table></div>
 <p>You can similarly add more functions that plugin authors can use to do useful
-things in your application <a class="footnote-reference" href="#id3" id="id1">[1]</a>. A sample plugin using this API is:</p>
+things in your application <a class="footnote-reference" href="#id4" id="id2">[2]</a>. A sample plugin using this API is:</p>
 <p class="rubric">plugin/hello.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -543,205 +742,6 @@ to get the error message.</p>
 argument. <tt class="docutils literal"><span class="pre">init_plugin_function</span></tt> is a function pointer to the sort of
 function we are looking for in the application&#8217;s plugins.</p>
 </div>
-<div class="section" id="idle-watcher-pattern">
-<h2>Idle watcher pattern<a class="headerlink" href="#idle-watcher-pattern" title="Permalink to this headline">¶</a></h2>
-<p>The callbacks of idle watchers are only invoked when the event loop has no
-other pending events. In such a situation they are invoked once every iteration
-of the loop. The idle callback can be used to perform some very low priority
-activity. For example, you could dispatch a summary of the daily application
-performance to the developers for analysis during periods of idleness, or use
-the application&#8217;s CPU time to perform SETI calculations :) An idle watcher is
-also useful in a GUI application. Say you are using an event loop for a file
-download. If the TCP socket is still being established and no other events are
-present your event loop will pause (<strong>block</strong>), which means your progress bar
-will freeze and the user will think the application crashed. In such a case
-queue up and idle watcher to keep the UI operational.</p>
-<p class="rubric">idle-compute/main.c</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="n">uv_fs_t</span> <span class="n">stdin_watcher</span><span class="p">;</span>
-<span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
-<span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
-
-    <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
-
-    <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdin_watcher</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_type</span><span class="p">);</span>
-    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">crunch_away</span><span class="p">);</span>
-    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</td></tr></table></div>
-<p>Here we initialize the idle watcher and queue it up along with the actual
-events we are interested in. <tt class="docutils literal"><span class="pre">crunch_away</span></tt> will now be called repeatedly
-until the user types something and presses Return. Then it will be interrupted
-for a brief amount as the loop deals with the input data, after which it will
-keep calling the idle callback again.</p>
-<p class="rubric">idle-compute/main.c</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">crunch_away</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Compute extra-terrestrial life</span>
-    <span class="c1">// fold proteins</span>
-    <span class="c1">// computer another digit of PI</span>
-    <span class="c1">// or similar</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Computing PI...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="c1">// just to avoid overwhelming your terminal emulator</span>
-    <span class="n">uv_idle_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</td></tr></table></div>
-</div>
-<div class="section" id="event-loop-reference-count">
-<span id="reference-count"></span><h2>Event loop reference count<a class="headerlink" href="#event-loop-reference-count" title="Permalink to this headline">¶</a></h2>
-<p>The event loop only runs as long as there are active watchers. This system
-works by having every watcher increase the reference count of the event loop
-when it is started and decreasing the reference count when stopped. It is also
-possible to manually change the reference count of handles using:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">uv_ref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
-<span class="kt">void</span> <span class="n">uv_unref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>These functions can be used to allow a loop to exit even when a watcher is
-active or to use custom objects to keep the loop alive.</p>
-<p>The former can be used with interval timers. You might have a garbage collector
-which runs every X seconds, or your network service might send a heartbeat to
-others periodically, but you don&#8217;t want to have to stop them along all clean
-exit paths or error scenarios. Or you want the program to exit when all your
-other watchers are done. In that case just unref the timer immediately after
-creation so that if it is the only watcher running then <tt class="docutils literal"><span class="pre">uv_run</span></tt> will still
-exit.</p>
-<p>The later is used in node.js where some libuv methods are being bubbled up to
-the JS API. A <tt class="docutils literal"><span class="pre">uv_handle_t</span></tt> (the superclass of all watchers) is created per
-JS object and can be ref/unrefed.</p>
-<p class="rubric">ref-timer/main.c</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13
-14
-15
-16
-17</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="n">uv_timer_t</span> <span class="n">gc_req</span><span class="p">;</span>
-<span class="n">uv_timer_t</span> <span class="n">fake_job_req</span><span class="p">;</span>
-
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
-
-    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
-<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
-</span>
-    <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gc_req</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">);</span>
-
-    <span class="c1">// could actually be a TCP download or something</span>
-    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fake_job_req</span><span class="p">);</span>
-    <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">fake_job_req</span><span class="p">,</span> <span class="n">fake_job</span><span class="p">,</span> <span class="mi">9000</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</td></tr></table></div>
-<p>We initialize the garbage collector timer, then immediately <tt class="docutils literal"><span class="pre">unref</span></tt> it.
-Observe how after 9 seconds, when the fake job is done, the program
-automatically exits, even though the garbage collector is still running.</p>
-</div>
-<div class="section" id="passing-data-to-worker-thread">
-<span id="baton"></span><h2>Passing data to worker thread<a class="headerlink" href="#passing-data-to-worker-thread" title="Permalink to this headline">¶</a></h2>
-<p>When using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt> you&#8217;ll usually need to pass complex data through
-to the worker thread. The solution is to use a <tt class="docutils literal"><span class="pre">struct</span></tt> and set
-<tt class="docutils literal"><span class="pre">uv_work_t.data</span></tt> to point to it. A slight variation is to have the
-<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> itself as the first member of this struct (called a baton <a class="footnote-reference" href="#id4" id="id2">[2]</a>).
-This allows cleaning up the work request and all the data in one free call.</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">struct</span> <span class="n">ftp_baton</span> <span class="p">{</span>
-<span class="hll">    <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
-</span>    <span class="kt">char</span> <span class="o">*</span><span class="n">host</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">port</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">username</span><span class="p">;</span>
-    <span class="kt">char</span> <span class="o">*</span><span class="n">password</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</td></tr></table></div>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">ftp_baton</span><span class="p">));</span>
-<span class="hll"><span class="n">baton</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">baton</span><span class="p">;</span>
-</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span> <span class="o">=</span> <span class="n">strdup</span><span class="p">(</span><span class="s">&quot;my.webhost.com&quot;</span><span class="p">);</span>
-<span class="n">baton</span><span class="o">-&gt;</span><span class="n">port</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
-<span class="c1">// ...</span>
-
-<span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">,</span> <span class="n">ftp_session</span><span class="p">,</span> <span class="n">ftp_cleanup</span><span class="p">);</span>
-</pre></div>
-</td></tr></table></div>
-<p>Here we create the baton and queue the task.</p>
-<p>Now the task function can extract the data it needs:</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">ftp_session</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
-</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Connecting to %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kt">void</span> <span class="nf">ftp_cleanup</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
-
-    <span class="n">free</span><span class="p">(</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
-    <span class="c1">// ...</span>
-<span class="hll">    <span class="n">free</span><span class="p">(</span><span class="n">baton</span><span class="p">);</span>
-</span><span class="p">}</span>
-</pre></div>
-</td></tr></table></div>
-<p>We then free the baton which also frees the watcher.</p>
-</div>
 <div class="section" id="tty">
 <h2>TTY<a class="headerlink" href="#tty" title="Permalink to this headline">¶</a></h2>
 <p>Text terminals have supported basic formatting for a long time, with a <a class="reference external" href="http://en.wikipedia.org/wiki/ANSI_escape_sequences">pretty
@@ -758,7 +758,7 @@ it reads/writes from. This is achieved with:</p>
 </div>
 <p>If <tt class="docutils literal"><span class="pre">readable</span></tt> is false, <tt class="docutils literal"><span class="pre">uv_write</span></tt> calls to this stream will be
 <strong>blocking</strong>.</p>
-<p>It is then best to <tt class="docutils literal"><span class="pre">uv_tty_set_mode</span></tt> to set the mode to <em>normal</em> (0)
+<p>It is then best to use <tt class="docutils literal"><span class="pre">uv_tty_set_mode</span></tt> to set the mode to <em>normal</em> (0)
 which enables most TTY formatting, flow-control and other settings. <em>raw</em> mode
 (1) is also supported.</p>
 <p>Remember to call <tt class="docutils literal"><span class="pre">uv_tty_reset_mode</span></tt> when your program exits to restore the

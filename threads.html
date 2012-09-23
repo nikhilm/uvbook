@@ -156,17 +156,17 @@ send values use <a class="reference internal" href="#inter-thread-communication"
 <h2>Synchronization Primitives<a class="headerlink" href="#synchronization-primitives" title="Permalink to this headline">¶</a></h2>
 <p>This section is purposely spartan. This book is not about threads, so I only
 catalogue any surprises in the libuv APIs here. For the rest you can look at
-the pthreads <a class="reference external" href="pthreads">man pages</a></p>
+the pthreads <a class="reference external" href="pthreads">man pages</a>.</p>
 <div class="section" id="mutexes">
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
 <p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
 <p class="rubric">libuv mutex functions</p>
-<div class="highlight-c"><pre>   */
- UV_FS_EVENT_WATCH_ENTRY = 1,
-
-  /*
-   * By default uv_fs_event will try to use a kernel interface such as inotify
-</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="n">uv_mutex_init</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_destroy</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="n">uv_mutex_trylock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_unlock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
 </div>
 <p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on
 success, -1 on error instead of error codes.</p>
@@ -185,9 +185,9 @@ locked a mutex attempts to lock it again. For example, a construct like:</p>
 </div>
 <p>can be used to wait until another thread initializes some stuff and then
 unlocks <tt class="docutils literal"><span class="pre">a_mutex</span></tt> but will lead to your program crashing if in debug mode, or
-otherwise behaving wrongly.</p>
-<div class="admonition tip">
-<p class="first admonition-title">Tip</p>
+return an error in the second call to <tt class="docutils literal"><span class="pre">uv_mutex_lock()</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
 <p class="last">Mutexes on linux support attributes for a recursive mutex, but the API is
 not exposed via libuv.</p>
 </div>
@@ -202,7 +202,7 @@ DB read/write example</p>
 <p>Semaphores and condition variables are not implemented yet. Their are a couple
 of patches for condition variable support in libuv <a class="footnote-reference" href="#id6" id="id1">[1]</a> <a class="footnote-reference" href="#id7" id="id2">[2]</a>, but since the
 Windows condition variable system is available only from Windows Vista and
-Windows Server 2008 onwards <a class="footnote-reference" href="#id8" id="id3">[3]</a>, its not in libuv yet.</p>
+Windows Server 2008 onwards <a class="footnote-reference" href="#id8" id="id3">[3]</a>, the patches haven&#8217;t been merged.</p>
 </div>
 </div>
 <div class="section" id="libuv-work-queue">
@@ -225,7 +225,7 @@ a convenient abstraction for this.</p>
 calculate fibonacci numbers, sleeping a bit along the way, but run it in
 a separate thread so that the blocking and CPU bound task does not prevent the
 event loop from performing other activities.</p>
-<p class="rubric">queue-work/main.c</p>
+<p class="rubric">queue-work/main.c - lazy fibonacci</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -409,14 +409,14 @@ non-blocking and will return immediately.</p>
 </td></tr></table></div>
 <p>After this example, which showed the abuse of the <tt class="docutils literal"><span class="pre">data</span></tt> field, <a class="reference external" href="https://github.com/bnoordhuis">bnoordhuis</a>
 pointed out that using the <tt class="docutils literal"><span class="pre">data</span></tt> field is not thread safe, and
-<tt class="docutils literal"><span class="pre">uv_async_send()</span></tt> is actually only meant to wake up another thread. Use
+<tt class="docutils literal"><span class="pre">uv_async_send()</span></tt> is actually only meant to wake up the event loop. Use
 a mutex or rwlock to ensure accesses are performed in the right order.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">mutexes and rwlocks <strong>DO NOT</strong> work inside a signal handler, whereas
 <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> does.</p>
 </div>
-<p>One use case where uv_async_send is required is when interoperating with
+<p>One use case where <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is required is when interoperating with
 libraries that require thread affinity for their functionality. For example in
 node.js, a v8 engine instance, contexts and its objects are bound to the thread
 that the v8 instance was started in. Interacting with v8 data structures from

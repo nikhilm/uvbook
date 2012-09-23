@@ -244,7 +244,7 @@ a command whenever any of the watched files change::
 
 The file change notification is started using ``uv_fs_event_init()``:
 
-.. rubric:: onchange/main.c
+.. rubric:: onchange/main.c - The setup
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
     :lines: 29-32
@@ -254,7 +254,7 @@ The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1501,1510
+    :lines: 1507-1510
 
 but both are currently unimplemented on all platforms.
 

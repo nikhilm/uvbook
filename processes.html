@@ -138,9 +138,9 @@ exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_
 <p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the watcher, all options are set via
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. To simply launch a process, you need to set only the
 <tt class="docutils literal"><span class="pre">file</span></tt> and <tt class="docutils literal"><span class="pre">args</span></tt> fields. <tt class="docutils literal"><span class="pre">file</span></tt> is the program to execute. Since
-<tt class="docutils literal"><span class="pre">uv_spawn</span></tt> uses <tt class="docutils literal"><span class="pre">execvp</span></tt> internally, there is no need to supply the full
-path. Finally as per underlying conventions, the arguments array <em>has</em> to be
-one larger than the number of arguments, with the last element being <tt class="docutils literal"><span class="pre">NULL</span></tt>.</p>
+<tt class="docutils literal"><span class="pre">uv_spawn</span></tt> uses <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man3/exec.3.html">execvp</a> internally, there is no need to supply the full
+path. Finally as per underlying conventions, <strong>the arguments array has to be
+one larger than the number of arguments, with the last element being NULL</strong>.</p>
 <p>After the call to <tt class="docutils literal"><span class="pre">uv_spawn</span></tt>, <tt class="docutils literal"><span class="pre">uv_process_t.pid</span></tt> will contain the process
 ID of the child process.</p>
 <p>The exit callback will be invoked with the <em>exit status</em> and the type of <em>signal</em>
@@ -157,8 +157,8 @@ which caused the exit.</p>
 </td></tr></table></div>
 <p>It is <strong>required</strong> to close the process watcher after the process exits.</p>
 </div>
-<div class="section" id="changing-the-process-parameters">
-<h2>Changing the process parameters<a class="headerlink" href="#changing-the-process-parameters" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="changing-process-parameters">
+<h2>Changing process parameters<a class="headerlink" href="#changing-process-parameters" title="Permalink to this headline">¶</a></h2>
 <p>Before the child process is launched you can control the execution environment
 using fields in <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>.</p>
 <div class="section" id="change-execution-directory">
@@ -210,7 +210,16 @@ does not affect it.</p>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+16
+17
+18
+19
+20
+21
+22</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+
+    <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
     <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;sleep&quot;</span><span class="p">;</span>
     <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;100&quot;</span><span class="p">;</span>
     <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
@@ -226,7 +235,10 @@ does not affect it.</p>
     <span class="p">}</span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Launched sleep with PID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">child_req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
 <span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">);</span>
-</span></pre></div>
+</span>
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
 </td></tr></table></div>
 <p>Just remember that the watcher is still monitoring the child, so your program
 won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
@@ -234,7 +246,7 @@ won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()<
 <div class="section" id="signals-and-termination">
 <h2>Signals and termination<a class="headerlink" href="#signals-and-termination" title="Permalink to this headline">¶</a></h2>
 <p>libuv wraps the standard <tt class="docutils literal"><span class="pre">kill(2)</span></tt> system call on Unix and implements one
-with similar semantics on Windows, with <em>one caveat</em>. <tt class="docutils literal"><span class="pre">uv_kill</span></tt> on Windows
+with similar semantics on Windows, with <em>one caveat</em>: <tt class="docutils literal"><span class="pre">uv_kill</span></tt> on Windows
 only supports <tt class="docutils literal"><span class="pre">SIGTERM</span></tt>, <tt class="docutils literal"><span class="pre">SIGINT</span></tt> and <tt class="docutils literal"><span class="pre">SIGKILL</span></tt>, all of which lead to
 termination of the process. The signature of <tt class="docutils literal"><span class="pre">uv_kill</span></tt> is:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_err_t</span> <span class="n">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
@@ -432,7 +444,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 </pre></div>
 </td></tr></table></div>
 <p>The <tt class="docutils literal"><span class="pre">stdout</span></tt> of the CGI script is set to the socket so that whatever our tick
-script prints gets sent to the client. By using processes, we can offload the
+script prints, gets sent to the client. By using processes, we can offload the
 read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.</p>
 </div>
@@ -461,7 +473,7 @@ read/write flag is from the perspective of the child process.</p>
 <div class="section" id="arbitrary-process-ipc">
 <h3>Arbitrary process IPC<a class="headerlink" href="#arbitrary-process-ipc" title="Permalink to this headline">¶</a></h3>
 <p>Since domain sockets <a class="footnote-reference" href="#id3" id="id2">[1]</a> can have a well known name and a location in the
-file-system they can be used for IPC between unrelated processes. The D-BUS
+file-system they can be used for IPC between unrelated processes. The <a class="reference external" href="http://www.freedesktop.org/wiki/Software/dbus">D-BUS</a>
 system used by open source desktop environments uses domain sockets for event
 notification. Various applications can then react when a contact comes online
 or new hardware is detected. The MySQL server also runs a domain socket on
