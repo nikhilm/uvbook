@@ -34,9 +34,11 @@ exits. This is achieved using ``uv_spawn``.
 The ``uv_process_t`` struct only acts as the watcher, all options are set via
 ``uv_process_options_t``. To simply launch a process, you need to set only the
 ``file`` and ``args`` fields. ``file`` is the program to execute. Since
-``uv_spawn`` uses ``execvp`` internally, there is no need to supply the full
-path. Finally as per underlying conventions, the arguments array *has* to be
-one larger than the number of arguments, with the last element being ``NULL``.
+``uv_spawn`` uses execvp_ internally, there is no need to supply the full
+path. Finally as per underlying conventions, **the arguments array has to be
+one larger than the number of arguments, with the last element being NULL**.
+
+.. _execvp: http://www.kernel.org/doc/man-pages/online/pages/man3/exec.3.html
 
 After the call to ``uv_spawn``, ``uv_process_t.pid`` will contain the process
 ID of the child process.
@@ -52,8 +54,8 @@ which caused the exit.
 
 It is **required** to close the process watcher after the process exits.
 
-Changing the process parameters
--------------------------------
+Changing process parameters
+---------------------------
 
 Before the child process is launched you can control the execution environment
 using fields in ``uv_process_options_t``.
@@ -107,7 +109,7 @@ Signals and termination
 -----------------------
 
 libuv wraps the standard ``kill(2)`` system call on Unix and implements one
-with similar semantics on Windows, with *one caveat*. ``uv_kill`` on Windows
+with similar semantics on Windows, with *one caveat*: ``uv_kill`` on Windows
 only supports ``SIGTERM``, ``SIGINT`` and ``SIGKILL``, all of which lead to
 termination of the process. The signature of ``uv_kill`` is::
 
@@ -187,7 +189,7 @@ Here we simply accept the TCP connection and pass on the socket (*stream*) to
     :emphasize-lines: 8-9,17-18
 
 The ``stdout`` of the CGI script is set to the socket so that whatever our tick
-script prints gets sent to the client. By using processes, we can offload the
+script prints, gets sent to the client. By using processes, we can offload the
 read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.
 
@@ -226,11 +228,13 @@ Arbitrary process IPC
 +++++++++++++++++++++
 
 Since domain sockets [#]_ can have a well known name and a location in the
-file-system they can be used for IPC between unrelated processes. The D-BUS
+file-system they can be used for IPC between unrelated processes. The D-BUS_
 system used by open source desktop environments uses domain sockets for event
 notification. Various applications can then react when a contact comes online
 or new hardware is detected. The MySQL server also runs a domain socket on
 which clients can interact with it.
+
+.. _D-BUS: http://www.freedesktop.org/wiki/Software/dbus
 
 When using domain sockets, a client-server pattern is usually followed with the
 creator/owner of the socket acting as the server. After the initial setup,

@@ -369,7 +369,7 @@ it reads/writes from. This is achieved with::
 If ``readable`` is false, ``uv_write`` calls to this stream will be
 **blocking**.
 
-It is then best to ``uv_tty_set_mode`` to set the mode to *normal* (0)
+It is then best to use ``uv_tty_set_mode`` to set the mode to *normal* (0)
 which enables most TTY formatting, flow-control and other settings. *raw* mode
 (1) is also supported.
 

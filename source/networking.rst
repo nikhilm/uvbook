@@ -2,7 +2,7 @@ Networking
 ==========
 
 Networking in libuv is not much different from directly using the BSD socket
-interface, some things are easier, all are non-blocking but the concepts stay
+interface, some things are easier, all are non-blocking, but the concepts stay
 the same. In addition libuv offers utility functions to abstract the annoying,
 repetitive and low-level tasks like setting up sockets using the BSD socket
 structures, DNS lookup, and tweaking various socket parameters.
@@ -86,13 +86,12 @@ UDP
 ---
 
 The `User Datagram Protocol`_ offers connectionless, unreliable network
-communication. Hence, unlike TCP, it doesn't offer a stream abstraction since
-each packet is independent. libuv provides non-blocking UDP support via the
-`uv_udp_t` (for receiving) and `uv_udp_send_t` (for sending) structures and
-related functions. That said, the actual API for reading/writing is very
-similar to normal stream reads. To look at how UDP can be used, the example
-shows the first stage of obtaining an IP address from a `DHCP`_ server -- DHCP
-Discover.
+communication. Hence libuv doesn't offer a stream. Instead libuv provides
+non-blocking UDP support via the `uv_udp_t` (for receiving) and `uv_udp_send_t`
+(for sending) structures and related functions.  That said, the actual API for
+reading/writing is very similar to normal stream reads. To look at how UDP can
+be used, the example shows the first stage of obtaining an IP address from
+a `DHCP`_ server -- DHCP Discover.
 
 .. note::
 
@@ -135,6 +134,9 @@ data that could not fit* (That's UDP for you!).
 
 UDP Options
 +++++++++++
+
+Time-to-live
+~~~~~~~~~~~~
 
 The TTL of packets sent on the socket can be changed using ``uv_udp_set_ttl``.
 
