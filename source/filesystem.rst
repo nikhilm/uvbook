@@ -44,7 +44,8 @@ File descriptors are closed using
 
 .. code-block:: c
 
-    int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file,
+    int uv_fs_close(uv_loop_t* loop, uv_fs_t* req, uv_file file, uv_fs_cb cb)
+
 
 Filesystem operation callbacks have the signature:
 
@@ -134,7 +135,7 @@ same patterns as the read/write/open calls, returning the result in the
 
 .. rubric:: Filesystem operations
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1390-1466
+    :lines: 1428-1504
 
 .. _buffers-and-streams:
 
