@@ -9,7 +9,7 @@ networking support, asynchronous file system access, child processes and more.
 Event loops
 -----------
 
-In event-driven programming, an application express interest in certain events
+In event-driven programming, an application expresses interest in certain events
 and respond to them when they occur. The responsibility of gathering events
 from the operating system or monitoring other sources of events is handled by
 libuv, and the user can register callbacks to be invoked when an event occurs.
