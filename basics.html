@@ -74,7 +74,7 @@ and other activities.  libuv offers core utilities like timers, non-blocking
 networking support, asynchronous file system access, child processes and more.</p>
 <div class="section" id="event-loops">
 <h2>Event loops<a class="headerlink" href="#event-loops" title="Permalink to this headline">¶</a></h2>
-<p>In event-driven programming, an application express interest in certain events
+<p>In event-driven programming, an application expresses interest in certain events
 and respond to them when they occur. The responsibility of gathering events
 from the operating system or monitoring other sources of events is handled by
 libuv, and the user can register callbacks to be invoked when an event occurs.
@@ -124,7 +124,12 @@ way our computer hardware works, with the thread as the basic unit of the
 processor, libuv and OSes will usually run background/worker threads and/or
 polling to perform tasks in a non-blocking manner.</p>
 </div>
-</div>
+<p>Bert Belder, one of the libuv core developers has a small video explaining the
+architecture of libuv and its background. If you have no prior experience with
+either libuv or libev, it is a quick, useful watch.</p>
+<iframe width="560" height="315"
+src="https://www.youtube-nocookie.com/embed/nGn60vDSxQ4" frameborder="0"
+allowfullscreen></iframe></div>
 <div class="section" id="hello-world">
 <h2>Hello World<a class="headerlink" href="#hello-world" title="Permalink to this headline">¶</a></h2>
 <p>With the basics out of the way, lets write our first libuv program. It does

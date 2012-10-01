@@ -9,7 +9,7 @@ networking support, asynchronous file system access, child processes and more.
 Event loops
 -----------
 
-In event-driven programming, an application express interest in certain events
+In event-driven programming, an application expresses interest in certain events
 and respond to them when they occur. The responsibility of gathering events
 from the operating system or monitoring other sources of events is handled by
 libuv, and the user can register callbacks to be invoked when an event occurs.
@@ -65,6 +65,16 @@ that other events can continue to be handled as fast they come in [#]_.
     way our computer hardware works, with the thread as the basic unit of the
     processor, libuv and OSes will usually run background/worker threads and/or
     polling to perform tasks in a non-blocking manner.
+
+Bert Belder, one of the libuv core developers has a small video explaining the
+architecture of libuv and its background. If you have no prior experience with
+either libuv or libev, it is a quick, useful watch.
+
+.. raw:: html
+
+    <iframe width="560" height="315"
+    src="https://www.youtube-nocookie.com/embed/nGn60vDSxQ4" frameborder="0"
+    allowfullscreen></iframe>
 
 Hello World
 -----------
