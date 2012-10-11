@@ -21,3 +21,10 @@ The book is written in `RestructuredText
 <http://sphinx.pocoo.org/>`_ to generate the html and PDF. `vim
 <http://www.vim.org>`_, `tmux <http://tmux.sourceforge.net>`_ and `iTerm2
 <http://www.iterm2.com>`_ on a Macbook Pro helped craft the text and code.
+
+Licensing
+---------
+
+The contents of this book are licensed as `Creative Commons - Attribution
+<http://creativecommons.org/licenses/by/3.0/>`_. All code is in the **public
+domain**.
