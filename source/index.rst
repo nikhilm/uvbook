@@ -19,3 +19,11 @@ Table of Contents
    utilities
    about
 
+Alternate formats
+-----------------
+
+The book is also available in:
+
+* `PDF <http://nikhilm.github.com/uvbook/An%20Introduction%20to%20libuv.pdf>`_
+* `epub
+  <http://nikhilm.github.com/uvbook/An%20Introduction%20to%20libuv.epub>`_

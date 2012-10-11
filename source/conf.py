@@ -185,7 +185,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'AnIntroductiontolibuv.tex', u'An Introduction to libuv Documentation',
+  ('index', 'AnIntroductiontolibuv.tex', u'An Introduction to libuv',
    u'Nikhil Marathe', 'manual'),
 ]
 
@@ -229,9 +229,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'AnIntroductiontolibuv', u'An Introduction to libuv Documentation',
-   u'Nikhil Marathe', 'AnIntroductiontolibuv', 'One line description of project.',
-   'Miscellaneous'),
+  ('index', 'AnIntroductiontolibuv', u'An Introduction to libuv',
+   u'Nikhil Marathe', 'An Introduction to libuv', 'Guide to the library powering node.js.',
+   'Computers'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -257,11 +257,11 @@ epub_copyright = u'2012, Nikhil Marathe'
 #epub_language = ''
 
 # The scheme of the identifier. Typical schemes are ISBN or URL.
-#epub_scheme = ''
+epub_scheme = 'URL'
 
 # The unique identifier of the text. This can be a ISBN number
 # or the project homepage.
-#epub_identifier = ''
+#epub_identifier = 'http://nikhilm.github.com/uvbook/'
 
 # A unique identification for the text.
 #epub_uid = ''
@@ -281,7 +281,7 @@ epub_copyright = u'2012, Nikhil Marathe'
 #epub_exclude_files = []
 
 # The depth of the table of contents in toc.ncx.
-#epub_tocdepth = 3
+epub_tocdepth = 2
 
 # Allow duplicate toc entries.
 #epub_tocdup = True

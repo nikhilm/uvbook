@@ -162,8 +162,10 @@ gh-pages:
 	rm -rf build _sources _static
 	git checkout master $(GH_PAGES_SOURCES)
 	git reset HEAD
-	make html
+	make html latexpdf epub
 	mv -fv build/html/* ./
+	mv -fv build/latex/AnIntroductiontolibuv.pdf "./An Introduction to libuv.pdf"
+	mv -fv build/epub/AnIntroductiontolibuv.epub "./An Introduction to libuv.epub"
 	rm -rf $(GH_PAGES_SOURCES) build
 	git add -A
 	git ci -m "Generated gh-pages for `git log master -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout master
