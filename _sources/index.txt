@@ -19,11 +19,11 @@ Table of Contents
    utilities
    about
 
+Alternate formats
+-----------------
 
-Indices and tables
-==================
+The book is also available in:
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+* `PDF <http://nikhilm.github.com/uvbook/An%20Introduction%20to%20libuv.pdf>`_
+* `epub
+  <http://nikhilm.github.com/uvbook/An%20Introduction%20to%20libuv.epub>`_
