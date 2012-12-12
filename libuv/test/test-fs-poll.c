@@ -140,7 +140,7 @@ TEST_IMPL(fs_poll) {
   ASSERT(poll_cb_called == 5);
   ASSERT(timer_cb_called == 2);
   ASSERT(close_cb_called == 1);
-  uv_loop_delete(loop);
 
+  MAKE_VALGRIND_HAPPY();
   return 0;
 }

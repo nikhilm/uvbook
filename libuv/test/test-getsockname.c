@@ -238,9 +238,9 @@ static void udp_recv(uv_udp_t* handle,
   int r;
 
   ASSERT(nread >= 0);
+  free(buf.base);
 
   if (nread == 0) {
-    free(buf.base);
     return;
   }
 
@@ -322,6 +322,7 @@ TEST_IMPL(getsockname_tcp) {
   ASSERT(getsocknamecount == 3);
   ASSERT(getpeernamecount == 3);
 
+  MAKE_VALGRIND_HAPPY();
   return 0;
 }
 
@@ -338,5 +339,6 @@ TEST_IMPL(getsockname_udp) {
 
   ASSERT(getsocknamecount == 2);
 
+  MAKE_VALGRIND_HAPPY();
   return 0;
 }

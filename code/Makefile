@@ -23,7 +23,8 @@ examples=\
 	interfaces
 
 UV_PATH=$(shell pwd)/../libuv
-CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
+UV_LIB = $(UV_PATH)/libuv.a
+CFLAGS=-g -Wall -I$(UV_PATH)/include
 
 uname_S=$(shell uname -s)
 
@@ -38,11 +39,11 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: $(UV_PATH)/uv.a plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
-	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
+all: $(UV_LIB) plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
+	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_LIB); cd ..; done
 
 plugin/plugin: plugin/*.c
-	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_LIB)
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
 	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
@@ -53,21 +54,21 @@ cgi/tick: cgi/tick.c
 	gcc -g -Wall -o cgi/tick cgi/tick.c
 
 multi-echo-server/worker: multi-echo-server/worker.c
-	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_LIB)
 
 uvwget/uvwget: uvwget/main.c
-	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_LIB)
 
-$(UV_PATH)/uv.a:
+$(UV_LIB):
 	make -C ../libuv
 
 clean:
-	for dir in $(examples); do cd $$dir; rm -f $$dir; cd ..; done
+	for dir in $(examples); do cd $$dir; rm -f $$dir; rm -rf $$dir.dSYM; cd ..; done
 	rm -rf plugin/*.o plugin/libhello.*
-	rm -rf plugin/plugin
-	rm -rf proc-streams/test
-	rm -rf cgi/tick
-	rm -rf multi-echo-server/worker
-	rm -rf uvwget/uvwget
+	rm -rf plugin/plugin plugin/plugin.dSYM
+	rm -rf proc-streams/test proc-streams/test.dSYM
+	rm -rf cgi/tick cgi/tick.dSYM
+	rm -rf multi-echo-server/worker multi-echo-server/worker.dSYM
+	rm -rf uvwget/uvwget uvwget/uvwget.dSYM
 
 .PHONY: clean

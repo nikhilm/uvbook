@@ -63,6 +63,19 @@
 #endif
 
 
+int uv__platform_loop_init(uv_loop_t* loop, int default_loop) {
+  loop->fs_fd = -1;
+  return 0;
+}
+
+
+void uv__platform_loop_delete(uv_loop_t* loop) {
+  if (loop->fs_fd == -1) return;
+  close(loop->fs_fd);
+  loop->fs_fd = -1;
+}
+
+
 uint64_t uv_hrtime() {
   return (gethrtime());
 }
@@ -75,7 +88,6 @@ uint64_t uv_hrtime() {
  */
 int uv_exepath(char* buffer, size_t* size) {
   ssize_t res;
-  pid_t pid;
   char buf[128];
 
   if (buffer == NULL)
@@ -84,8 +96,7 @@ int uv_exepath(char* buffer, size_t* size) {
   if (size == NULL)
     return (-1);
 
-  pid = getpid();
-  (void) snprintf(buf, sizeof (buf), "/proc/%d/path/a.out", pid);
+  (void) snprintf(buf, sizeof(buf), "/proc/%lu/path/a.out", (unsigned long) getpid());
   res = readlink(buf, buffer, *size - 1);
 
   if (res < 0)
@@ -128,26 +139,36 @@ static void uv__fs_event_rearm(uv_fs_event_t *handle) {
 }
 
 
-static void uv__fs_event_read(EV_P_ ev_io* w, int revents) {
-  uv_fs_event_t *handle;
-  uv_loop_t *loop_;
+static void uv__fs_event_read(uv_loop_t* loop, uv__io_t* w, int revents) {
+  uv_fs_event_t *handle = NULL;
   timespec_t timeout;
   port_event_t pe;
   int events;
   int r;
 
-  loop_ = container_of(w, uv_loop_t, fs_event_watcher);
+  (void) w;
+  (void) revents;
 
   do {
-    /* TODO use port_getn() */
+    uint_t n = 1;
+
+    /*
+     * Note that our use of port_getn() here (and not port_get()) is deliberate:
+     * there is a bug in event ports (Sun bug 6456558) whereby a zeroed timeout
+     * causes port_get() to return success instead of ETIME when there aren't
+     * actually any events (!); by using port_getn() in lieu of port_get(),
+     * we can at least workaround the bug by checking for zero returned events
+     * and treating it as we would ETIME.
+     */
     do {
       memset(&timeout, 0, sizeof timeout);
-      r = port_get(loop_->fs_fd, &pe, &timeout);
+      r = port_getn(loop->fs_fd, &pe, 1, &n, &timeout);
     }
     while (r == -1 && errno == EINTR);
 
-    if (r == -1 && errno == ETIME)
+    if ((r == -1 && errno == ETIME) || n == 0)
       break;
+
     handle = (uv_fs_event_t *)pe.portev_user;
     assert((r == 0) && "unexpected port_get() error");
 
@@ -162,7 +183,7 @@ static void uv__fs_event_read(EV_P_ ev_io* w, int revents) {
   }
   while (handle->fd != PORT_DELETED);
 
-  if (handle->fd != PORT_DELETED)
+  if (handle != NULL && handle->fd != PORT_DELETED)
     uv__fs_event_rearm(handle);
 }
 
@@ -175,10 +196,6 @@ int uv_fs_event_init(uv_loop_t* loop,
   int portfd;
   int first_run = 0;
 
-  loop->counters.fs_event_init++;
-
-  /* We don't support any flags yet. */
-  assert(!flags);
   if (loop->fs_fd == -1) {
     if ((portfd = port_create()) == -1) {
       uv__set_sys_error(loop, errno);
@@ -199,8 +216,8 @@ int uv_fs_event_init(uv_loop_t* loop,
   uv__fs_event_rearm(handle);
 
   if (first_run) {
-    ev_io_init(&loop->fs_event_watcher, uv__fs_event_read, portfd, EV_READ);
-    ev_io_start(loop->ev, &loop->fs_event_watcher);
+    uv__io_init(&loop->fs_event_watcher, uv__fs_event_read, portfd, UV__IO_READ);
+    uv__io_start(loop, &loop->fs_event_watcher);
   }
 
   return 0;
@@ -225,7 +242,6 @@ int uv_fs_event_init(uv_loop_t* loop,
                      const char* filename,
                      uv_fs_event_cb cb,
                      int flags) {
-  loop->counters.fs_event_init++;
   uv__set_sys_error(loop, ENOSYS);
   return -1;
 }
@@ -332,24 +348,18 @@ uv_err_t uv_cpu_info(uv_cpu_info_t** cpu_infos, int* count) {
   lookup_instance = 0;
   while ((ksp = kstat_lookup(kc, (char *)"cpu_info", lookup_instance, NULL))) {
     if (kstat_read(kc, ksp, NULL) == -1) {
-      /*
-       * It is deeply annoying, but some kstats can return errors
-       * under otherwise routine conditions.  (ACPI is one
-       * offender; there are surely others.)  To prevent these
-       * fouled kstats from completely ruining our day, we assign
-       * an "error" member to the return value that consists of
-       * the strerror().
-       */
       cpu_info->speed = 0;
       cpu_info->model = NULL;
     } else {
       knp = (kstat_named_t *) kstat_data_lookup(ksp, (char *)"clock_MHz");
-      assert(knp->data_type == KSTAT_DATA_INT32);
-      cpu_info->speed = knp->value.i32;
+      assert(knp->data_type == KSTAT_DATA_INT32 ||
+             knp->data_type == KSTAT_DATA_INT64);
+      cpu_info->speed = (knp->data_type == KSTAT_DATA_INT32) ? knp->value.i32
+                                                             : knp->value.i64;
 
       knp = (kstat_named_t *) kstat_data_lookup(ksp, (char *)"brand");
       assert(knp->data_type == KSTAT_DATA_STRING);
-      cpu_info->model = KSTAT_NAMED_STR_PTR(knp);
+      cpu_info->model = strdup(KSTAT_NAMED_STR_PTR(knp));
     }
 
     lookup_instance++;
@@ -441,7 +451,8 @@ uv_err_t uv_interface_addresses(uv_interface_address_t** addresses,
   address = *addresses;
 
   for (ent = addrs; ent != NULL; ent = ent->ifa_next) {
-    bzero(&ip, sizeof (ip));
+    memset(&ip, 0, sizeof(ip));
+
     if (!(ent->ifa_flags & IFF_UP && ent->ifa_flags & IFF_RUNNING)) {
       continue;
     }

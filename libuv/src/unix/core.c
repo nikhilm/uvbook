@@ -49,10 +49,14 @@
 
 #ifdef __APPLE__
 # include <mach-o/dyld.h> /* _NSGetExecutablePath */
+# include <sys/filio.h>
+# include <sys/ioctl.h>
 #endif
 
 #ifdef __FreeBSD__
 # include <sys/sysctl.h>
+# include <sys/filio.h>
+# include <sys/ioctl.h>
 # include <sys/wait.h>
 #endif
 
@@ -61,6 +65,9 @@ static uv_loop_t* default_loop_ptr;
 
 
 void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
+  assert(!(handle->flags & (UV_CLOSING | UV_CLOSED)));
+
+  handle->flags |= UV_CLOSING;
   handle->close_cb = close_cb;
 
   switch (handle->type) {
@@ -69,8 +76,11 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     break;
 
   case UV_TTY:
-  case UV_TCP:
     uv__stream_close((uv_stream_t*)handle);
+    break;
+
+  case UV_TCP:
+    uv__tcp_close((uv_tcp_t*)handle);
     break;
 
   case UV_UDP:
@@ -113,12 +123,23 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     uv__fs_poll_close((uv_fs_poll_t*)handle);
     break;
 
+  case UV_SIGNAL:
+    uv__signal_close((uv_signal_t*) handle);
+    /* Signal handles may not be closed immediately. The signal code will */
+    /* itself close uv__make_close_pending whenever appropriate. */
+    return;
+
   default:
     assert(0);
   }
 
-  handle->flags |= UV_CLOSING;
+  uv__make_close_pending(handle);
+}
 
+
+void uv__make_close_pending(uv_handle_t* handle) {
+  assert(handle->flags & UV_CLOSING);
+  assert(!(handle->flags & UV_CLOSED));
   handle->next_closing = handle->loop->closing_handles;
   handle->loop->closing_handles = handle;
 }
@@ -140,6 +161,7 @@ static void uv__finish_close(uv_handle_t* handle) {
     case UV_FS_EVENT:
     case UV_FS_POLL:
     case UV_POLL:
+    case UV_SIGNAL:
       break;
 
     case UV_NAMED_PIPE:
@@ -228,7 +250,7 @@ void uv_loop_delete(uv_loop_t* loop) {
 
 
 static unsigned int uv__poll_timeout(uv_loop_t* loop) {
-  if (!uv__has_active_handles(loop))
+  if (!uv__has_active_handles(loop) && !uv__has_active_reqs(loop))
     return 0;
 
   if (!ngx_queue_empty(&loop->idle_handles))
@@ -287,109 +309,6 @@ int uv_is_active(const uv_handle_t* handle) {
 }
 
 
-static int uv_getaddrinfo_done(eio_req* req_) {
-  uv_getaddrinfo_t* req = req_->data;
-  struct addrinfo *res = req->res;
-#if __sun
-  size_t hostlen = strlen(req->hostname);
-#endif
-
-  req->res = NULL;
-
-  uv__req_unregister(req->loop, req);
-
-  free(req->hints);
-  free(req->service);
-  free(req->hostname);
-
-  if (req->retcode == 0) {
-    /* OK */
-#if EAI_NODATA /* FreeBSD deprecated EAI_NODATA */
-  } else if (req->retcode == EAI_NONAME || req->retcode == EAI_NODATA) {
-#else
-  } else if (req->retcode == EAI_NONAME) {
-#endif
-    uv__set_sys_error(req->loop, ENOENT); /* FIXME compatibility hack */
-#if __sun
-  } else if (req->retcode == EAI_MEMORY && hostlen >= MAXHOSTNAMELEN) {
-    uv__set_sys_error(req->loop, ENOENT);
-#endif
-  } else {
-    req->loop->last_err.code = UV_EADDRINFO;
-    req->loop->last_err.sys_errno_ = req->retcode;
-  }
-
-  req->cb(req, req->retcode, res);
-
-  return 0;
-}
-
-
-static void getaddrinfo_thread_proc(eio_req *req) {
-  uv_getaddrinfo_t* handle = req->data;
-
-  handle->retcode = getaddrinfo(handle->hostname,
-                                handle->service,
-                                handle->hints,
-                                &handle->res);
-}
-
-
-/* stub implementation of uv_getaddrinfo */
-int uv_getaddrinfo(uv_loop_t* loop,
-                   uv_getaddrinfo_t* handle,
-                   uv_getaddrinfo_cb cb,
-                   const char* hostname,
-                   const char* service,
-                   const struct addrinfo* hints) {
-  eio_req* req;
-  uv_eio_init(loop);
-
-  if (handle == NULL || cb == NULL ||
-      (hostname == NULL && service == NULL)) {
-    uv__set_artificial_error(loop, UV_EINVAL);
-    return -1;
-  }
-
-  uv__req_init(loop, handle, UV_GETADDRINFO);
-  handle->loop = loop;
-  handle->cb = cb;
-
-  /* TODO don't alloc so much. */
-
-  if (hints) {
-    handle->hints = malloc(sizeof(struct addrinfo));
-    memcpy(handle->hints, hints, sizeof(struct addrinfo));
-  }
-  else {
-    handle->hints = NULL;
-  }
-
-  /* TODO security! check lengths, check return values. */
-
-  handle->hostname = hostname ? strdup(hostname) : NULL;
-  handle->service = service ? strdup(service) : NULL;
-  handle->res = NULL;
-  handle->retcode = 0;
-
-  /* TODO check handle->hostname == NULL */
-  /* TODO check handle->service == NULL */
-
-  req = eio_custom(getaddrinfo_thread_proc, EIO_PRI_DEFAULT,
-      uv_getaddrinfo_done, handle, &loop->uv_eio_channel);
-  assert(req);
-  assert(req->data == handle);
-
-  return 0;
-}
-
-
-void uv_freeaddrinfo(struct addrinfo* ai) {
-  if (ai)
-    freeaddrinfo(ai);
-}
-
-
 /* Open a socket in non-blocking close-on-exec mode, atomically if possible. */
 int uv__socket(int domain, int type, int protocol) {
   int sockfd;
@@ -426,6 +345,11 @@ int uv__accept(int sockfd) {
 
   while (1) {
 #if __linux__
+    static int no_accept4;
+
+    if (no_accept4)
+      goto skip;
+
     peerfd = uv__accept4(sockfd,
                          NULL,
                          NULL,
@@ -439,6 +363,9 @@ int uv__accept(int sockfd) {
 
     if (errno != ENOSYS)
       break;
+
+    no_accept4 = 1;
+skip:
 #endif
 
     peerfd = accept(sockfd, NULL, NULL);
@@ -462,17 +389,34 @@ int uv__accept(int sockfd) {
 }
 
 
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+
 int uv__nonblock(int fd, int set) {
   int r;
 
-#if FIONBIO
   do
     r = ioctl(fd, FIONBIO, &set);
   while (r == -1 && errno == EINTR);
 
   return r;
-#else
+}
+
+
+int uv__cloexec(int fd, int set) {
+  int r;
+
+  do
+    r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
+  while (r == -1 && errno == EINTR);
+
+  return r;
+}
+
+#else /* !(defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)) */
+
+int uv__nonblock(int fd, int set) {
   int flags;
+  int r;
 
   do
     r = fcntl(fd, F_GETFL);
@@ -491,7 +435,6 @@ int uv__nonblock(int fd, int set) {
   while (r == -1 && errno == EINTR);
 
   return r;
-#endif
 }
 
 
@@ -499,15 +442,6 @@ int uv__cloexec(int fd, int set) {
   int flags;
   int r;
 
-#if __linux__
-  /* Linux knows only FD_CLOEXEC so we can safely omit the fcntl(F_GETFD)
-   * syscall. CHECKME: That's probably true for other Unices as well.
-   */
-  if (set)
-    flags = FD_CLOEXEC;
-  else
-    flags = 0;
-#else
   do
     r = fcntl(fd, F_GETFD);
   while (r == -1 && errno == EINTR);
@@ -519,7 +453,6 @@ int uv__cloexec(int fd, int set) {
     flags = r | FD_CLOEXEC;
   else
     flags = r & ~FD_CLOEXEC;
-#endif
 
   do
     r = fcntl(fd, F_SETFD, flags);
@@ -527,6 +460,8 @@ int uv__cloexec(int fd, int set) {
 
   return r;
 }
+
+#endif /* defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__) */
 
 
 /* This function is not execve-safe, there is a race window
