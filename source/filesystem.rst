@@ -12,12 +12,6 @@ Simple filesystem read/write is achieved using the ``uv_fs_*`` functions and the
     internally, but invoke these functions in a thread pool and notify watchers
     registered with the event loop when application interaction is required.
 
-.. note::
-
-    The fs operations are actually a part of `libeio
-    <http://software.schmorp.de/pkg/libeio.html>`_ on Unix systems. ``libeio`` is
-    a separate library written by the author of ``libev``.
-
 All filesystem functions have two forms - *synchronous* and *asynchronous*.
 
 The *synchronous* forms automatically get called (and **block**) if no callback
