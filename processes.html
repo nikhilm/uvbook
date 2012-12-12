@@ -281,15 +281,15 @@ The file descriptors of the child process are set using the <tt class="docutils 
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
 file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
 <tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
-  <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
-
-  <span class="k">union</span> <span class="p">{</span>
-    <span class="n">uv_stream_t</span><span class="o">*</span> <span class="n">stream</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
-  <span class="p">}</span> <span class="n">data</span><span class="p">;</span>
-<span class="p">}</span> <span class="n">uv_stdio_container_t</span><span class="p">;</span>
-</pre></div>
+<div class="highlight-c"><pre>
+/*
+ * Asynchronous getaddrinfo(3).
+ *
+ * Either node or service may be NULL but not both.
+ *
+ * hints is a pointer to a struct addrinfo with additional address type
+ * constraints, or NULL. Consult `man -s 3 getaddrinfo` for details.
+</pre>
 </div>
 <p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
 used. If the first three <tt class="docutils literal"><span class="pre">stdio</span></tt> fields are marked as <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> they&#8217;ll
@@ -566,7 +566,7 @@ it by the master.</p>
 
 <span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 </span><span class="hll">    <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="hll">    <span class="n">uv_read2_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_read2_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
 </span>    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>

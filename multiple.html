@@ -68,6 +68,64 @@
         
   <div class="section" id="multiple-event-loops">
 <h1>Multiple event loops<a class="headerlink" href="#multiple-event-loops" title="Permalink to this headline">¶</a></h1>
+<p>It is possible to use multiple event loops in the same thread. But this usually
+makes no sense since the <cite>uv_run()</cite> call of one loop will block and stop the
+other loop from running at all. With a careful combination of <cite>uv_run_once()</cite>
+you could do some really fun things though.</p>
+<div class="section" id="modality">
+<h2>Modality<a class="headerlink" href="#modality" title="Permalink to this headline">¶</a></h2>
+<p>You can use multiple loops to create a &#8216;modal&#8217; step in your program, where the
+second event loop &#8216;pauses&#8217; the first event loop until some action occurs (a
+user presses Return or you get a new event or something). An</p>
+</div>
+<div class="section" id="one-loop-per-thread">
+<h2>One loop per thread<a class="headerlink" href="#one-loop-per-thread" title="Permalink to this headline">¶</a></h2>
+<p>This is the &#8216;standard model&#8217;, no different from spawning multiple processes
+like we did in the <a class="reference internal" href="processes.html"><em>Processes</em></a> chapter.</p>
+<div class="section" id="using-two-loops-for-synchronization">
+<h3>Using two loops for synchronization<a class="headerlink" href="#using-two-loops-for-synchronization" title="Permalink to this headline">¶</a></h3>
+<p>There is a very specific use-case where two event loops can be used as
+a synchronization mechanism in place of conditional variables (especially since
+libuv doesn&#8217;t have condition variable support at this point). I used it in
+<a class="reference external" href="https://github.com/nikhilm/node-taglib">node-taglib</a>. The specific use case
+was:</p>
+<ol class="arabic simple">
+<li>The <em>main thread</em> calls a blocking function in a <em>worker thread</em> using
+<cite>uv_queue_work()</cite>.</li>
+<li>The <em>worker thread</em> has to call a custom function. The catch is that the
+custom function <em>has to run on the main thread</em>.</li>
+<li>The <em>worker thread</em> has to wait until this function returns.</li>
+</ol>
+<p>The condition variable approach is:</p>
+<ol class="arabic simple">
+<li>The worker thread doesn&#8217;t directly call the custom function. It instead
+creates a <cite>uv_async_t</cite> handler. The callback for this handler calls the
+custom function.</li>
+<li>Initializes a condition variable.</li>
+<li>It uses <cite>uv_async_send()</cite> to get the main thread (where the event loop runs)
+to invoke the function on its behalf.</li>
+<li>Waits on the condition variable.</li>
+<li>The callback calls the custom function, then signals the condition variable
+which lets the worker thread continue.</li>
+</ol>
+<p>The event loop implementation instead:</p>
+<ol class="arabic simple">
+<li>Creates a new event loop in the worker thread.</li>
+<li>Associates a <cite>uv_async_t</cite> with this new loop.</li>
+<li>Passes this handler to the <cite>main thread</cite> through the original <cite>uv_async_t</cite>
+handler&#8217;s <cite>data</cite> field.</li>
+<li><cite>uv_run()</cite> the new event loop, which now blocks because the async handler
+has incremented it&#8217;s <a class="reference internal" href="utilities.html#reference-count"><em>refcount</em></a>.</li>
+<li>The callback in the main thread calls the custom function, then uses
+<cite>uv_async_send()</cite> to signal the async handler on the new loop.</li>
+<li>The callback for this async handler simply closes the handler itself, the
+new loop&#8217;s refcount drops to zero, <cite>uv_run()</cite> returns and the worker thread
+can continue.</li>
+</ol>
+<p>Numerically it&#8217;s one step extra, but the approach suited <cite>node-taglib</cite> well
+because it made the code more symmetrical and explicit.</p>
+</div>
+</div>
 </div>
 
 

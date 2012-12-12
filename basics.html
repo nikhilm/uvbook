@@ -179,8 +179,13 @@ you should be aware of this.</p>
 are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:</p>
 <p class="rubric">libuv watchers</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="n">uv_loop_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_ares_task_s</span> <span class="n">uv_ares_task_t</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre>  <span class="n">UV_REQ_TYPE_PRIVATE</span>
+  <span class="n">UV_REQ_TYPE_MAX</span>
+<span class="p">}</span> <span class="n">uv_req_type</span><span class="p">;</span>
+
+
+<span class="cm">/* Handle types. */</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="n">uv_loop_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_err_s</span> <span class="n">uv_err_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="n">uv_handle_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="n">uv_stream_t</span><span class="p">;</span>
@@ -193,11 +198,6 @@ is used for. A full list of watchers supported by libuv is:</p>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_prepare_s</span> <span class="n">uv_prepare_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_check_s</span> <span class="n">uv_check_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_idle_s</span> <span class="n">uv_idle_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_async_s</span> <span class="n">uv_async_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getaddrinfo_s</span> <span class="n">uv_getaddrinfo_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_process_s</span> <span class="n">uv_process_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_counters_s</span> <span class="n">uv_counters_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_cpu_info_s</span> <span class="n">uv_cpu_info_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <div class="admonition note">

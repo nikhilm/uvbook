@@ -161,12 +161,12 @@ the pthreads <a class="reference external" href="pthreads">man pages</a>.</p>
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
 <p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
 <p class="rubric">libuv mutex functions</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="n">uv_mutex_init</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_destroy</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="n">uv_mutex_trylock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="n">uv_mutex_unlock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
-</pre></div>
+<div class="highlight-c"><pre>   * regular interval.
+   * This flag is currently not implemented yet on any backend.
+   */
+  UV_FS_EVENT_STAT = 2,
+
+</pre>
 </div>
 <p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on
 success, -1 on error instead of error codes.</p>
