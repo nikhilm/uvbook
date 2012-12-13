@@ -20,7 +20,8 @@ examples=\
 	multi-echo-server\
 	tty\
 	tty-gravity\
-	interfaces
+	interfaces\
+	locks
 
 UV_PATH=$(shell pwd)/../libuv
 UV_LIB = $(UV_PATH)/libuv.a

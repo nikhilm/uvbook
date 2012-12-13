@@ -109,8 +109,21 @@ return an error in the second call to ``uv_mutex_lock()``.
 Locks
 ~~~~~
 
-Read-write locks are the other synchronization primitive supported. TODO some
-DB read/write example
+Read-write locks are a more granular access mechanism. Two readers can access
+shared memory at the same time. A writer may not acquire the lock when it is
+held by a reader. A reader or writer may not acquire a lock when a writer is
+holding it. Read-write locks are frequently used in databases. Here is a toy
+example.
+
+.. rubric:: locks/main.c - simple rwlocks
+.. literalinclude:: ../code/locks/main.c
+    :linenos:
+    :emphasize-lines: 13,16,27,31,42,55
+
+Run this and observe how the readers will sometimes overlap. In case of
+multiple writers, schedulers will usually give them higher priority, so if you
+add two writers, you'll see that both writers tend to finish first before the
+readers get a chance again.
 
 Others
 ~~~~~~
