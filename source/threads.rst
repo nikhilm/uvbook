@@ -115,10 +115,45 @@ DB read/write example
 Others
 ~~~~~~
 
-Semaphores and condition variables are not implemented yet. Their are a couple
-of patches for condition variable support in libuv [#]_ [#]_, but since the
-Windows condition variable system is available only from Windows Vista and
-Windows Server 2008 onwards [#]_, the patches haven't been merged.
+libuv also supports semaphores_, `condition variables`_ and barriers_ with APIs
+very similar to their pthread counterparts.
+
+In the case of condition variables, libuv also has a timeout on a wait, with
+platform specific quirks [#]_.
+
+.. _semaphores: http://en.wikipedia.org/wiki/Semaphore_(programming)
+.. _condition variables: http://en.wikipedia.org/wiki/Condition_variable#Waiting_and_signaling
+.. _barriers: http://en.wikipedia.org/wiki/Barrier_(computer_science)
+
+In addition, libuv provides a convenience function ``uv_once()`` (not to be
+confused with ``uv_run_once()``. Multiple threads can attempt to call
+``uv_once()`` with a given guard and a function pointer, **only the first one
+will win, the function will be called once and only once**::
+
+    /* Initialize guard */
+    static uv_once_t once_only = UV_ONCE_INIT;
+
+    int i = 0;
+
+    void increment() {
+        i++;
+    }
+
+    void thread1() {
+        /* ... work */
+        uv_once(once_only, increment);
+    }
+
+    void thread2() {
+        /* ... work */
+        uv_once(once_only, increment);
+    }
+
+    int main() {
+        /* ... spawn threads */
+    }
+
+After all threads are done, ``i == 1``.
 
 .. _libuv-work-queue:
 
@@ -276,8 +311,7 @@ which binds a third party library. It may go something like this:
 
 ----
 
-.. [#] https://github.com/nikhilm/libuv/compare/condvar
-.. [#] https://github.com/bnoordhuis/libuv/compare/uv_cond
-.. [#] http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx
 .. _node.js is cancer: https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
 .. _bnoordhuis: https://github.com/bnoordhuis
+
+.. [#] https://github.com/joyent/libuv/blob/master/include/uv.h#L1853

@@ -23,10 +23,10 @@ Using two loops for synchronization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is a very specific use-case where two event loops can be used as
-a synchronization mechanism in place of conditional variables (especially since
-libuv doesn't have condition variable support at this point). I used it in
-`node-taglib <https://github.com/nikhilm/node-taglib>`_. The specific use case
-was:
+a synchronization mechanism in place of conditional variables. I used it in
+`node-taglib <https://github.com/nikhilm/node-taglib>`_. libuv did not have
+condition variable support then, and I've kept it that way for now to allow
+it to work with earlier node versions. The specific use case is:
 
 1. The *main thread* calls a blocking function in a *worker thread* using
    `uv_queue_work()`.
@@ -59,6 +59,3 @@ The event loop implementation instead:
 6. The callback for this async handler simply closes the handler itself, the
    new loop's refcount drops to zero, `uv_run()` returns and the worker thread
    can continue.
-
-Numerically it's one step extra, but the approach suited `node-taglib` well
-because it made the code more symmetrical and explicit.
