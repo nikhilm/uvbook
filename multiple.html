@@ -85,10 +85,10 @@ like we did in the <a class="reference internal" href="processes.html"><em>Proce
 <div class="section" id="using-two-loops-for-synchronization">
 <h3>Using two loops for synchronization<a class="headerlink" href="#using-two-loops-for-synchronization" title="Permalink to this headline">¶</a></h3>
 <p>There is a very specific use-case where two event loops can be used as
-a synchronization mechanism in place of conditional variables (especially since
-libuv doesn&#8217;t have condition variable support at this point). I used it in
-<a class="reference external" href="https://github.com/nikhilm/node-taglib">node-taglib</a>. The specific use case
-was:</p>
+a synchronization mechanism in place of conditional variables. I used it in
+<a class="reference external" href="https://github.com/nikhilm/node-taglib">node-taglib</a>. libuv did not have
+condition variable support then, and I&#8217;ve kept it that way for now to allow
+it to work with earlier node versions. The specific use case is:</p>
 <ol class="arabic simple">
 <li>The <em>main thread</em> calls a blocking function in a <em>worker thread</em> using
 <cite>uv_queue_work()</cite>.</li>
@@ -122,8 +122,6 @@ has incremented it&#8217;s <a class="reference internal" href="utilities.html#re
 new loop&#8217;s refcount drops to zero, <cite>uv_run()</cite> returns and the worker thread
 can continue.</li>
 </ol>
-<p>Numerically it&#8217;s one step extra, but the approach suited <cite>node-taglib</cite> well
-because it made the code more symmetrical and explicit.</p>
 </div>
 </div>
 </div>

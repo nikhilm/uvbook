@@ -194,19 +194,171 @@ not exposed via libuv.</p>
 </div>
 <div class="section" id="locks">
 <h3>Locks<a class="headerlink" href="#locks" title="Permalink to this headline">¶</a></h3>
-<p>Read-write locks are the other synchronization primitive supported. TODO some
-DB read/write example</p>
+<p>Read-write locks are a more granular access mechanism. Two readers can access
+shared memory at the same time. A writer may not acquire the lock when it is
+held by a reader. A reader or writer may not acquire a lock when a writer is
+holding it. Read-write locks are frequently used in databases. Here is a toy
+example.</p>
+<p class="rubric">locks/main.c - simple rwlocks</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="n">uv_barrier_t</span> <span class="n">blocker</span><span class="p">;</span>
+<span class="n">uv_rwlock_t</span> <span class="n">numlock</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">shared_num</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">reader</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">n</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">        <span class="n">uv_rwlock_rdlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Reader %d: acquired lock</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Reader %d: shared num = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">shared_num</span><span class="p">);</span>
+<span class="hll">        <span class="n">uv_rwlock_rdunlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Reader %d: released lock</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">uv_barrier_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">blocker</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">writer</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">num</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">n</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">        <span class="n">uv_rwlock_wrlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Writer %d: acquired lock</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
+        <span class="n">shared_num</span><span class="o">++</span><span class="p">;</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Writer %d: incremented shared num = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">shared_num</span><span class="p">);</span>
+<span class="hll">        <span class="n">uv_rwlock_wrunlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Writer %d: released lock</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">uv_barrier_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">blocker</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">uv_barrier_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">blocker</span><span class="p">,</span> <span class="mi">4</span><span class="p">);</span>
+
+    <span class="n">shared_num</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="hll">    <span class="n">uv_rwlock_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>
+    <span class="n">uv_thread_t</span> <span class="n">threads</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+    <span class="kt">int</span> <span class="n">thread_nums</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">};</span>
+    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">threads</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">thread_nums</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">threads</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">thread_nums</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+
+    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">threads</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">writer</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">thread_nums</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+
+    <span class="n">uv_barrier_wait</span><span class="p">(</span><span class="o">&amp;</span><span class="n">blocker</span><span class="p">);</span>
+    <span class="n">uv_barrier_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">blocker</span><span class="p">);</span>
+
+<span class="hll">    <span class="n">uv_rwlock_destroy</span><span class="p">(</span><span class="o">&amp;</span><span class="n">numlock</span><span class="p">);</span>
+</span>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Run this and observe how the readers will sometimes overlap. In case of
+multiple writers, schedulers will usually give them higher priority, so if you
+add two writers, you&#8217;ll see that both writers tend to finish first before the
+readers get a chance again.</p>
 </div>
 <div class="section" id="others">
 <h3>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h3>
-<p>Semaphores and condition variables are not implemented yet. Their are a couple
-of patches for condition variable support in libuv <a class="footnote-reference" href="#id6" id="id1">[1]</a> <a class="footnote-reference" href="#id7" id="id2">[2]</a>, but since the
-Windows condition variable system is available only from Windows Vista and
-Windows Server 2008 onwards <a class="footnote-reference" href="#id8" id="id3">[3]</a>, the patches haven&#8217;t been merged.</p>
+<p>libuv also supports <a class="reference external" href="http://en.wikipedia.org/wiki/Semaphore_(programming)">semaphores</a>, <a class="reference external" href="http://en.wikipedia.org/wiki/Condition_variable#Waiting_and_signaling">condition variables</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Barrier_(computer_science)">barriers</a> with APIs
+very similar to their pthread counterparts.</p>
+<p>In the case of condition variables, libuv also has a timeout on a wait, with
+platform specific quirks <a class="footnote-reference" href="#id4" id="id1">[1]</a>.</p>
+<p>In addition, libuv provides a convenience function <tt class="docutils literal"><span class="pre">uv_once()</span></tt> (not to be
+confused with <tt class="docutils literal"><span class="pre">uv_run_once()</span></tt>. Multiple threads can attempt to call
+<tt class="docutils literal"><span class="pre">uv_once()</span></tt> with a given guard and a function pointer, <strong>only the first one
+will win, the function will be called once and only once</strong>:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Initialize guard */</span>
+<span class="k">static</span> <span class="n">uv_once_t</span> <span class="n">once_only</span> <span class="o">=</span> <span class="n">UV_ONCE_INIT</span><span class="p">;</span>
+
+<span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">increment</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">thread1</span><span class="p">()</span> <span class="p">{</span>
+    <span class="cm">/* ... work */</span>
+    <span class="n">uv_once</span><span class="p">(</span><span class="n">once_only</span><span class="p">,</span> <span class="n">increment</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">thread2</span><span class="p">()</span> <span class="p">{</span>
+    <span class="cm">/* ... work */</span>
+    <span class="n">uv_once</span><span class="p">(</span><span class="n">once_only</span><span class="p">,</span> <span class="n">increment</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="cm">/* ... spawn threads */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>After all threads are done, <tt class="docutils literal"><span class="pre">i</span> <span class="pre">==</span> <span class="pre">1</span></tt>.</p>
 </div>
 </div>
 <div class="section" id="libuv-work-queue">
-<span id="id4"></span><h2>libuv work queue<a class="headerlink" href="#libuv-work-queue" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>libuv work queue<a class="headerlink" href="#libuv-work-queue" title="Permalink to this headline">¶</a></h2>
 <p><tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt> is a convenience function that allows an application to run
 a task in a separate thread, and have a callback that is triggered when the
 task is done. A seemingly simple function, what makes <tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt>
@@ -296,7 +448,7 @@ will be called, again with the same structure.</p>
 is to use a baton to exchange data.</p>
 </div>
 <div class="section" id="inter-thread-communication">
-<span id="id5"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
+<span id="id3"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes you want various threads to actually send each other messages <em>while</em>
 they are running. For example you might be running some long duration task in
 a separate thread (perhaps using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>) but want to notify progress
@@ -447,22 +599,10 @@ then interacts with v8 to invoke the JavaScript callback.</p>
 </li>
 </ol>
 <hr class="docutils" />
-<table class="docutils footnote" frame="void" id="id6" rules="none">
+<table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://github.com/nikhilm/libuv/compare/condvar">https://github.com/nikhilm/libuv/compare/condvar</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id7" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><a class="reference external" href="https://github.com/bnoordhuis/libuv/compare/uv_cond">https://github.com/bnoordhuis/libuv/compare/uv_cond</a></td></tr>
-</tbody>
-</table>
-<table class="docutils footnote" frame="void" id="id8" rules="none">
-<colgroup><col class="label" /><col /></colgroup>
-<tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td><a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/ms683469(v=vs.85).aspx</a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><a class="reference external" href="https://github.com/joyent/libuv/blob/master/include/uv.h#L1853">https://github.com/joyent/libuv/blob/master/include/uv.h#L1853</a></td></tr>
 </tbody>
 </table>
 </div>
