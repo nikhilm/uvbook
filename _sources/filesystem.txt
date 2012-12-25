@@ -278,6 +278,6 @@ In our example we simply print the arguments and run the command using
 
 ----
 
-.. [#fsnotify] inotify on Linux, kqueue on BSDs, ReadDirectoryChangesW on
-    Windows, event ports on Solaris, unsupported on Cygwin
+.. [#fsnotify] inotify on Linux, FSEvents on Darwin, kqueue on BSDs,
+               ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin
 .. [#] see :ref:`pipes`
