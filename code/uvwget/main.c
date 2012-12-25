@@ -33,7 +33,7 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
     if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
-    curl_multi_socket_action(curl_handle, req->fd, flags, &running_handles);
+    curl_multi_socket_action(curl_handle, req->io_watcher.fd, flags, &running_handles);
 
     char *done_url;
 

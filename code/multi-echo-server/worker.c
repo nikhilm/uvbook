@@ -42,7 +42,7 @@ void on_new_connection(uv_pipe_t *q, ssize_t nread, uv_buf_t buf, uv_handle_type
     uv_pipe_t *client = (uv_pipe_t*) malloc(sizeof(uv_pipe_t));
     uv_pipe_init(loop, client, 0);
     if (uv_accept((uv_stream_t*) q, (uv_stream_t*) client) == 0) {
-        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), client->fd);
+        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), client->io_watcher.fd);
         uv_read_start((uv_stream_t*) client, alloc_buffer, echo_read);
     }
     else {
