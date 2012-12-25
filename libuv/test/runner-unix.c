@@ -24,6 +24,7 @@
 
 #include <stdint.h> /* uintptr_t */
 
+#include <errno.h>
 #include <unistd.h> /* usleep */
 #include <string.h> /* strdup */
 #include <stdio.h>
@@ -40,11 +41,14 @@
 
 /* Do platform-specific initialization. */
 void platform_init(int argc, char **argv) {
+  const char* var = getenv("UV_RUN_AS_ROOT");
+
   /* Running the tests as root is not smart - don't do it. */
-  if (getuid() == 0) {
+  if (getuid() == 0 && (var == NULL || atoi(var) <= 0)) {
     fprintf(stderr, "Running the tests as root is not safe.\n");
     exit(1);
   }
+
   /* Disable stdio output buffering. */
   setvbuf(stdout, NULL, _IONBF, 0);
   setvbuf(stderr, NULL, _IONBF, 0);
@@ -143,8 +147,11 @@ static void* dowait(void* data) {
 
   if (args->pipe[1] >= 0) {
     /* Write a character to the main thread to notify it about this. */
-    char c = 0;
-    write(args->pipe[1], &c, 1);
+    ssize_t r;
+
+    do
+      r = write(args->pipe[1], "", 1);
+    while (r == -1 && errno == EINTR);
   }
 
   return NULL;

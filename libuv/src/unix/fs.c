@@ -46,7 +46,7 @@
 
 #define INIT(type)                                                            \
   do {                                                                        \
-    uv__req_init((loop), (req), UV_FS_ ## type);                              \
+    uv__req_init((loop), (req), UV_FS);                                       \
     (req)->fs_type = UV_FS_ ## type;                                          \
     (req)->errorno = 0;                                                       \
     (req)->result = 0;                                                        \
@@ -90,7 +90,7 @@
     }                                                                         \
     else {                                                                    \
       uv__fs_work(&(req)->work_req);                                          \
-      uv__fs_done(&(req)->work_req);                                          \
+      uv__fs_done(&(req)->work_req, 0);                                       \
       return (req)->result;                                                   \
     }                                                                         \
   }                                                                           \
@@ -119,14 +119,17 @@ static ssize_t uv__fs_futime(uv_fs_t* req) {
   ts[1].tv_sec  = req->mtime;
   ts[1].tv_nsec = (unsigned long)(req->mtime * 1000000) % 1000000 * 1000;
   return uv__utimesat(req->file, NULL, ts, 0);
-#elif HAVE_FUTIMES
+#elif defined(__APPLE__)                                                      \
+    || defined(__DragonFly__)                                                 \
+    || defined(__FreeBSD__)                                                   \
+    || defined(__sun)
   struct timeval tv[2];
   tv[0].tv_sec  = req->atime;
   tv[0].tv_usec = (unsigned long)(req->atime * 1000000) % 1000000;
   tv[1].tv_sec  = req->mtime;
   tv[1].tv_usec = (unsigned long)(req->mtime * 1000000) % 1000000;
   return futimes(req->file, tv);
-#else /* !HAVE_FUTIMES */
+#else
   errno = ENOSYS;
   return -1;
 #endif
@@ -513,7 +516,7 @@ static void uv__fs_work(struct uv__work* w) {
 }
 
 
-static void uv__fs_done(struct uv__work* w) {
+static void uv__fs_done(struct uv__work* w, int status) {
   uv_fs_t* req;
 
   req = container_of(w, uv_fs_t, work_req);
@@ -522,6 +525,12 @@ static void uv__fs_done(struct uv__work* w) {
   if (req->errorno != 0) {
     req->errorno = uv_translate_sys_error(req->errorno);
     uv__set_artificial_error(req->loop, req->errorno);
+  }
+
+  if (status == -UV_ECANCELED) {
+    assert(req->errorno == 0);
+    req->errorno = UV_ECANCELED;
+    uv__set_artificial_error(req->loop, UV_ECANCELED);
   }
 
   if (req->cb != NULL)

@@ -26,7 +26,7 @@
 #include <fcntl.h>
 
 #ifndef HAVE_KQUEUE
-# if __APPLE__ || __FreeBSD__ || __OpenBSD__ || __NetBSD__
+# if __APPLE__ || __DragonFly__ || __FreeBSD__ || __OpenBSD__ || __NetBSD__
 #  define HAVE_KQUEUE 1
 # endif
 #endif
@@ -112,7 +112,7 @@ static void fs_event_cb_file(uv_fs_event_t* handle, const char* filename,
   uv_close((uv_handle_t*)handle, close_cb);
 }
 
-static void timber_cb_close_handle(uv_timer_t* timer, int status) {
+static void timer_cb_close_handle(uv_timer_t* timer, int status) {
   uv_handle_t* handle;
 
   ASSERT(timer != NULL);
@@ -138,7 +138,7 @@ static void fs_event_cb_file_current_dir(uv_fs_event_t* handle,
     static uv_timer_t timer;
     uv_timer_init(handle->loop, &timer);
     timer.data = handle;
-    uv_timer_start(&timer, timber_cb_close_handle, 250, 0);
+    uv_timer_start(&timer, timer_cb_close_handle, 250, 0);
   }
 }
 
@@ -296,6 +296,37 @@ TEST_IMPL(fs_event_watch_file_current_dir) {
   return 0;
 }
 
+TEST_IMPL(fs_event_no_callback_after_close) {
+  uv_loop_t* loop = uv_default_loop();
+  int r;
+
+  /* Setup */
+  remove("watch_dir/file1");
+  remove("watch_dir/");
+  create_dir(loop, "watch_dir");
+  create_file(loop, "watch_dir/file1");
+
+  r = uv_fs_event_init(loop,
+                       &fs_event,
+                       "watch_dir/file1",
+                       fs_event_cb_file,
+                       0);
+  ASSERT(r != -1);
+
+  uv_close((uv_handle_t*)&fs_event, close_cb);
+  touch_file(loop, "watch_dir/file1");
+  uv_run(loop);
+
+  ASSERT(fs_event_cb_called == 0);
+  ASSERT(close_cb_called == 1);
+
+  /* Cleanup */
+  remove("watch_dir/file1");
+  remove("watch_dir/");
+
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
 
 TEST_IMPL(fs_event_no_callback_on_close) {
   uv_loop_t* loop = uv_default_loop();

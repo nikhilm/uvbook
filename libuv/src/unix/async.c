@@ -27,7 +27,7 @@
 #include <unistd.h>
 
 static int uv__async_init(uv_loop_t* loop);
-static void uv__async_io(uv_loop_t* loop, uv__io_t* handle, int events);
+static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events);
 
 
 static int uv__async_make_pending(volatile sig_atomic_t* ptr) {
@@ -84,6 +84,8 @@ int uv_async_send(uv_async_t* handle) {
     r = write(handle->loop->async_pipefd[1], "x", 1);
   while (r == -1 && errno == EINTR);
 
+  assert(r == -1 || r == 1);
+
   if (r == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
     return uv__set_sys_error(handle->loop, errno);
 
@@ -104,17 +106,14 @@ static int uv__async_init(uv_loop_t* loop) {
   if (uv__make_pipe(loop->async_pipefd, UV__F_NONBLOCK))
     return -1;
 
-  uv__io_init(&loop->async_watcher,
-              uv__async_io,
-              loop->async_pipefd[0],
-              UV__IO_READ);
-  uv__io_start(loop, &loop->async_watcher);
+  uv__io_init(&loop->async_watcher, uv__async_io, loop->async_pipefd[0]);
+  uv__io_start(loop, &loop->async_watcher, UV__POLLIN);
 
   return 0;
 }
 
 
-static void uv__async_io(uv_loop_t* loop, uv__io_t* handle, int events) {
+static void uv__async_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   char buf[1024];
   ngx_queue_t* q;
   uv_async_t* h;

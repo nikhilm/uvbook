@@ -21,11 +21,15 @@
 E=
 CSTDFLAG=--std=c89 -pedantic -Wall -Wextra -Wno-unused-parameter
 CFLAGS += -g
-CPPFLAGS += -Isrc -Isrc/unix/ev
-LINKFLAGS=-lm
+CPPFLAGS += -Isrc
+LDFLAGS=-lm
 
 CPPFLAGS += -D_LARGEFILE_SOURCE
 CPPFLAGS += -D_FILE_OFFSET_BITS=64
+
+RUNNER_SRC=test/runner-unix.c
+RUNNER_CFLAGS=$(CFLAGS) -Itest
+RUNNER_LDFLAGS=-L"$(PWD)" -luv -Xlinker -rpath -Xlinker "$(PWD)"
 
 OBJS += src/unix/async.o
 OBJS += src/unix/core.o
@@ -46,90 +50,85 @@ OBJS += src/unix/threadpool.o
 OBJS += src/unix/timer.o
 OBJS += src/unix/tty.o
 OBJS += src/unix/udp.o
+OBJS += src/fs-poll.o
+OBJS += src/uv-common.o
+OBJS += src/inet.o
 
 ifeq (SunOS,$(uname_S))
-EV_CONFIG=config_sunos.h
 CPPFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
-LINKFLAGS+=-lkstat -lnsl -lsendfile -lsocket
+LDFLAGS+=-lkstat -lnsl -lsendfile -lsocket
+# Library dependencies are not transitive.
+RUNNER_LDFLAGS += $(LDFLAGS)
 OBJS += src/unix/sunos.o
 endif
 
 ifeq (AIX,$(uname_S))
-EV_CONFIG=config_aix.h
 CPPFLAGS += -Isrc/ares/config_aix -D_ALL_SOURCE -D_XOPEN_SOURCE=500
-LINKFLAGS+= -lperfstat
+LDFLAGS+= -lperfstat
 OBJS += src/unix/aix.o
 endif
 
 ifeq (Darwin,$(uname_S))
-EV_CONFIG=config_darwin.h
 CPPFLAGS += -D_DARWIN_USE_64_BIT_INODE=1
-LINKFLAGS+=-framework CoreServices
+LDFLAGS+=-framework CoreServices -dynamiclib -install_name "@rpath/libuv.dylib"
+SOEXT = dylib
 OBJS += src/unix/darwin.o
 OBJS += src/unix/kqueue.o
 OBJS += src/unix/fsevents.o
 endif
 
 ifeq (Linux,$(uname_S))
-EV_CONFIG=config_linux.h
 CSTDFLAG += -D_GNU_SOURCE
-LINKFLAGS+=-ldl -lrt
+LDFLAGS+=-ldl -lrt
+RUNNER_CFLAGS += -D_GNU_SOURCE
 OBJS += src/unix/linux/linux-core.o \
         src/unix/linux/inotify.o    \
         src/unix/linux/syscalls.o
 endif
 
 ifeq (FreeBSD,$(uname_S))
-EV_CONFIG=config_freebsd.h
-LINKFLAGS+=-lkvm
+LDFLAGS+=-lkvm
 OBJS += src/unix/freebsd.o
 OBJS += src/unix/kqueue.o
 endif
 
 ifeq (DragonFly,$(uname_S))
-EV_CONFIG=config_freebsd.h
-LINKFLAGS+=
+LDFLAGS+=-lkvm
 OBJS += src/unix/freebsd.o
 OBJS += src/unix/kqueue.o
 endif
 
 ifeq (NetBSD,$(uname_S))
-EV_CONFIG=config_netbsd.h
-LINKFLAGS+=-lkvm
+LDFLAGS+=-lkvm
 OBJS += src/unix/netbsd.o
 OBJS += src/unix/kqueue.o
 endif
 
 ifeq (OpenBSD,$(uname_S))
-EV_CONFIG=config_openbsd.h
-LINKFLAGS+=-lkvm
+LDFLAGS+=-lkvm
 OBJS += src/unix/openbsd.o
 OBJS += src/unix/kqueue.o
 endif
 
 ifneq (,$(findstring CYGWIN,$(uname_S)))
-EV_CONFIG=config_cygwin.h
 # We drop the --std=c89, it hides CLOCK_MONOTONIC on cygwin
 CSTDFLAG = -D_GNU_SOURCE
-LINKFLAGS+=
+LDFLAGS+=
 OBJS += src/unix/cygwin.o
 endif
 
-# Need _GNU_SOURCE for strdup?
-RUNNER_CFLAGS=$(CFLAGS) -D_GNU_SOURCE
-RUNNER_LINKFLAGS=$(LINKFLAGS)
-
 ifeq (SunOS,$(uname_S))
-RUNNER_LINKFLAGS += -pthreads
+RUNNER_LDFLAGS += -pthreads
 else
-RUNNER_LINKFLAGS += -pthread
+RUNNER_LDFLAGS += -pthread
 endif
 
-RUNNER_LIBS=
-RUNNER_SRC=test/runner-unix.c
-
-libuv.a: $(OBJS) src/fs-poll.o src/inet.o src/uv-common.o src/unix/ev/ev.o
+libuv.a: $(OBJS)
 	$(AR) rcs $@ $^
+
+libuv.$(SOEXT):	override CFLAGS += -fPIC
+libuv.$(SOEXT):	$(OBJS)
+	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 src/%.o: src/%.c include/uv.h include/uv-private/uv-unix.h
 	$(CC) $(CSTDFLAG) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
@@ -137,17 +136,12 @@ src/%.o: src/%.c include/uv.h include/uv-private/uv-unix.h
 src/unix/%.o: src/unix/%.c include/uv.h include/uv-private/uv-unix.h src/unix/internal.h
 	$(CC) $(CSTDFLAG) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-src/unix/ev/ev.o: src/unix/ev/ev.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/unix/ev/ev.c -o src/unix/ev/ev.o -DEV_CONFIG_H=\"$(EV_CONFIG)\"
-
 clean-platform:
 	-rm -f src/unix/*.o
-	-rm -f src/unix/ev/*.o
 	-rm -f src/unix/linux/*.o
 	-rm -rf test/run-tests.dSYM run-benchmarks.dSYM
 
 distclean-platform:
 	-rm -f src/unix/*.o
-	-rm -f src/unix/ev/*.o
 	-rm -f src/unix/linux/*.o
 	-rm -rf test/run-tests.dSYM run-benchmarks.dSYM

@@ -55,6 +55,9 @@ int uv__platform_loop_init(uv_loop_t* loop, int default_loop) {
   CFRunLoopSourceContext ctx;
   int r;
 
+  if (uv__kqueue_init(loop))
+    return -1;
+
   loop->cf_loop = NULL;
   if ((r = uv_mutex_init(&loop->cf_mutex)))
     return r;
@@ -173,32 +176,15 @@ void uv__cf_loop_signal(uv_loop_t* loop, cf_loop_signal_cb cb, void* arg) {
 }
 
 
-#if TARGET_OS_IPHONE
-/* see: http://developer.apple.com/library/mac/#qa/qa1398/_index.html */
-uint64_t uv_hrtime() {
-    uint64_t time;
-    uint64_t enano;
-    static mach_timebase_info_data_t sTimebaseInfo;
+uint64_t uv_hrtime(void) {
+    mach_timebase_info_data_t info;
 
-    time = mach_absolute_time();
+    if (mach_timebase_info(&info) != KERN_SUCCESS)
+      abort();
 
-    if (0 == sTimebaseInfo.denom) {
-        (void)mach_timebase_info(&sTimebaseInfo);
-    }
-
-    enano = time * sTimebaseInfo.numer / sTimebaseInfo.denom;
-
-    return enano;
+    return mach_absolute_time() * info.numer / info.denom;
 }
-#else
-uint64_t uv_hrtime() {
-  uint64_t time;
-  Nanoseconds enano;
-  time = mach_absolute_time(); 
-  enano = AbsoluteToNanoseconds(*(AbsoluteTime *)&time);
-  return (*(uint64_t *)&enano);
-}
-#endif
+
 
 int uv_exepath(char* buffer, size_t* size) {
   uint32_t usize;

@@ -19,59 +19,28 @@
  * IN THE SOFTWARE.
  */
 
-#include "task.h"
 #include "uv.h"
+#include "task.h"
 
-#define NUM_TIMERS (1000 * 1000)
-
-static int timer_cb_called;
-static int close_cb_called;
+static uv_timer_t timer_handle;
+static int timer_called = 0;
 
 
 static void timer_cb(uv_timer_t* handle, int status) {
-  timer_cb_called++;
+  ASSERT(handle == &timer_handle);
+  ASSERT(status == 0);
+  timer_called = 1;
 }
 
 
-static void close_cb(uv_handle_t* handle) {
-  close_cb_called++;
-}
+TEST_IMPL(run_nowait) {
+  int r;
+  uv_timer_init(uv_default_loop(), &timer_handle);
+  uv_timer_start(&timer_handle, timer_cb, 100, 100);
 
+  r = uv_run2(uv_default_loop(), UV_RUN_NOWAIT);
+  ASSERT(r != 0);
+  ASSERT(timer_called == 0);
 
-BENCHMARK_IMPL(million_timers) {
-  uv_timer_t* timers;
-  uv_loop_t* loop;
-  uint64_t before;
-  uint64_t after;
-  int timeout;
-  int i;
-
-  timers = malloc(NUM_TIMERS * sizeof(timers[0]));
-  ASSERT(timers != NULL);
-
-  loop = uv_default_loop();
-  timeout = 0;
-
-  for (i = 0; i < NUM_TIMERS; i++) {
-    if (i % 1000 == 0) timeout++;
-    ASSERT(0 == uv_timer_init(loop, timers + i));
-    ASSERT(0 == uv_timer_start(timers + i, timer_cb, timeout, 0));
-  }
-
-  before = uv_hrtime();
-  ASSERT(0 == uv_run(loop));
-  after = uv_hrtime();
-
-  for (i = 0; i < NUM_TIMERS; i++)
-    uv_close((uv_handle_t*) (timers + i), close_cb);
-
-  ASSERT(0 == uv_run(loop));
-  ASSERT(timer_cb_called == NUM_TIMERS);
-  ASSERT(close_cb_called == NUM_TIMERS);
-  free(timers);
-
-  LOGF("%.2f seconds\n", (after - before) / 1e9);
-
-  MAKE_VALGRIND_HAPPY();
   return 0;
 }
