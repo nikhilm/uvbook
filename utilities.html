@@ -576,7 +576,7 @@ mask with the new value. <tt class="docutils literal"><span class="pre">curl_per
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_READABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_IN</span><span class="p">;</span>
 </span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_WRITABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_OUT</span><span class="p">;</span>
 </span>
-<span class="hll">    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
+<span class="hll">    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">io_watcher</span><span class="p">.</span><span class="n">fd</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
 </span>
     <span class="kt">char</span> <span class="o">*</span><span class="n">done_url</span><span class="p">;</span>
 

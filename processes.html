@@ -243,18 +243,150 @@ does not affect it.</p>
 <p>Just remember that the watcher is still monitoring the child, so your program
 won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
 </div>
-<div class="section" id="signals-and-termination">
-<h2>Signals and termination<a class="headerlink" href="#signals-and-termination" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sending-signals-to-processes">
+<h2>Sending signals to processes<a class="headerlink" href="#sending-signals-to-processes" title="Permalink to this headline">¶</a></h2>
 <p>libuv wraps the standard <tt class="docutils literal"><span class="pre">kill(2)</span></tt> system call on Unix and implements one
-with similar semantics on Windows, with <em>one caveat</em>: <tt class="docutils literal"><span class="pre">uv_kill</span></tt> on Windows
-only supports <tt class="docutils literal"><span class="pre">SIGTERM</span></tt>, <tt class="docutils literal"><span class="pre">SIGINT</span></tt> and <tt class="docutils literal"><span class="pre">SIGKILL</span></tt>, all of which lead to
-termination of the process. The signature of <tt class="docutils literal"><span class="pre">uv_kill</span></tt> is:</p>
+with similar semantics on Windows, with <em>one caveat</em>: all of <tt class="docutils literal"><span class="pre">SIGTERM</span></tt>,
+<tt class="docutils literal"><span class="pre">SIGINT</span></tt> and <tt class="docutils literal"><span class="pre">SIGKILL</span></tt>, lead to termination of the process. The signature
+of <tt class="docutils literal"><span class="pre">uv_kill</span></tt> is:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_err_t</span> <span class="n">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>For processes started using libuv, you may use <tt class="docutils literal"><span class="pre">uv_process_kill</span></tt> instead,
 which accepts the <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> watcher as the first argument, rather than
 the pid. In this case, <strong>remember to call</strong> <tt class="docutils literal"><span class="pre">uv_close</span></tt> on the watcher.</p>
+</div>
+<div class="section" id="signals">
+<h2>Signals<a class="headerlink" href="#signals" title="Permalink to this headline">¶</a></h2>
+<p>TODO: update based on <a class="reference external" href="https://github.com/joyent/libuv/issues/668">https://github.com/joyent/libuv/issues/668</a></p>
+<p>libuv provides wrappers around Unix signals with <a class="reference external" href="https://github.com/joyent/libuv/blob/node-v0.9.4/include/uv.h#L1659">some Windows support</a> as well.</p>
+<p>To make signals &#8216;play nice&#8217; with libuv, the API will deliver signals to <em>all
+handlers on all running event loops</em>! Use <tt class="docutils literal"><span class="pre">uv_signal_init()</span></tt> to initialize
+a handler and associate it with a loop. To listen for particular signals on
+that handler, use <tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> with the handler function. Each handler
+can only be associated with one signal number, with subsequent calls to
+<tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> overwriting earlier associations. Use <tt class="docutils literal"><span class="pre">uv_signal_stop()</span></tt> to
+stop watching. Here is a small example demonstrating the various possibilities:</p>
+<p class="rubric">signal/main.c</p>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;unistd.h&gt;</span>
+<span class="cp">#include &lt;uv.h&gt;</span>
+
+<span class="kt">void</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">uv_signal_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Signal received: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">signum</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_signal_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+</span><span class="p">}</span>
+
+<span class="c1">// two signal handlers in one loop</span>
+<span class="kt">void</span> <span class="nf">thread1_worker</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop1</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+
+    <span class="n">uv_signal_t</span> <span class="n">sig1a</span><span class="p">,</span> <span class="n">sig1b</span><span class="p">;</span>
+<span class="hll">    <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig1a</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_signal_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sig1a</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">,</span> <span class="n">SIGUSR1</span><span class="p">);</span>
+</span>
+    <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig1b</span><span class="p">);</span>
+    <span class="n">uv_signal_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sig1b</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">,</span> <span class="n">SIGUSR1</span><span class="p">);</span>
+
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// two signal handlers, each in its own loop</span>
+<span class="kt">void</span> <span class="nf">thread2_worker</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop2</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop3</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+
+    <span class="n">uv_signal_t</span> <span class="n">sig2</span><span class="p">;</span>
+    <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig2</span><span class="p">);</span>
+    <span class="n">uv_signal_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sig2</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">,</span> <span class="n">SIGUSR1</span><span class="p">);</span>
+
+    <span class="n">uv_signal_t</span> <span class="n">sig3</span><span class="p">;</span>
+    <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop3</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig3</span><span class="p">);</span>
+    <span class="n">uv_signal_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sig3</span><span class="p">,</span> <span class="n">signal_handler</span><span class="p">,</span> <span class="n">SIGUSR1</span><span class="p">);</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="n">uv_run_once</span><span class="p">(</span><span class="n">loop2</span><span class="p">)</span> <span class="o">||</span> <span class="n">uv_run_once</span><span class="p">(</span><span class="n">loop3</span><span class="p">))</span> <span class="p">{</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;PID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">());</span>
+
+    <span class="n">uv_thread_t</span> <span class="n">thread1</span><span class="p">,</span> <span class="n">thread2</span><span class="p">;</span>
+
+    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">,</span> <span class="n">thread1_worker</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">uv_thread_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span> <span class="n">thread2_worker</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+
+    <span class="n">uv_thread_join</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">);</span>
+    <span class="n">uv_thread_join</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Send <tt class="docutils literal"><span class="pre">SIGUSR1</span></tt> to the process, and you&#8217;ll find the handler being invoked
+4 times, one for each <tt class="docutils literal"><span class="pre">uv_signal_t</span></tt>. The handler just stops each handle,
+so that the program exits. This sort of dispatch to all handlers is very
+useful. A server using multiple event loops could ensure that all data was
+safely saved before termination, simply by every loop adding a watcher for
+<tt class="docutils literal"><span class="pre">SIGINT</span></tt>.</p>
 </div>
 <div class="section" id="child-process-i-o">
 <h2>Child Process I/O<a class="headerlink" href="#child-process-i-o" title="Permalink to this headline">¶</a></h2>
@@ -281,14 +413,14 @@ The file descriptors of the child process are set using the <tt class="docutils 
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
 file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
 <tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
-<div class="highlight-c"><pre>
-/*
- * Asynchronous getaddrinfo(3).
- *
- * Either node or service may be NULL but not both.
- *
- * hints is a pointer to a struct addrinfo with additional address type
- * constraints, or NULL. Consult `man -s 3 getaddrinfo` for details.
+<div class="highlight-c"><pre> * non-repeating before, it will have been stopped. If it was repeating, then
+ * the old repeat value will have been used to schedule the next timeout.
+ */
+UV_EXTERN void uv_timer_set_repeat(uv_timer_t* timer, int64_t repeat);
+
+UV_EXTERN int64_t uv_timer_get_repeat(uv_timer_t* timer);
+
+
 </pre>
 </div>
 <p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
@@ -602,7 +734,7 @@ input of the worker, we connect the pipe to <tt class="docutils literal"><span c
     <span class="n">uv_pipe_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_pipe_t</span><span class="p">));</span>
     <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Worker %d: Accepted fd %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">(),</span> <span class="n">client</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">);</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Worker %d: Accepted fd %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">(),</span> <span class="n">client</span><span class="o">-&gt;</span><span class="n">io_watcher</span><span class="p">.</span><span class="n">fd</span><span class="p">);</span>
         <span class="n">uv_read_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">echo_read</span><span class="p">);</span>
     <span class="p">}</span>
     <span class="k">else</span> <span class="p">{</span>

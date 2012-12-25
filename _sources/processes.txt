@@ -105,19 +105,47 @@ does not affect it.
 Just remember that the watcher is still monitoring the child, so your program
 won't exit. Use ``uv_unref()`` if you want to be more *fire-and-forget*.
 
-Signals and termination
------------------------
+Sending signals to processes
+----------------------------
 
 libuv wraps the standard ``kill(2)`` system call on Unix and implements one
-with similar semantics on Windows, with *one caveat*: ``uv_kill`` on Windows
-only supports ``SIGTERM``, ``SIGINT`` and ``SIGKILL``, all of which lead to
-termination of the process. The signature of ``uv_kill`` is::
+with similar semantics on Windows, with *one caveat*: all of ``SIGTERM``,
+``SIGINT`` and ``SIGKILL``, lead to termination of the process. The signature
+of ``uv_kill`` is::
 
     uv_err_t uv_kill(int pid, int signum);
 
 For processes started using libuv, you may use ``uv_process_kill`` instead,
 which accepts the ``uv_process_t`` watcher as the first argument, rather than
 the pid. In this case, **remember to call** ``uv_close`` on the watcher.
+
+Signals
+-------
+
+TODO: update based on https://github.com/joyent/libuv/issues/668
+
+libuv provides wrappers around Unix signals with `some Windows support
+<https://github.com/joyent/libuv/blob/node-v0.9.4/include/uv.h#L1659>`_ as well.
+
+To make signals 'play nice' with libuv, the API will deliver signals to *all
+handlers on all running event loops*! Use ``uv_signal_init()`` to initialize
+a handler and associate it with a loop. To listen for particular signals on
+that handler, use ``uv_signal_start()`` with the handler function. Each handler
+can only be associated with one signal number, with subsequent calls to
+``uv_signal_start()`` overwriting earlier associations. Use ``uv_signal_stop()`` to
+stop watching. Here is a small example demonstrating the various possibilities:
+
+.. rubric:: signal/main.c
+.. literalinclude:: ../code/signal/main.c
+    :linenos:
+    :emphasize-lines: 8,17-18
+
+Send ``SIGUSR1`` to the process, and you'll find the handler being invoked
+4 times, one for each ``uv_signal_t``. The handler just stops each handle,
+so that the program exits. This sort of dispatch to all handlers is very
+useful. A server using multiple event loops could ensure that all data was
+safely saved before termination, simply by every loop adding a watcher for
+``SIGINT``.
 
 Child Process I/O
 -----------------
