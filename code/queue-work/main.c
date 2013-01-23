@@ -40,5 +40,5 @@ int main() {
         uv_queue_work(loop, &req[i], fib, after_fib);
     }
 
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

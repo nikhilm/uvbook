@@ -119,5 +119,5 @@ int main() {
     struct sockaddr_in send_addr = uv_ip4_addr("255.255.255.255", 67);
     uv_udp_send(&send_req, &send_socket, &discover_msg, 1, send_addr, on_send);
 
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }
