@@ -44,5 +44,5 @@ int main() {
     fprintf(stderr, "Width %d, height %d\n", width, height);
     uv_timer_init(loop, &tick);
     uv_timer_start(&tick, update, 200, 200);
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

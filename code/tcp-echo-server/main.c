@@ -60,5 +60,5 @@ int main() {
         fprintf(stderr, "Listen error %s\n", uv_err_name(uv_last_error(loop)));
         return 1;
     }
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

@@ -75,6 +75,6 @@ int main(int argc, char **argv) {
 
     uv_read_start((uv_stream_t*)&stdin_pipe, alloc_buffer, read_stdin);
 
-    uv_run(loop);
+    uv_run(loop, UV_RUN_DEFAULT);
     return 0;
 }

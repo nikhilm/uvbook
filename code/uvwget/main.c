@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
         add_download(argv[argc], argc);
     }
 
-    uv_run(loop);
+    uv_run(loop, UV_RUN_DEFAULT);
     curl_multi_cleanup(curl_handle);
     return 0;
 }

@@ -36,5 +36,5 @@ int main() {
 
     uv_fs_read(loop, &stdin_watcher, 1, buffer, 1024, -1, on_type);
     uv_idle_start(&idler, crunch_away);
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }
