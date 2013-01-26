@@ -17,7 +17,7 @@ int main() {
     uv_idle_start(&idler, wait_for_a_while);
 
     printf("Idling...\n");
-    uv_run(uv_default_loop());
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
     return 0;
 }

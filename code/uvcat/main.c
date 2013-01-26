@@ -49,6 +49,6 @@ void on_open(uv_fs_t *req) {
 
 int main(int argc, char **argv) {
     uv_fs_open(uv_default_loop(), &open_req, argv[1], O_RDONLY, 0, on_open);
-    uv_run(uv_default_loop());
+    uv_run(uv_default_loop(), UV_RUN_DEFAULT);
     return 0;
 }

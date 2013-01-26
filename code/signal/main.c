@@ -20,7 +20,7 @@ void thread1_worker(void *userp)
     uv_signal_init(loop1, &sig1b);
     uv_signal_start(&sig1b, signal_handler, SIGUSR1);
 
-    uv_run(loop1);
+    uv_run(loop1, UV_RUN_DEFAULT);
 }
 
 // two signal handlers, each in its own loop
@@ -37,7 +37,7 @@ void thread2_worker(void *userp)
     uv_signal_init(loop3, &sig3);
     uv_signal_start(&sig3, signal_handler, SIGUSR1);
 
-    while (uv_run_once(loop2) || uv_run_once(loop3)) {
+    while (uv_run(loop2, UV_RUN_NOWAIT) || uv_run(loop3, UV_RUN_NOWAIT)) {
     }
 }
 
