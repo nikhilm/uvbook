@@ -16,11 +16,8 @@ Nikhil is indebted to Marc Lehmann's comprehensive `man page
 <http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod>`_ about libev which
 describes much of the semantics of the two libraries.
 
-The book is written in `RestructuredText
-<http://docutils.sourceforge.net/rst.html>`_ and uses `Sphinx
-<http://sphinx.pocoo.org/>`_ to generate the html and PDF. `vim
-<http://www.vim.org>`_, `tmux <http://tmux.sourceforge.net>`_ and `iTerm2
-<http://www.iterm2.com>`_ on a Macbook Pro helped craft the text and code.
+This book was made using `Sphinx <http://sphinx.pocoo.org/>`_ and `vim
+<http://www.vim.org>`_.
 
 Licensing
 ---------
