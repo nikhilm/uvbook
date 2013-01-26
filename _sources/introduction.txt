@@ -41,6 +41,8 @@ node.js grew in popularity, it was important to make it work on Windows, but
 libev ran only on Unix. The Windows equivalent of kernel event notification
 mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction around libev
 or IOCP depending on the platform, providing users an API based on libev.
+As of the node-v0.9.0 version of libuv, `libev has been removed`_ and libuv
+directly interfaces with Unix.
 
 Code
 ----
@@ -48,13 +50,14 @@ Code
 All the code from this book is included as part of the source of the book on
 Github. `Clone`_/`Download`_ the book and run ``make`` in the ``code/``
 folder to compile all the examples. This book and the code is based on libuv
-version `node-v0.9.0` and a version is included in the ``libuv/`` folder
+version `node-v0.9.8`_ and a version is included in the ``libuv/`` folder
 which will be compiled automatically.
 
 .. _Clone: https://github.com/nikhilm/uvbook
 .. _Download: https://github.com/nikhilm/uvbook/downloads
-.. _node-v0.9.0: https://github.com/joyent/libuv/tags
+.. _node-v0.9.8: https://github.com/joyent/libuv/tags
 .. _V8: http://code.google.com/p/v8/
 .. _libev: http://software.schmorp.de/pkg/libev.html
 .. _libuv: https://github.com/joyent/libuv
 .. _node.js: http://www.nodejs.org
+.. _libev has been removed: https://github.com/joyent/libuv/issues/485

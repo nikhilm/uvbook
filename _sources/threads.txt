@@ -78,7 +78,7 @@ The mutex functions are a **direct** map to the pthread equivalents.
 
 .. rubric:: libuv mutex functions
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1672-1676
+    :lines: 1834-1838
 
 The ``uv_mutex_init()`` and ``uv_mutex_trylock()`` functions will return 0 on
 success, -1 on error instead of error codes.

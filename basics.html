@@ -79,10 +79,11 @@ and respond to them when they occur. The responsibility of gathering events
 from the operating system or monitoring other sources of events is handled by
 libuv, and the user can register callbacks to be invoked when an event occurs.
 The event-loop usually keeps running <em>forever</em>. In pseudocode:</p>
-<div class="highlight-python"><pre>while there are still events to process:
-    e = get the next event
-    if there is a callback associated with e:
-        call the callback</pre>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">while</span> <span class="n">there</span> <span class="n">are</span> <span class="n">still</span> <span class="n">events</span> <span class="n">to</span> <span class="n">process</span><span class="p">:</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">get</span> <span class="n">the</span> <span class="nb">next</span> <span class="n">event</span>
+    <span class="k">if</span> <span class="n">there</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">callback</span> <span class="n">associated</span> <span class="k">with</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">call</span> <span class="n">the</span> <span class="n">callback</span>
+</pre></div>
 </div>
 <p>Some examples of events are:</p>
 <ul class="simple">
@@ -149,10 +150,10 @@ nothing, except start a loop which will exit immediately.</p>
 <span class="cp">#include &lt;uv.h&gt;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
 
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Now quitting.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -179,25 +180,24 @@ you should be aware of this.</p>
 are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:</p>
 <p class="rubric">libuv watchers</p>
-<div class="highlight-c"><div class="highlight"><pre>  <span class="n">UV_REQ_TYPE_PRIVATE</span>
-  <span class="n">UV_REQ_TYPE_MAX</span>
-<span class="p">}</span> <span class="n">uv_req_type</span><span class="p">;</span>
-
-
-<span class="cm">/* Handle types. */</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="n">uv_loop_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_err_s</span> <span class="n">uv_err_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="n">uv_handle_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="n">uv_stream_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="n">uv_tcp_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="n">uv_udp_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="n">uv_pipe_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="n">uv_tty_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="n">uv_poll_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_timer_s</span> <span class="n">uv_timer_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_prepare_s</span> <span class="n">uv_prepare_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_check_s</span> <span class="n">uv_check_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_idle_s</span> <span class="n">uv_idle_t</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="kt">uv_loop_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_err_s</span> <span class="kt">uv_err_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="kt">uv_handle_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="kt">uv_stream_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="kt">uv_tcp_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="kt">uv_pipe_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="kt">uv_tty_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="kt">uv_poll_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_timer_s</span> <span class="kt">uv_timer_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_prepare_s</span> <span class="kt">uv_prepare_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_check_s</span> <span class="kt">uv_check_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_idle_s</span> <span class="kt">uv_idle_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_async_s</span> <span class="kt">uv_async_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_process_s</span> <span class="kt">uv_process_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_event_s</span> <span class="kt">uv_fs_event_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_poll_s</span> <span class="kt">uv_fs_poll_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_signal_s</span> <span class="kt">uv_signal_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -241,7 +241,7 @@ exits since no event watchers are active.</p>
 
 <span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="kt">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
 </span>    <span class="n">counter</span><span class="o">++</span><span class="p">;</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;=</span> <span class="mf">10e6</span><span class="p">)</span>
@@ -249,13 +249,13 @@ exits since no event watchers are active.</p>
 </span><span class="p">}</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
+<span class="hll">    <span class="kt">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
 </span><span class="hll">
 </span><span class="hll">    <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
 </span><span class="hll">    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">wait_for_a_while</span><span class="p">);</span>
 </span>
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Idling...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-    <span class="n">uv_run</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">());</span>
+    <span class="n">uv_run</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -290,7 +290,7 @@ exits since no event watchers are active.</p>
 
     <div class="footer">
         &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

@@ -153,7 +153,7 @@ Multicast
 A socket can (un)subscribe to a multicast group using:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 738-740
+    :lines: 796-798
 
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
 
