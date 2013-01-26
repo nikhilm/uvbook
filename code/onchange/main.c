@@ -31,5 +31,5 @@ int main(int argc, char **argv) {
         uv_fs_event_init(loop, (uv_fs_event_t*) malloc(sizeof(uv_fs_event_t)), argv[argc], run_command, 0);
     }
 
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

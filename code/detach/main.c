@@ -26,5 +26,5 @@ int main() {
     fprintf(stderr, "Launched sleep with PID %d\n", child_req.pid);
     uv_unref((uv_handle_t*) &child_req);
 
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

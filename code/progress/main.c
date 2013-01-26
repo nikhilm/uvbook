@@ -42,5 +42,5 @@ int main() {
     uv_async_init(loop, &async, print_progress);
     uv_queue_work(loop, &req, fake_download, after);
 
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

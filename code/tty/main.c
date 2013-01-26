@@ -25,5 +25,5 @@ int main() {
     buf.len = strlen(buf.base);
     uv_write(&req, (uv_stream_t*) &tty, &buf, 1, NULL);
     uv_tty_reset_mode();
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }

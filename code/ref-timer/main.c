@@ -25,5 +25,5 @@ int main() {
     // could actually be a TCP download or something
     uv_timer_init(loop, &fake_job_req);
     uv_timer_start(&fake_job_req, fake_job, 9000, 0);
-    return uv_run(loop);
+    return uv_run(loop, UV_RUN_DEFAULT);
 }
