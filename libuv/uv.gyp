@@ -31,10 +31,16 @@
         'include_dirs': [ 'include' ],
         'conditions': [
           ['OS != "win"', {
-            'defines': [ '_LARGEFILE_SOURCE', '_FILE_OFFSET_BITS=64' ],
+            'defines': [
+              '_LARGEFILE_SOURCE',
+              '_FILE_OFFSET_BITS=64',
+            ],
           }],
           ['OS == "mac"', {
             'defines': [ '_DARWIN_USE_64_BIT_INODE=1' ],
+          }],
+          ['OS == "linux"', {
+            'defines': [ '_POSIX_C_SOURCE=200112' ],
           }],
         ],
       },
@@ -275,6 +281,7 @@
         'test/test-poll-close.c',
         'test/test-process-title.c',
         'test/test-ref.c',
+        'test/test-run-nowait.c',
         'test/test-run-once.c',
         'test/test-semaphore.c',
         'test/test-shutdown-close.c',
@@ -295,7 +302,6 @@
         'test/test-tcp-connect-timeout.c',
         'test/test-tcp-connect6-error.c',
         'test/test-tcp-open.c',
-        'test/test-tcp-write-error.c',
         'test/test-tcp-write-to-half-open-connection.c',
         'test/test-tcp-writealot.c',
         'test/test-tcp-unexpected-read.c',
@@ -306,7 +312,6 @@
         'test/test-thread.c',
         'test/test-barrier.c',
         'test/test-condvar.c',
-        'test/test-condvar-consumer-producer.c',
         'test/test-timer-again.c',
         'test/test-timer.c',
         'test/test-tty.c',
@@ -364,6 +369,7 @@
         'test/benchmark-getaddrinfo.c',
         'test/benchmark-list.h',
         'test/benchmark-loop-count.c',
+        'test/benchmark-million-async.c',
         'test/benchmark-million-timers.c',
         'test/benchmark-multi-accept.c',
         'test/benchmark-ping-pongs.c',

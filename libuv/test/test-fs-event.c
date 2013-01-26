@@ -26,7 +26,11 @@
 #include <fcntl.h>
 
 #ifndef HAVE_KQUEUE
-# if __APPLE__ || __DragonFly__ || __FreeBSD__ || __OpenBSD__ || __NetBSD__
+# if defined(__APPLE__) ||                                                    \
+     defined(__DragonFly__) ||                                                \
+     defined(__FreeBSD__) ||                                                  \
+     defined(__OpenBSD__) ||                                                  \
+     defined(__NetBSD__)
 #  define HAVE_KQUEUE 1
 # endif
 #endif
@@ -190,7 +194,7 @@ TEST_IMPL(fs_event_watch_dir) {
   r = uv_timer_start(&timer, timer_cb_dir, 100, 0);
   ASSERT(r != -1);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(fs_event_cb_called == 1);
   ASSERT(timer_cb_called == 1);
@@ -224,7 +228,7 @@ TEST_IMPL(fs_event_watch_file) {
   r = uv_timer_start(&timer, timer_cb_file, 100, 100);
   ASSERT(r != -1);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(fs_event_cb_called == 1);
   ASSERT(timer_cb_called == 2);
@@ -252,7 +256,7 @@ TEST_IMPL(fs_event_watch_file_twice) {
   ASSERT(0 == uv_fs_event_init(loop, watchers + 1, path, fail_cb, 0));
   ASSERT(0 == uv_timer_init(loop, &timer));
   ASSERT(0 == uv_timer_start(&timer, timer_cb_watch_twice, 10, 0));
-  ASSERT(0 == uv_run(loop));
+  ASSERT(0 == uv_run(loop, UV_RUN_DEFAULT));
 
   MAKE_VALGRIND_HAPPY();
   return 0;
@@ -283,7 +287,7 @@ TEST_IMPL(fs_event_watch_file_current_dir) {
   ASSERT(fs_event_cb_called == 0);
   ASSERT(close_cb_called == 0);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(timer_cb_touch_called == 1);
   ASSERT(fs_event_cb_called == 1);
@@ -315,7 +319,7 @@ TEST_IMPL(fs_event_no_callback_after_close) {
 
   uv_close((uv_handle_t*)&fs_event, close_cb);
   touch_file(loop, "watch_dir/file1");
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(fs_event_cb_called == 0);
   ASSERT(close_cb_called == 1);
@@ -347,7 +351,7 @@ TEST_IMPL(fs_event_no_callback_on_close) {
 
   uv_close((uv_handle_t*)&fs_event, close_cb);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(fs_event_cb_called == 0);
   ASSERT(close_cb_called == 1);
@@ -393,7 +397,7 @@ TEST_IMPL(fs_event_immediate_close) {
   r = uv_timer_start(&timer, timer_cb, 1, 0);
   ASSERT(r == 0);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(close_cb_called == 2);
 
@@ -419,7 +423,7 @@ TEST_IMPL(fs_event_close_with_pending_event) {
 
   uv_close((uv_handle_t*)&fs_event, close_cb);
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(close_cb_called == 1);
 
@@ -431,7 +435,7 @@ TEST_IMPL(fs_event_close_with_pending_event) {
   return 0;
 }
 
-#if HAVE_KQUEUE
+#if defined(HAVE_KQUEUE)
 
 /* kqueue doesn't register fs events if you don't have an active watcher.
  * The file descriptor needs to be part of the kqueue set of interest and
@@ -480,7 +484,7 @@ TEST_IMPL(fs_event_close_in_callback) {
   touch_file(loop, "watch_dir/file4");
   touch_file(loop, "watch_dir/file5");
 
-  uv_run(loop);
+  uv_run(loop, UV_RUN_DEFAULT);
 
   ASSERT(close_cb_called == 1);
   ASSERT(fs_event_cb_called == 3);
