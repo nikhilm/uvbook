@@ -22,7 +22,7 @@ void fake_download(uv_work_t *req) {
     }
 }
 
-void after(uv_work_t *req) {
+void after(uv_work_t *req, int status) {
     fprintf(stderr, "Download complete\n");
     uv_close((uv_handle_t*) &async, NULL);
 }

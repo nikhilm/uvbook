@@ -24,7 +24,7 @@ void fib(uv_work_t *req) {
     fprintf(stderr, "%dth fibonacci is %lu\n", n, fib);
 }
 
-void after_fib(uv_work_t *req) {
+void after_fib(uv_work_t *req, int status) {
     fprintf(stderr, "Done calculating %dth fibonacci\n", *(int *) req->data);
 }
 
