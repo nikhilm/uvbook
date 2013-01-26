@@ -168,7 +168,7 @@ file descriptors being set. ``uv_process_options_t.stdio`` is an array of
 ``uv_stdio_container_t``, which is:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1188-1195
+    :lines: 1263-1270
 
 where flags can have several values. Use ``UV_IGNORE`` if it isn't going to be
 used. If the first three ``stdio`` fields are marked as ``UV_IGNORE`` they'll

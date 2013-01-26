@@ -111,7 +111,7 @@ is used for. A full list of watchers supported by libuv is:
 
 .. rubric:: libuv watchers
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 184-202
+    :lines: 190-207
 
 .. note::
 

@@ -129,7 +129,9 @@ same patterns as the read/write/open calls, returning the result in the
 
 .. rubric:: Filesystem operations
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1428-1504
+    :lines: 1523-1581
+
+Callbacks should free the ``uv_fs_t`` argument using ``uv_fs_req_cleanup()``.
 
 .. _buffers-and-streams:
 
@@ -249,14 +251,11 @@ The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1507-1510
+    :lines: 1728,1737,1744
 
-but both are currently unimplemented on all platforms.
-
-.. warning::
-
-    You will in fact raise an assertion error if you pass any flags. So stick
-    to 0.
+``UV_FS_EVENT_WATCH_ENTRY`` and ``UV_FS_EVENT_STAT`` don't do anything (yet).
+``UV_FS_EVENT_RECURSIVE`` will start watching subdirectories as well on
+supported platforms.
 
 The callback will receive the following arguments:
 
