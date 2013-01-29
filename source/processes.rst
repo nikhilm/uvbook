@@ -32,8 +32,8 @@ exits. This is achieved using ``uv_spawn``.
     :emphasize-lines: 11,13-17
 
 Note: The ``options`` being a global variable, is implicitly  initialized with 
-zeros.  If you move ``options`` to being a local variable, you 
-will experience memory errors.  You can use ``memset`` to initialize
+zeros.  If you move ``options`` to being a local variable, memory corruption 
+will follow (thanks Valgrind!).  You can use ``memset`` to initialize
 a local variable of type ``uv_process_options_t``.
 
 The ``uv_process_t`` struct only acts as the watcher, all options are set via
