@@ -28,10 +28,6 @@
 #include <stdlib.h> /* malloc */
 #include <string.h> /* memset */
 
-/* use inet_pton from c-ares if necessary */
-#include "ares_config.h"
-#include "ares/inet_net_pton.h"
-#include "ares/inet_ntop.h"
 
 #define XX(uc, lc) case UV_##uc: return sizeof(uv_##lc##_t);
 
@@ -182,21 +178,21 @@ struct sockaddr_in6 uv_ip6_addr(const char* ip, int port) {
 
   addr.sin6_family = AF_INET6;
   addr.sin6_port = htons(port);
-  ares_inet_pton(AF_INET6, ip, &addr.sin6_addr);
+  uv_inet_pton(AF_INET6, ip, &addr.sin6_addr);
 
   return addr;
 }
 
 
 int uv_ip4_name(struct sockaddr_in* src, char* dst, size_t size) {
-  const char* d = ares_inet_ntop(AF_INET, &src->sin_addr, dst, size);
-  return d != dst;
+  uv_err_t err = uv_inet_ntop(AF_INET, &src->sin_addr, dst, size);
+  return err.code != UV_OK;
 }
 
 
 int uv_ip6_name(struct sockaddr_in6* src, char* dst, size_t size) {
-  const char* d = ares_inet_ntop(AF_INET6, &src->sin6_addr, dst, size);
-  return d != dst;
+  uv_err_t err = uv_inet_ntop(AF_INET6, &src->sin6_addr, dst, size);
+  return err.code != UV_OK;
 }
 
 
@@ -315,6 +311,15 @@ int uv_thread_create(uv_thread_t *tid, void (*entry)(void *arg), void *arg) {
   }
 
   return 0;
+}
+
+
+unsigned long uv_thread_self(void) {
+#ifdef _WIN32
+  return (unsigned long) GetCurrentThreadId();
+#else
+  return (unsigned long) pthread_self();
+#endif
 }
 
 

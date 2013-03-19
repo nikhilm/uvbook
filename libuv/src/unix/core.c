@@ -35,7 +35,7 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <limits.h> /* PATH_MAX */
+#include <limits.h> /* INT_MAX, PATH_MAX */
 #include <sys/uio.h> /* writev */
 
 #ifdef __linux__
@@ -49,18 +49,27 @@
 
 #ifdef __APPLE__
 # include <mach-o/dyld.h> /* _NSGetExecutablePath */
+# include <sys/filio.h>
+# include <sys/ioctl.h>
 #endif
 
 #ifdef __FreeBSD__
 # include <sys/sysctl.h>
+# include <sys/filio.h>
+# include <sys/ioctl.h>
 # include <sys/wait.h>
 #endif
+
+static void uv__run_pending(uv_loop_t* loop);
 
 static uv_loop_t default_loop_struct;
 static uv_loop_t* default_loop_ptr;
 
 
 void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
+  assert(!(handle->flags & (UV_CLOSING | UV_CLOSED)));
+
+  handle->flags |= UV_CLOSING;
   handle->close_cb = close_cb;
 
   switch (handle->type) {
@@ -69,8 +78,11 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     break;
 
   case UV_TTY:
-  case UV_TCP:
     uv__stream_close((uv_stream_t*)handle);
+    break;
+
+  case UV_TCP:
+    uv__tcp_close((uv_tcp_t*)handle);
     break;
 
   case UV_UDP:
@@ -113,12 +125,23 @@ void uv_close(uv_handle_t* handle, uv_close_cb close_cb) {
     uv__fs_poll_close((uv_fs_poll_t*)handle);
     break;
 
+  case UV_SIGNAL:
+    uv__signal_close((uv_signal_t*) handle);
+    /* Signal handles may not be closed immediately. The signal code will */
+    /* itself close uv__make_close_pending whenever appropriate. */
+    return;
+
   default:
     assert(0);
   }
 
-  handle->flags |= UV_CLOSING;
+  uv__make_close_pending(handle);
+}
 
+
+void uv__make_close_pending(uv_handle_t* handle) {
+  assert(handle->flags & UV_CLOSING);
+  assert(!(handle->flags & UV_CLOSED));
   handle->next_closing = handle->loop->closing_handles;
   handle->loop->closing_handles = handle;
 }
@@ -140,14 +163,12 @@ static void uv__finish_close(uv_handle_t* handle) {
     case UV_FS_EVENT:
     case UV_FS_POLL:
     case UV_POLL:
+    case UV_SIGNAL:
       break;
 
     case UV_NAMED_PIPE:
     case UV_TCP:
     case UV_TTY:
-      assert(!uv__io_active(&((uv_stream_t*)handle)->read_watcher));
-      assert(!uv__io_active(&((uv_stream_t*)handle)->write_watcher));
-      assert(((uv_stream_t*)handle)->fd == -1);
       uv__stream_destroy((uv_stream_t*)handle);
       break;
 
@@ -227,8 +248,13 @@ void uv_loop_delete(uv_loop_t* loop) {
 }
 
 
-static unsigned int uv__poll_timeout(uv_loop_t* loop) {
-  if (!uv__has_active_handles(loop))
+int uv_backend_fd(const uv_loop_t* loop) {
+  return loop->backend_fd;
+}
+
+
+int uv_backend_timeout(const uv_loop_t* loop) {
+  if (!uv__has_active_handles(loop) && !uv__has_active_reqs(loop))
     return 0;
 
   if (!ngx_queue_empty(&loop->idle_handles))
@@ -241,20 +267,13 @@ static unsigned int uv__poll_timeout(uv_loop_t* loop) {
 }
 
 
-static void uv__poll(uv_loop_t* loop) {
-  void ev__run(EV_P_ ev_tstamp waittime);
-  ev_invoke_pending(loop->ev);
-  ev__run(loop->ev, uv__poll_timeout(loop) / 1000.);
-  ev_invoke_pending(loop->ev);
-}
-
-
 static int uv__run(uv_loop_t* loop) {
   uv_update_time(loop);
   uv__run_timers(loop);
   uv__run_idle(loop);
   uv__run_prepare(loop);
-  uv__poll(loop);
+  uv__run_pending(loop);
+  uv__io_poll(loop, uv_backend_timeout(loop));
   uv__run_check(loop);
   uv__run_closing_handles(loop);
   return uv__has_active_handles(loop) || uv__has_active_reqs(loop);
@@ -287,109 +306,6 @@ int uv_is_active(const uv_handle_t* handle) {
 }
 
 
-static int uv_getaddrinfo_done(eio_req* req_) {
-  uv_getaddrinfo_t* req = req_->data;
-  struct addrinfo *res = req->res;
-#if __sun
-  size_t hostlen = strlen(req->hostname);
-#endif
-
-  req->res = NULL;
-
-  uv__req_unregister(req->loop, req);
-
-  free(req->hints);
-  free(req->service);
-  free(req->hostname);
-
-  if (req->retcode == 0) {
-    /* OK */
-#if EAI_NODATA /* FreeBSD deprecated EAI_NODATA */
-  } else if (req->retcode == EAI_NONAME || req->retcode == EAI_NODATA) {
-#else
-  } else if (req->retcode == EAI_NONAME) {
-#endif
-    uv__set_sys_error(req->loop, ENOENT); /* FIXME compatibility hack */
-#if __sun
-  } else if (req->retcode == EAI_MEMORY && hostlen >= MAXHOSTNAMELEN) {
-    uv__set_sys_error(req->loop, ENOENT);
-#endif
-  } else {
-    req->loop->last_err.code = UV_EADDRINFO;
-    req->loop->last_err.sys_errno_ = req->retcode;
-  }
-
-  req->cb(req, req->retcode, res);
-
-  return 0;
-}
-
-
-static void getaddrinfo_thread_proc(eio_req *req) {
-  uv_getaddrinfo_t* handle = req->data;
-
-  handle->retcode = getaddrinfo(handle->hostname,
-                                handle->service,
-                                handle->hints,
-                                &handle->res);
-}
-
-
-/* stub implementation of uv_getaddrinfo */
-int uv_getaddrinfo(uv_loop_t* loop,
-                   uv_getaddrinfo_t* handle,
-                   uv_getaddrinfo_cb cb,
-                   const char* hostname,
-                   const char* service,
-                   const struct addrinfo* hints) {
-  eio_req* req;
-  uv_eio_init(loop);
-
-  if (handle == NULL || cb == NULL ||
-      (hostname == NULL && service == NULL)) {
-    uv__set_artificial_error(loop, UV_EINVAL);
-    return -1;
-  }
-
-  uv__req_init(loop, handle, UV_GETADDRINFO);
-  handle->loop = loop;
-  handle->cb = cb;
-
-  /* TODO don't alloc so much. */
-
-  if (hints) {
-    handle->hints = malloc(sizeof(struct addrinfo));
-    memcpy(handle->hints, hints, sizeof(struct addrinfo));
-  }
-  else {
-    handle->hints = NULL;
-  }
-
-  /* TODO security! check lengths, check return values. */
-
-  handle->hostname = hostname ? strdup(hostname) : NULL;
-  handle->service = service ? strdup(service) : NULL;
-  handle->res = NULL;
-  handle->retcode = 0;
-
-  /* TODO check handle->hostname == NULL */
-  /* TODO check handle->service == NULL */
-
-  req = eio_custom(getaddrinfo_thread_proc, EIO_PRI_DEFAULT,
-      uv_getaddrinfo_done, handle, &loop->uv_eio_channel);
-  assert(req);
-  assert(req->data == handle);
-
-  return 0;
-}
-
-
-void uv_freeaddrinfo(struct addrinfo* ai) {
-  if (ai)
-    freeaddrinfo(ai);
-}
-
-
 /* Open a socket in non-blocking close-on-exec mode, atomically if possible. */
 int uv__socket(int domain, int type, int protocol) {
   int sockfd;
@@ -414,6 +330,13 @@ int uv__socket(int domain, int type, int protocol) {
     sockfd = -1;
   }
 
+#if defined(SO_NOSIGPIPE)
+  {
+    int on = 1;
+    setsockopt(sockfd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+  }
+#endif
+
 out:
   return sockfd;
 }
@@ -426,6 +349,11 @@ int uv__accept(int sockfd) {
 
   while (1) {
 #if __linux__
+    static int no_accept4;
+
+    if (no_accept4)
+      goto skip;
+
     peerfd = uv__accept4(sockfd,
                          NULL,
                          NULL,
@@ -439,6 +367,9 @@ int uv__accept(int sockfd) {
 
     if (errno != ENOSYS)
       break;
+
+    no_accept4 = 1;
+skip:
 #endif
 
     peerfd = accept(sockfd, NULL, NULL);
@@ -462,17 +393,34 @@ int uv__accept(int sockfd) {
 }
 
 
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
+
 int uv__nonblock(int fd, int set) {
   int r;
 
-#if FIONBIO
   do
     r = ioctl(fd, FIONBIO, &set);
   while (r == -1 && errno == EINTR);
 
   return r;
-#else
+}
+
+
+int uv__cloexec(int fd, int set) {
+  int r;
+
+  do
+    r = ioctl(fd, set ? FIOCLEX : FIONCLEX);
+  while (r == -1 && errno == EINTR);
+
+  return r;
+}
+
+#else /* !(defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)) */
+
+int uv__nonblock(int fd, int set) {
   int flags;
+  int r;
 
   do
     r = fcntl(fd, F_GETFL);
@@ -491,7 +439,6 @@ int uv__nonblock(int fd, int set) {
   while (r == -1 && errno == EINTR);
 
   return r;
-#endif
 }
 
 
@@ -499,15 +446,6 @@ int uv__cloexec(int fd, int set) {
   int flags;
   int r;
 
-#if __linux__
-  /* Linux knows only FD_CLOEXEC so we can safely omit the fcntl(F_GETFD)
-   * syscall. CHECKME: That's probably true for other Unices as well.
-   */
-  if (set)
-    flags = FD_CLOEXEC;
-  else
-    flags = 0;
-#else
   do
     r = fcntl(fd, F_GETFD);
   while (r == -1 && errno == EINTR);
@@ -519,7 +457,6 @@ int uv__cloexec(int fd, int set) {
     flags = r | FD_CLOEXEC;
   else
     flags = r & ~FD_CLOEXEC;
-#endif
 
   do
     r = fcntl(fd, F_SETFD, flags);
@@ -527,6 +464,8 @@ int uv__cloexec(int fd, int set) {
 
   return r;
 }
+
+#endif /* defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__) */
 
 
 /* This function is not execve-safe, there is a race window
@@ -599,49 +538,136 @@ void uv_disable_stdio_inheritance(void) {
 }
 
 
-static void uv__io_set_cb(uv__io_t* handle, uv__io_cb cb) {
-  union { void* data; uv__io_cb cb; } u;
-  u.cb = cb;
-  handle->io_watcher.data = u.data;
+static void uv__run_pending(uv_loop_t* loop) {
+  ngx_queue_t* q;
+  uv__io_t* w;
+
+  while (!ngx_queue_empty(&loop->pending_queue)) {
+    q = ngx_queue_head(&loop->pending_queue);
+    ngx_queue_remove(q);
+    ngx_queue_init(q);
+
+    w = ngx_queue_data(q, uv__io_t, pending_queue);
+    w->cb(loop, w, UV__POLLOUT);
+  }
 }
 
 
-static void uv__io_rw(struct ev_loop* ev, ev_io* w, int events) {
-  union { void* data; uv__io_cb cb; } u;
-  uv_loop_t* loop = ev_userdata(ev);
-  uv__io_t* handle = container_of(w, uv__io_t, io_watcher);
-  u.data = handle->io_watcher.data;
-  u.cb(loop, handle, events & (EV_READ|EV_WRITE|EV_ERROR));
+static unsigned int next_power_of_two(unsigned int val) {
+  val -= 1;
+  val |= val >> 1;
+  val |= val >> 2;
+  val |= val >> 4;
+  val |= val >> 8;
+  val |= val >> 16;
+  val += 1;
+  return val;
+}
+
+static void maybe_resize(uv_loop_t* loop, unsigned int len) {
+  uv__io_t** watchers;
+  unsigned int nwatchers;
+  unsigned int i;
+
+  if (len <= loop->nwatchers)
+    return;
+
+  nwatchers = next_power_of_two(len);
+  watchers = realloc(loop->watchers, nwatchers * sizeof(loop->watchers[0]));
+
+  if (watchers == NULL)
+    abort();
+
+  for (i = loop->nwatchers; i < nwatchers; i++)
+    watchers[i] = NULL;
+
+  loop->watchers = watchers;
+  loop->nwatchers = nwatchers;
 }
 
 
-void uv__io_init(uv__io_t* handle, uv__io_cb cb, int fd, int events) {
-  ev_io_init(&handle->io_watcher, uv__io_rw, fd, events & (EV_READ|EV_WRITE));
-  uv__io_set_cb(handle, cb);
+void uv__io_init(uv__io_t* w, uv__io_cb cb, int fd) {
+  assert(cb != NULL);
+  assert(fd >= -1);
+  ngx_queue_init(&w->pending_queue);
+  ngx_queue_init(&w->watcher_queue);
+  w->cb = cb;
+  w->fd = fd;
+  w->events = 0;
+  w->pevents = 0;
 }
 
 
-void uv__io_set(uv__io_t* handle, uv__io_cb cb, int fd, int events) {
-  ev_io_set(&handle->io_watcher, fd, events);
-  uv__io_set_cb(handle, cb);
+/* Note that uv__io_start() and uv__io_stop() can't simply remove the watcher
+ * from the queue when the new event mask equals the old one. The event ports
+ * backend operates exclusively in single-shot mode and needs to rearm all fds
+ * before each call to port_getn(). It's up to the individual backends to
+ * filter out superfluous event mask modifications.
+ */
+
+
+void uv__io_start(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
+  assert(0 == (events & ~(UV__POLLIN | UV__POLLOUT)));
+  assert(0 != events);
+  assert(w->fd >= 0);
+  assert(w->fd < INT_MAX);
+
+  w->pevents |= events;
+  maybe_resize(loop, w->fd + 1);
+
+  if (ngx_queue_empty(&w->watcher_queue))
+    ngx_queue_insert_tail(&loop->watcher_queue, &w->watcher_queue);
+
+  if (loop->watchers[w->fd] == NULL) {
+    loop->watchers[w->fd] = w;
+    loop->nfds++;
+  }
 }
 
 
-void uv__io_start(uv_loop_t* loop, uv__io_t* handle) {
-  ev_io_start(loop->ev, &handle->io_watcher);
+void uv__io_stop(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
+  assert(0 == (events & ~(UV__POLLIN | UV__POLLOUT)));
+  assert(0 != events);
+
+  if (w->fd == -1)
+    return;
+
+  assert(w->fd >= 0);
+
+  /* Happens when uv__io_stop() is called on a handle that was never started. */
+  if ((unsigned) w->fd >= loop->nwatchers)
+    return;
+
+  w->pevents &= ~events;
+
+  if (w->pevents == 0) {
+    ngx_queue_remove(&w->pending_queue);
+    ngx_queue_init(&w->pending_queue);
+
+    ngx_queue_remove(&w->watcher_queue);
+    ngx_queue_init(&w->watcher_queue);
+
+    if (loop->watchers[w->fd] != NULL) {
+      assert(loop->watchers[w->fd] == w);
+      assert(loop->nfds > 0);
+      loop->watchers[w->fd] = NULL;
+      loop->nfds--;
+      w->events = 0;
+    }
+  }
+  else if (ngx_queue_empty(&w->watcher_queue))
+    ngx_queue_insert_tail(&loop->watcher_queue, &w->watcher_queue);
 }
 
 
-void uv__io_stop(uv_loop_t* loop, uv__io_t* handle) {
-  ev_io_stop(loop->ev, &handle->io_watcher);
+void uv__io_feed(uv_loop_t* loop, uv__io_t* w) {
+  if (ngx_queue_empty(&w->pending_queue))
+    ngx_queue_insert_tail(&loop->pending_queue, &w->pending_queue);
 }
 
 
-void uv__io_feed(uv_loop_t* loop, uv__io_t* handle, int event) {
-  ev_feed_event(loop->ev, &handle->io_watcher, event);
-}
-
-
-int uv__io_active(uv__io_t* handle) {
-  return ev_is_active(&handle->io_watcher);
+int uv__io_active(const uv__io_t* w, unsigned int events) {
+  assert(0 == (events & ~(UV__POLLIN | UV__POLLOUT)));
+  assert(0 != events);
+  return 0 != (w->pevents & events);
 }

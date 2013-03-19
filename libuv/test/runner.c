@@ -24,6 +24,7 @@
 
 #include "runner.h"
 #include "task.h"
+#include "uv.h"
 
 char executable_path[PATHMAX] = { '\0' };
 
@@ -34,6 +35,35 @@ static void log_progress(int total, int passed, int failed, const char* name) {
 
   LOGF("[%% %3d|+ %3d|- %3d]: %s", (int) ((passed + failed) / ((double) total) * 100.0),
       passed, failed, name);
+}
+
+
+const char* fmt(double d) {
+  uint64_t v;
+  char* p;
+
+  p = (char *) calloc(1, 32) + 31; /* leaks memory */
+  v = (uint64_t) d;
+
+#if 0 /* works but we don't care about fractional precision */
+  if (d - v >= 0.01) {
+    *--p = '0' + (uint64_t) (d * 100) % 10;
+    *--p = '0' + (uint64_t) (d * 10) % 10;
+    *--p = '.';
+  }
+#endif
+
+  if (v == 0)
+    *--p = '0';
+
+  while (v) {
+    if (v) *--p = '0' + (v % 10), v /= 10;
+    if (v) *--p = '0' + (v % 10), v /= 10;
+    if (v) *--p = '0' + (v % 10), v /= 10;
+    if (v) *--p = ',';
+  }
+
+  return p;
 }
 
 
@@ -118,7 +148,8 @@ int run_test(const char* test, int timeout, int benchmark_output) {
 
     if (process_start(task->task_name,
                       task->process_name,
-                      &processes[process_count]) == -1) {
+                      &processes[process_count],
+                      1 /* is_helper */) == -1) {
       snprintf(errmsg,
                sizeof errmsg,
                "Process `%s` failed to start.",
@@ -144,7 +175,8 @@ int run_test(const char* test, int timeout, int benchmark_output) {
 
     if (process_start(task->task_name,
                       task->process_name,
-                      &processes[process_count]) == -1) {
+                      &processes[process_count],
+                      0 /* !is_helper */) == -1) {
       snprintf(errmsg,
                sizeof errmsg,
                "Process `%s` failed to start.",
@@ -262,11 +294,13 @@ out:
  */
 int run_test_part(const char* test, const char* part) {
   task_entry_t* task;
+  int r;
 
   for (task = TASKS; task->main; task++) {
-    if (strcmp(test, task->task_name) == 0
-        && strcmp(part, task->process_name) == 0) {
-      return task->main();
+    if (strcmp(test, task->task_name) == 0 &&
+        strcmp(part, task->process_name) == 0) {
+      r = task->main();
+      return r;
     }
   }
 

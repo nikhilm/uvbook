@@ -23,7 +23,7 @@ examples=\
 	interfaces
 
 UV_PATH=$(shell pwd)/../libuv
-CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/uv.a
+CFLAGS=-g -Wall -I$(UV_PATH)/include $(UV_PATH)/libuv.a
 
 uname_S=$(shell uname -s)
 
@@ -38,11 +38,11 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: $(UV_PATH)/uv.a plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
-	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/uv.a; cd ..; done
+all: $(UV_PATH)/libuv.a plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
+	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_PATH)/libuv.a; cd ..; done
 
 plugin/plugin: plugin/*.c
-	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_PATH)/libuv.a
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
 	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
@@ -53,12 +53,12 @@ cgi/tick: cgi/tick.c
 	gcc -g -Wall -o cgi/tick cgi/tick.c
 
 multi-echo-server/worker: multi-echo-server/worker.c
-	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_PATH)/libuv.a
 
 uvwget/uvwget: uvwget/main.c
-	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_PATH)/uv.a
+	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_PATH)/libuv.a
 
-$(UV_PATH)/uv.a:
+$(UV_PATH)/libuv.a:
 	make -C ../libuv
 
 clean:

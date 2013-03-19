@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "uv.h"
@@ -40,10 +41,23 @@ static uv_once_t uv_init_guard_ = UV_ONCE_INIT;
 static uv_once_t uv_default_loop_init_guard_ = UV_ONCE_INIT;
 
 
+static void uv__crt_invalid_parameter_handler(const wchar_t* expression,
+    const wchar_t* function, const wchar_t * file, unsigned int line,
+    uintptr_t reserved) {
+  /* No-op. */
+}
+
+
 static void uv_init(void) {
   /* Tell Windows that we will handle critical errors. */
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX |
-    SEM_NOOPENFILEERRORBOX);
+               SEM_NOOPENFILEERRORBOX);
+
+  /* Tell the CRT to not exit the application when an invalid parameter is */
+  /* passed. The main issue is that invalid FDs will trigger this behavior. */
+#ifdef _WRITE_ABORT_MSG
+  _set_invalid_parameter_handler(uv__crt_invalid_parameter_handler);
+#endif
 
   /* Fetch winapi function pointers. This must be done first because other */
   /* intialization code might need these function pointers to be loaded. */
@@ -54,6 +68,9 @@ static void uv_init(void) {
 
   /* Initialize FS */
   uv_fs_init();
+
+  /* Initialize signal stuff */
+  uv_signals_init();
 
   /* Initialize console */
   uv_console_init();
@@ -70,6 +87,9 @@ static void uv_loop_init(uv_loop_t* loop) {
     uv_fatal_error(GetLastError(), "CreateIoCompletionPort");
   }
 
+  /* To prevent uninitialized memory access, loop->time must be intialized */
+  /* to zero before calling uv_update_time for the first time. */
+  loop->time = 0;
   uv_update_time(loop);
 
   ngx_queue_init(&loop->handle_queue);
@@ -92,15 +112,10 @@ static void uv_loop_init(uv_loop_t* loop) {
 
   memset(&loop->poll_peer_sockets, 0, sizeof loop->poll_peer_sockets);
 
-  loop->channel = NULL;
-  RB_INIT(&loop->ares_handles);
-
   loop->active_tcp_streams = 0;
   loop->active_udp_streams = 0;
 
   loop->last_err = uv_ok_;
-
-  memset(&loop->counters, 0, sizeof loop->counters);
 }
 
 
@@ -153,6 +168,16 @@ void uv_loop_delete(uv_loop_t* loop) {
 
     free(loop);
   }
+}
+
+
+int uv_backend_fd(const uv_loop_t* loop) {
+  return -1;
+}
+
+
+int uv_backend_timeout(const uv_loop_t* loop) {
+  return 0;
 }
 
 
