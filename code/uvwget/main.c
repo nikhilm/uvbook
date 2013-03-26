@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef _WIN32
-#include <sys/select.h>
-#endif
 #include <uv.h>
 #include <curl/curl.h>
 
@@ -64,10 +61,10 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
     if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
-	curl_context_t *context;
-	
-	context = (curl_context_t*)req;
-	
+    curl_context_t *context;
+
+    context = (curl_context_t*)req;
+
     curl_multi_socket_action(curl_handle, context->sockfd, flags, &running_handles);
 
     char *done_url;
@@ -76,17 +73,17 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     int pending;
     while ((message = curl_multi_info_read(curl_handle, &pending))) {
         switch (message->msg) {
-            case CURLMSG_DONE:
-                curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &done_url);
-                printf("%s DONE\n", done_url);
+        case CURLMSG_DONE:
+            curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &done_url);
+            printf("%s DONE\n", done_url);
 
-                curl_multi_remove_handle(curl_handle, message->easy_handle);
-                curl_easy_cleanup(message->easy_handle);
+            curl_multi_remove_handle(curl_handle, message->easy_handle);
+            curl_easy_cleanup(message->easy_handle);
 
-                break;
-            default:
-                fprintf(stderr, "CURLMSG default\n");
-                abort();
+            break;
+        default:
+            fprintf(stderr, "CURLMSG default\n");
+            abort();
         }
     }
 }
@@ -123,8 +120,8 @@ int handle_socket(CURL *easy, curl_socket_t s, int action, void *userp, void *so
             break;
         case CURL_POLL_REMOVE:
             if (socketp) {
-				uv_poll_stop(&((curl_context_t*)socketp)->poll_handle);
-				destroy_curl_context((curl_context_t*) socketp);                
+                uv_poll_stop(&((curl_context_t*)socketp)->poll_handle);
+                destroy_curl_context((curl_context_t*) socketp);                
                 curl_multi_assign(curl_handle, s, NULL);
             }
             break;
