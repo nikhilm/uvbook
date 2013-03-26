@@ -1,12 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <sys/select.h>
+#endif
 #include <uv.h>
 #include <curl/curl.h>
 
 uv_loop_t *loop;
 CURLM *curl_handle;
 uv_timer_t timeout;
+
+typedef struct curl_context_s {
+  uv_poll_t poll_handle;
+  curl_socket_t sockfd;
+} curl_context_t;
+
+curl_context_t* create_curl_context(curl_socket_t sockfd) {
+  int r;
+  curl_context_t* context;
+
+  context = (curl_context_t*) malloc(sizeof *context);
+
+  context->sockfd = sockfd;
+
+  r = uv_poll_init_socket(loop, &context->poll_handle, sockfd);
+  context->poll_handle.data = context;
+
+  return context;
+}
+
+void curl_close_cb(uv_handle_t* handle) {
+  curl_context_t* context = (curl_context_t*) handle->data;
+  free(context);
+}
+
+void destroy_curl_context(curl_context_t* context) {
+  uv_close((uv_handle_t*) &context->poll_handle, curl_close_cb);
+}
+
 
 void add_download(const char *url, int num) {
     char filename[50];
@@ -33,7 +64,11 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
     if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
-    curl_multi_socket_action(curl_handle, req->io_watcher.fd, flags, &running_handles);
+	curl_context_t *context;
+	
+	context = (curl_context_t*)req;
+	
+    curl_multi_socket_action(curl_handle, context->sockfd, flags, &running_handles);
 
     char *done_url;
 
@@ -68,29 +103,28 @@ void start_timeout(CURLM *multi, long timeout_ms, void *userp) {
 }
 
 int handle_socket(CURL *easy, curl_socket_t s, int action, void *userp, void *socketp) {
-    uv_poll_t *poll_fd;
+	curl_context_t *curl_context;
     if (action == CURL_POLL_IN || action == CURL_POLL_OUT) {
         if (socketp) {
-            poll_fd = (uv_poll_t*) socketp;
+            curl_context = (curl_context_t*) socketp;
         }
         else {
-            poll_fd = (uv_poll_t*) malloc(sizeof(uv_poll_t));
-            uv_poll_init(loop, poll_fd, s);
+            curl_context = create_curl_context(s);
         }
-        curl_multi_assign(curl_handle, s, (void *) poll_fd);
+        curl_multi_assign(curl_handle, s, (void *) curl_context);
     }
 
     switch (action) {
         case CURL_POLL_IN:
-            uv_poll_start(poll_fd, UV_READABLE, curl_perform);
+            uv_poll_start(&curl_context->poll_handle, UV_READABLE, curl_perform);
             break;
         case CURL_POLL_OUT:
-            uv_poll_start(poll_fd, UV_WRITABLE, curl_perform);
+            uv_poll_start(&curl_context->poll_handle, UV_WRITABLE, curl_perform);
             break;
         case CURL_POLL_REMOVE:
             if (socketp) {
-                uv_poll_stop((uv_poll_t*) socketp);
-                uv_close((uv_handle_t*) socketp, (uv_close_cb) free);
+				uv_poll_stop(&((curl_context_t*)socketp)->poll_handle);
+				destroy_curl_context((curl_context_t*) socketp);                
                 curl_multi_assign(curl_handle, s, NULL);
             }
             break;
