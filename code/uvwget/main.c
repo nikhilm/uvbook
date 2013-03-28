@@ -8,31 +8,31 @@ CURLM *curl_handle;
 uv_timer_t timeout;
 
 typedef struct curl_context_s {
-  uv_poll_t poll_handle;
-  curl_socket_t sockfd;
+    uv_poll_t poll_handle;
+    curl_socket_t sockfd;
 } curl_context_t;
 
-curl_context_t* create_curl_context(curl_socket_t sockfd) {
-  int r;
-  curl_context_t* context;
+curl_context_t *create_curl_context(curl_socket_t sockfd) {
+    int r;
+    curl_context_t *context;
 
-  context = (curl_context_t*) malloc(sizeof *context);
+    context = (curl_context_t*) malloc(sizeof *context);
 
-  context->sockfd = sockfd;
+    context->sockfd = sockfd;
 
-  r = uv_poll_init_socket(loop, &context->poll_handle, sockfd);
-  context->poll_handle.data = context;
+    r = uv_poll_init_socket(loop, &context->poll_handle, sockfd);
+    context->poll_handle.data = context;
 
-  return context;
+    return context;
 }
 
-void curl_close_cb(uv_handle_t* handle) {
-  curl_context_t* context = (curl_context_t*) handle->data;
-  free(context);
+void curl_close_cb(uv_handle_t *handle) {
+    curl_context_t *context = (curl_context_t*) handle->data;
+    free(context);
 }
 
-void destroy_curl_context(curl_context_t* context) {
-  uv_close((uv_handle_t*) &context->poll_handle, curl_close_cb);
+void destroy_curl_context(curl_context_t *context) {
+    uv_close((uv_handle_t*) &context->poll_handle, curl_close_cb);
 }
 
 
@@ -73,17 +73,17 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     int pending;
     while ((message = curl_multi_info_read(curl_handle, &pending))) {
         switch (message->msg) {
-        case CURLMSG_DONE:
-            curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &done_url);
-            printf("%s DONE\n", done_url);
+            case CURLMSG_DONE:
+                curl_easy_getinfo(message->easy_handle, CURLINFO_EFFECTIVE_URL, &done_url);
+                printf("%s DONE\n", done_url);
 
-            curl_multi_remove_handle(curl_handle, message->easy_handle);
-            curl_easy_cleanup(message->easy_handle);
+                curl_multi_remove_handle(curl_handle, message->easy_handle);
+                curl_easy_cleanup(message->easy_handle);
 
-            break;
-        default:
-            fprintf(stderr, "CURLMSG default\n");
-            abort();
+                break;
+            default:
+                fprintf(stderr, "CURLMSG default\n");
+                abort();
         }
     }
 }
@@ -100,7 +100,7 @@ void start_timeout(CURLM *multi, long timeout_ms, void *userp) {
 }
 
 int handle_socket(CURL *easy, curl_socket_t s, int action, void *userp, void *socketp) {
-	curl_context_t *curl_context;
+    curl_context_t *curl_context;
     if (action == CURL_POLL_IN || action == CURL_POLL_OUT) {
         if (socketp) {
             curl_context = (curl_context_t*) socketp;
