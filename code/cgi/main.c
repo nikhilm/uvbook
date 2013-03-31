@@ -7,7 +7,7 @@ uv_loop_t *loop;
 uv_process_t child_req;
 uv_process_options_t options;
 
-void on_exit(uv_process_t *req, int exit_status, int term_signal) {
+void cleanup_handles(uv_process_t *req, int exit_status, int term_signal) {
     fprintf(stderr, "Process exited with status %d, signal %d\n", exit_status, term_signal);
     uv_close((uv_handle_t*) req->data, NULL);
     uv_close((uv_handle_t*) req, NULL);
@@ -33,7 +33,7 @@ void invoke_cgi_script(uv_tcp_t *client) {
     child_stdio[2].flags = UV_IGNORE;
     options.stdio = child_stdio;
 
-    options.exit_cb = on_exit;
+    options.exit_cb = cleanup_handles;
     options.file = args[0];
     options.args = args;
 

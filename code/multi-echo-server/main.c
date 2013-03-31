@@ -17,7 +17,7 @@ int child_worker_count;
 uv_buf_t dummy_buf;
 char worker_path[500];
 
-void on_exit(uv_process_t *req, int exit_status, int term_signal) {
+void close_process_handle(uv_process_t *req, int exit_status, int term_signal) {
     fprintf(stderr, "Process exited with status %d, signal %d\n", exit_status, term_signal);
     uv_close((uv_handle_t*) req, NULL);
 }
@@ -83,7 +83,7 @@ void setup_workers() {
         worker->options.stdio = child_stdio;
         worker->options.stdio_count = 3;
 
-        worker->options.exit_cb = on_exit;
+        worker->options.exit_cb = close_process_handle;
         worker->options.file = args[0];
         worker->options.args = args;
 
