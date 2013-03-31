@@ -65,6 +65,17 @@ static void uv__run_pending(uv_loop_t* loop);
 static uv_loop_t default_loop_struct;
 static uv_loop_t* default_loop_ptr;
 
+/* Verify that uv_buf_t is ABI-compatible with struct iovec. */
+STATIC_ASSERT(sizeof(uv_buf_t) == sizeof(struct iovec));
+STATIC_ASSERT(sizeof(&((uv_buf_t*) 0)->base) ==
+              sizeof(((struct iovec*) 0)->iov_base));
+STATIC_ASSERT(sizeof(&((uv_buf_t*) 0)->len) ==
+              sizeof(((struct iovec*) 0)->iov_len));
+STATIC_ASSERT((uintptr_t) &((uv_buf_t*) 0)->base ==
+              (uintptr_t) &((struct iovec*) 0)->iov_base);
+STATIC_ASSERT((uintptr_t) &((uv_buf_t*) 0)->len ==
+              (uintptr_t) &((struct iovec*) 0)->iov_len);
+
 
 uint64_t uv_hrtime(void) {
   return uv__hrtime();
@@ -259,6 +270,9 @@ int uv_backend_fd(const uv_loop_t* loop) {
 
 
 int uv_backend_timeout(const uv_loop_t* loop) {
+  if (loop->stop_flag != 0)
+    return 0;
+
   if (!uv__has_active_handles(loop) && !uv__has_active_reqs(loop))
     return 0;
 
@@ -280,22 +294,35 @@ static int uv__loop_alive(uv_loop_t* loop) {
 
 
 int uv_run(uv_loop_t* loop, uv_run_mode mode) {
+  int timeout;
   int r;
 
-  if (!uv__loop_alive(loop))
-    return 0;
-
-  do {
+  r = uv__loop_alive(loop);
+  while (r != 0 && loop->stop_flag == 0) {
     uv__update_time(loop);
     uv__run_timers(loop);
     uv__run_idle(loop);
     uv__run_prepare(loop);
     uv__run_pending(loop);
-    uv__io_poll(loop, (mode & UV_RUN_NOWAIT ? 0 : uv_backend_timeout(loop)));
+
+    timeout = 0;
+    if ((mode & UV_RUN_NOWAIT) == 0)
+      timeout = uv_backend_timeout(loop);
+
+    uv__io_poll(loop, timeout);
     uv__run_check(loop);
     uv__run_closing_handles(loop);
     r = uv__loop_alive(loop);
-  } while (r && !(mode & (UV_RUN_ONCE | UV_RUN_NOWAIT)));
+
+    if (mode & (UV_RUN_ONCE | UV_RUN_NOWAIT))
+      break;
+  }
+
+  /* The if statement lets gcc compile it to a conditional store. Avoids
+   * dirtying a cache line.
+   */
+  if (loop->stop_flag != 0)
+    loop->stop_flag = 0;
 
   return r;
 }
@@ -306,7 +333,7 @@ void uv_update_time(uv_loop_t* loop) {
 }
 
 
-int64_t uv_now(uv_loop_t* loop) {
+uint64_t uv_now(uv_loop_t* loop) {
   return loop->time;
 }
 
@@ -595,15 +622,12 @@ void uv__io_init(uv__io_t* w, uv__io_cb cb, int fd) {
   w->fd = fd;
   w->events = 0;
   w->pevents = 0;
+
+#if defined(UV_HAVE_KQUEUE)
+  w->rcount = 0;
+  w->wcount = 0;
+#endif /* defined(UV_HAVE_KQUEUE) */
 }
-
-
-/* Note that uv__io_start() and uv__io_stop() can't simply remove the watcher
- * from the queue when the new event mask equals the old one. The event ports
- * backend operates exclusively in single-shot mode and needs to rearm all fds
- * before each call to port_getn(). It's up to the individual backends to
- * filter out superfluous event mask modifications.
- */
 
 
 void uv__io_start(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
@@ -614,6 +638,20 @@ void uv__io_start(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
 
   w->pevents |= events;
   maybe_resize(loop, w->fd + 1);
+
+#if !defined(__sun)
+  /* The event ports backend needs to rearm all file descriptors on each and
+   * every tick of the event loop but the other backends allow us to
+   * short-circuit here if the event mask is unchanged.
+   */
+  if (w->events == w->pevents) {
+    if (w->events == 0 && !ngx_queue_empty(&w->watcher_queue)) {
+      ngx_queue_remove(&w->watcher_queue);
+      ngx_queue_init(&w->watcher_queue);
+    }
+    return;
+  }
+#endif
 
   if (ngx_queue_empty(&w->watcher_queue))
     ngx_queue_insert_tail(&loop->watcher_queue, &w->watcher_queue);

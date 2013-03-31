@@ -84,12 +84,6 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
     assert(w->fd >= 0);
     assert(w->fd < (int) loop->nwatchers);
 
-    /* Filter out no-op changes. This is for compatibility with the event ports
-     * backend, see uv__io_start().
-     */
-    if (w->events == w->pevents)
-      continue;
-
     if ((w->events & UV__POLLIN) == 0 && (w->pevents & UV__POLLIN) != 0) {
       filter = EVFILT_READ;
       fflags = 0;
@@ -197,9 +191,10 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       revents = 0;
 
       if (ev->filter == EVFILT_READ) {
-        if (w->events & UV__POLLIN)
+        if (w->events & UV__POLLIN) {
           revents |= UV__POLLIN;
-        else {
+          w->rcount = ev->data;
+        } else {
           /* TODO batch up */
           struct kevent events[1];
           EV_SET(events + 0, fd, ev->filter, EV_DELETE, 0, 0, 0);
@@ -210,9 +205,10 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
       }
 
       if (ev->filter == EVFILT_WRITE) {
-        if (w->events & UV__POLLOUT)
+        if (w->events & UV__POLLOUT) {
           revents |= UV__POLLOUT;
-        else {
+          w->wcount = ev->data;
+        } else {
           /* TODO batch up */
           struct kevent events[1];
           EV_SET(events + 0, fd, ev->filter, EV_DELETE, 0, 0, 0);

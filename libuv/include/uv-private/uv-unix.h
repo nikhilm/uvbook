@@ -41,7 +41,28 @@
 #include <pthread.h>
 #include <signal.h>
 
+#if defined(__linux__)
+# include "uv-linux.h"
+#elif defined(__sun)
+# include "uv-sunos.h"
+#elif defined(__APPLE__)
+# include "uv-darwin.h"
+#elif defined(__DragonFly__)  || \
+      defined(__FreeBSD__)    || \
+      defined(__OpenBSD__)    || \
+      defined(__NetBSD__)
+# include "uv-bsd.h"
+#endif
+
+#ifndef UV_IO_PRIVATE_PLATFORM_FIELDS
+# define UV_IO_PRIVATE_PLATFORM_FIELDS /* empty */
+#endif
+
+#define UV_IO_PRIVATE_FIELDS                                                  \
+  UV_IO_PRIVATE_PLATFORM_FIELDS                                               \
+
 struct uv__io_s;
+struct uv__async;
 struct uv_loop_s;
 
 typedef void (*uv__io_cb)(struct uv_loop_s* loop,
@@ -56,6 +77,17 @@ struct uv__io_s {
   unsigned int pevents; /* Pending event mask i.e. mask at next tick. */
   unsigned int events;  /* Current event mask. */
   int fd;
+  UV_IO_PRIVATE_FIELDS
+};
+
+typedef void (*uv__async_cb)(struct uv_loop_s* loop,
+                             struct uv__async* w,
+                             unsigned int nevents);
+
+struct uv__async {
+  uv__async_cb cb;
+  uv__io_t io_watcher;
+  int wfd;
 };
 
 struct uv__work {
@@ -64,19 +96,6 @@ struct uv__work {
   struct uv_loop_s* loop;
   ngx_queue_t wq;
 };
-
-#if defined(__linux__)
-# include "uv-linux.h"
-#elif defined(__sun)
-# include "uv-sunos.h"
-#elif defined(__APPLE__)
-# include "uv-darwin.h"
-#elif defined(__DragonFly__)  || \
-      defined(__FreeBSD__)    || \
-      defined(__OpenBSD__)    || \
-      defined(__NetBSD__)
-# include "uv-bsd.h"
-#endif
 
 #ifndef UV_PLATFORM_SEM_T
 # define UV_PLATFORM_SEM_T sem_t
@@ -159,8 +178,7 @@ typedef struct {
   ngx_queue_t check_handles;                                                  \
   ngx_queue_t idle_handles;                                                   \
   ngx_queue_t async_handles;                                                  \
-  uv__io_t async_watcher;                                                     \
-  int async_pipefd[2];                                                        \
+  struct uv__async async_watcher;                                             \
   /* RB_HEAD(uv__timers, uv_timer_s) */                                       \
   struct uv__timers {                                                         \
     struct uv_timer_s* rbh_root;                                              \
@@ -170,6 +188,7 @@ typedef struct {
   uv__io_t signal_io_watcher;                                                 \
   uv_signal_t child_watcher;                                                  \
   int emfile_fd;                                                              \
+  uint64_t timer_counter;                                                     \
   UV_PLATFORM_LOOP_FIELDS                                                     \
 
 #define UV_REQ_TYPE_PRIVATE /* empty */
@@ -243,9 +262,9 @@ typedef struct {
   ngx_queue_t queue;
 
 #define UV_ASYNC_PRIVATE_FIELDS                                               \
-  volatile sig_atomic_t pending;                                              \
   uv_async_cb async_cb;                                                       \
-  ngx_queue_t queue;
+  ngx_queue_t queue;                                                          \
+  int pending;                                                                \
 
 #define UV_TIMER_PRIVATE_FIELDS                                               \
   /* RB_ENTRY(uv_timer_s) tree_entry; */                                      \
@@ -257,7 +276,8 @@ typedef struct {
   } tree_entry;                                                               \
   uv_timer_cb timer_cb;                                                       \
   uint64_t timeout;                                                           \
-  uint64_t repeat;
+  uint64_t repeat;                                                            \
+  uint64_t start_id;
 
 #define UV_GETADDRINFO_PRIVATE_FIELDS                                         \
   struct uv__work work_req;                                                   \
@@ -285,7 +305,6 @@ typedef struct {
   double atime;                                                               \
   double mtime;                                                               \
   struct uv__work work_req;                                                   \
-  struct stat statbuf;                                                        \
 
 #define UV_WORK_PRIVATE_FIELDS                                                \
   struct uv__work work_req;

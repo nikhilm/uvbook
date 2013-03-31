@@ -27,8 +27,11 @@ static int once_cb_called = 0;
 static int once_close_cb_called = 0;
 static int repeat_cb_called = 0;
 static int repeat_close_cb_called = 0;
-
-static int64_t start_time;
+static int order_cb_called = 0;
+static uint64_t start_time;
+static uv_timer_t tiny_timer;
+static uv_timer_t huge_timer1;
+static uv_timer_t huge_timer2;
 
 
 static void once_close_cb(uv_handle_t* handle) {
@@ -150,6 +153,114 @@ TEST_IMPL(timer_start_twice) {
 
   ASSERT(once_cb_called == 1);
 
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
+
+
+TEST_IMPL(timer_init) {
+  uv_timer_t handle;
+
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &handle));
+  ASSERT(0 == uv_timer_get_repeat(&handle));
+  ASSERT(!uv_is_active((uv_handle_t*)&handle));
+
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
+
+
+static void order_cb_a(uv_timer_t *handle, int status) {
+  ASSERT(order_cb_called++ == *(int*)handle->data);
+}
+
+
+static void order_cb_b(uv_timer_t *handle, int status) {
+  ASSERT(order_cb_called++ == *(int*)handle->data);
+}
+
+
+TEST_IMPL(timer_order) {
+  int first;
+  int second;
+  uv_timer_t handle_a;
+  uv_timer_t handle_b;
+
+  first = 0;
+  second = 1;
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &handle_a));
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &handle_b));
+
+  /* Test for starting handle_a then handle_b */
+  handle_a.data = &first;
+  ASSERT(0 == uv_timer_start(&handle_a, order_cb_a, 0, 0));
+  handle_b.data = &second;
+  ASSERT(0 == uv_timer_start(&handle_b, order_cb_b, 0, 0));
+  ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
+
+  ASSERT(order_cb_called == 2);
+
+  ASSERT(0 == uv_timer_stop(&handle_a));
+  ASSERT(0 == uv_timer_stop(&handle_b));
+
+  /* Test for starting handle_b then handle_a */
+  order_cb_called = 0;
+  handle_b.data = &first;
+  ASSERT(0 == uv_timer_start(&handle_b, order_cb_b, 0, 0));
+
+  handle_a.data = &second;
+  ASSERT(0 == uv_timer_start(&handle_a, order_cb_a, 0, 0));
+  ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
+
+  ASSERT(order_cb_called == 2);
+
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
+
+
+static void tiny_timer_cb(uv_timer_t* handle, int status) {
+  ASSERT(handle == &tiny_timer);
+  uv_close((uv_handle_t*) &tiny_timer, NULL);
+  uv_close((uv_handle_t*) &huge_timer1, NULL);
+  uv_close((uv_handle_t*) &huge_timer2, NULL);
+}
+
+
+TEST_IMPL(timer_huge_timeout) {
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &tiny_timer));
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &huge_timer1));
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &huge_timer2));
+  ASSERT(0 == uv_timer_start(&tiny_timer, tiny_timer_cb, 1, 0));
+  ASSERT(0 == uv_timer_start(&huge_timer1, tiny_timer_cb, 0xffffffffffffLL, 0));
+  ASSERT(0 == uv_timer_start(&huge_timer2, tiny_timer_cb, (uint64_t) -1, 0));
+  ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}
+
+
+static void huge_repeat_cb(uv_timer_t* handle, int status) {
+  static int ncalls;
+
+  if (ncalls == 0)
+    ASSERT(handle == &huge_timer1);
+  else
+    ASSERT(handle == &tiny_timer);
+
+  if (++ncalls == 10) {
+    uv_close((uv_handle_t*) &tiny_timer, NULL);
+    uv_close((uv_handle_t*) &huge_timer1, NULL);
+  }
+}
+
+
+TEST_IMPL(timer_huge_repeat) {
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &tiny_timer));
+  ASSERT(0 == uv_timer_init(uv_default_loop(), &huge_timer1));
+  ASSERT(0 == uv_timer_start(&tiny_timer, huge_repeat_cb, 2, 2));
+  ASSERT(0 == uv_timer_start(&huge_timer1, huge_repeat_cb, 1, (uint64_t) -1));
+  ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_DEFAULT));
   MAKE_VALGRIND_HAPPY();
   return 0;
 }

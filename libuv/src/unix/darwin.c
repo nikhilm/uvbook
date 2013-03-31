@@ -37,8 +37,6 @@
 #include <sys/sysctl.h>
 #include <unistd.h>  /* sysconf */
 
-static char *process_title;
-
 /* Forward declarations */
 void uv__cf_loop_runner(void* arg);
 void uv__cf_loop_cb(void* arg);
@@ -75,7 +73,7 @@ int uv__platform_loop_init(uv_loop_t* loop, int default_loop) {
 
   /* Synchronize threads */
   uv_sem_wait(&loop->cf_sem);
-  assert(((volatile CFRunLoopRef) loop->cf_loop) != NULL);
+  assert(ACCESS_ONCE(CFRunLoopRef, loop->cf_loop) != NULL);
 
   return 0;
 }
@@ -111,7 +109,7 @@ void uv__cf_loop_runner(void* arg) {
   loop = arg;
 
   /* Get thread's loop */
-  *((volatile CFRunLoopRef*)&loop->cf_loop) = CFRunLoopGetCurrent();
+  ACCESS_ONCE(CFRunLoopRef, loop->cf_loop) = CFRunLoopGetCurrent();
 
   CFRunLoopAddSource(loop->cf_loop,
                      loop->cf_cb,
@@ -251,31 +249,6 @@ void uv_loadavg(double avg[3]) {
   avg[0] = (double) info.ldavg[0] / info.fscale;
   avg[1] = (double) info.ldavg[1] / info.fscale;
   avg[2] = (double) info.ldavg[2] / info.fscale;
-}
-
-
-char** uv_setup_args(int argc, char** argv) {
-  process_title = argc ? strdup(argv[0]) : NULL;
-  return argv;
-}
-
-
-uv_err_t uv_set_process_title(const char* title) {
-  /* TODO implement me */
-  return uv__new_artificial_error(UV_ENOSYS);
-}
-
-
-uv_err_t uv_get_process_title(char* buffer, size_t size) {
-  if (process_title) {
-    strncpy(buffer, process_title, size);
-  } else {
-    if (size > 0) {
-      buffer[0] = '\0';
-    }
-  }
-
-  return uv_ok_;
 }
 
 

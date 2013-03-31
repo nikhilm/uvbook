@@ -187,11 +187,7 @@ static ssize_t uv__fs_read(uv_fs_t* req) {
 }
 
 
-#if defined(__APPLE__) || defined(__OpenBSD__)
-static int uv__fs_readdir_filter(struct dirent* dent) {
-#else
 static int uv__fs_readdir_filter(const struct dirent* dent) {
-#endif
   return strcmp(dent->d_name, ".") != 0 && strcmp(dent->d_name, "..") != 0;
 }
 
@@ -378,6 +374,7 @@ static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
       while (n == -1 && errno == EINTR);
 
       if (n == -1 || (pfd.revents & ~POLLOUT) != 0) {
+        errno = EIO;
         nsent = -1;
         goto out;
       }

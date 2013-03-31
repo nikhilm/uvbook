@@ -19,46 +19,42 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
 
-#include "runner.h"
-#include "task.h"
+ /*
+ * Versions with an even minor version (e.g. 0.6.1 or 1.0.4) are API and ABI
+ * stable. When the minor version is odd, the API can change between patch
+ * releases.
+ */
 
-/* Actual benchmarks and helpers are defined in benchmark-list.h */
-#include "benchmark-list.h"
-
-
-/* The time in milliseconds after which a single benchmark times out. */
-#define BENCHMARK_TIMEOUT  60000
-
-static int maybe_run_test(int argc, char **argv);
+#define UV_VERSION_MAJOR 0
+#define UV_VERSION_MINOR 10
+#define UV_VERSION_PATCH 3
+#define UV_VERSION_IS_RELEASE 1
 
 
-int main(int argc, char **argv) {
-  platform_init(argc, argv);
+#define UV_VERSION  ((UV_VERSION_MAJOR << 16) | \
+                     (UV_VERSION_MINOR <<  8) | \
+                     (UV_VERSION_PATCH))
 
-  switch (argc) {
-  case 1: return run_tests(BENCHMARK_TIMEOUT, 1);
-  case 2: return maybe_run_test(argc, argv);
-  case 3: return run_test_part(argv[1], argv[2]);
-  default:
-    LOGF("Too many arguments.\n");
-    return 1;
-  }
+#define UV_STRINGIFY(v) UV_STRINGIFY_HELPER(v)
+#define UV_STRINGIFY_HELPER(v) #v
+
+#define UV_VERSION_STRING_BASE  UV_STRINGIFY(UV_VERSION_MAJOR) "." \
+                                UV_STRINGIFY(UV_VERSION_MINOR) "." \
+                                UV_STRINGIFY(UV_VERSION_PATCH)
+
+#if UV_VERSION_IS_RELEASE
+# define UV_VERSION_STRING  UV_VERSION_STRING_BASE
+#else
+# define UV_VERSION_STRING  UV_VERSION_STRING_BASE "-pre"
+#endif
+
+
+unsigned int uv_version(void) {
+  return UV_VERSION;
 }
 
 
-static int maybe_run_test(int argc, char **argv) {
-  if (strcmp(argv[1], "--list") == 0) {
-    print_tests(stdout);
-    return 0;
-  }
-
-  if (strcmp(argv[1], "spawn_helper") == 0) {
-    printf("hello world\n");
-    return 42;
-  }
-
-  return run_test(argv[1], BENCHMARK_TIMEOUT, 1, 1);
+const char* uv_version_string(void) {
+  return UV_VERSION_STRING;
 }

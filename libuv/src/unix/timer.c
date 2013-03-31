@@ -21,15 +21,21 @@
 #include "uv.h"
 #include "internal.h"
 #include <assert.h>
+#include <limits.h>
+
 
 static int uv__timer_cmp(const uv_timer_t* a, const uv_timer_t* b) {
   if (a->timeout < b->timeout)
     return -1;
   if (a->timeout > b->timeout)
     return 1;
-  if (a < b)
+  /*
+   *  compare start_id when both has the same timeout. start_id is
+   *  allocated with loop->timer_counter in uv_timer_start().
+   */
+  if (a->start_id < b->start_id)
     return -1;
-  if (a > b)
+  if (a->start_id > b->start_id)
     return 1;
   return 0;
 }
@@ -41,6 +47,7 @@ RB_GENERATE_STATIC(uv__timers, uv_timer_s, tree_entry, uv__timer_cmp)
 int uv_timer_init(uv_loop_t* loop, uv_timer_t* handle) {
   uv__handle_init(loop, (uv_handle_t*)handle, UV_TIMER);
   handle->timer_cb = NULL;
+  handle->repeat = 0;
 
   return 0;
 }
@@ -48,17 +55,22 @@ int uv_timer_init(uv_loop_t* loop, uv_timer_t* handle) {
 
 int uv_timer_start(uv_timer_t* handle,
                    uv_timer_cb cb,
-                   int64_t timeout,
-                   int64_t repeat) {
-  assert(timeout >= 0);
-  assert(repeat >= 0);
+                   uint64_t timeout,
+                   uint64_t repeat) {
+  uint64_t clamped_timeout;
 
   if (uv__is_active(handle))
     uv_timer_stop(handle);
 
+  clamped_timeout = handle->loop->time + timeout;
+  if (clamped_timeout < timeout)
+    clamped_timeout = (uint64_t) -1;
+
   handle->timer_cb = cb;
-  handle->timeout = handle->loop->time + timeout;
+  handle->timeout = clamped_timeout;
   handle->repeat = repeat;
+  /* start_id is the second index to be compared in uv__timer_cmp() */
+  handle->start_id = handle->loop->timer_counter++;
 
   RB_INSERT(uv__timers, &handle->loop->timer_handles, handle);
   uv__handle_start(handle);
@@ -91,19 +103,19 @@ int uv_timer_again(uv_timer_t* handle) {
 }
 
 
-void uv_timer_set_repeat(uv_timer_t* handle, int64_t repeat) {
-  assert(repeat >= 0);
+void uv_timer_set_repeat(uv_timer_t* handle, uint64_t repeat) {
   handle->repeat = repeat;
 }
 
 
-int64_t uv_timer_get_repeat(uv_timer_t* handle) {
+uint64_t uv_timer_get_repeat(const uv_timer_t* handle) {
   return handle->repeat;
 }
 
 
 int uv__next_timeout(const uv_loop_t* loop) {
   const uv_timer_t* handle;
+  uint64_t diff;
 
   /* RB_MIN expects a non-const tree root. That's okay, it doesn't modify it. */
   handle = RB_MIN(uv__timers, (struct uv__timers*) &loop->timer_handles);
@@ -114,7 +126,11 @@ int uv__next_timeout(const uv_loop_t* loop) {
   if (handle->timeout <= loop->time)
     return 0;
 
-  return handle->timeout - loop->time;
+  diff = handle->timeout - loop->time;
+  if (diff > INT_MAX)
+    diff = INT_MAX;
+
+  return diff;
 }
 
 
