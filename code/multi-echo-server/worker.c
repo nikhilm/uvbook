@@ -30,6 +30,7 @@ void echo_read(uv_stream_t *client, ssize_t nread, uv_buf_t buf) {
 
     uv_write_t *req = (uv_write_t *) malloc(sizeof(uv_write_t));
     req->data = (void*) buf.base;
+    buf.len = nread;
     uv_write(req, client, &buf, 1, echo_write);
 }
 
