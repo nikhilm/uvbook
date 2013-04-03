@@ -148,6 +148,14 @@ stop watching. Here is a small example demonstrating the various possibilities:
     :linenos:
     :emphasize-lines: 8,17-18
 
+.. NOTE::
+
+    ``uv_run(loop, UV_RUN_NOWAIT)`` is similar to ``uv_run(loop, UV_RUN_ONCE)``
+    in that it will process only one event. UV_RUN_ONCE blocks if there are no
+    pending events, while UV_RUN_NOWAIT will return immediately. We use NOWAIT
+    so that one of the loops isn't starved because the other one has no pending
+    activity.
+
 Send ``SIGUSR1`` to the process, and you'll find the handler being invoked
 4 times, one for each ``uv_signal_t``. The handler just stops each handle,
 so that the program exits. This sort of dispatch to all handlers is very
