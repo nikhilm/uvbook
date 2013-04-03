@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -16,7 +14,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -151,8 +149,7 @@ In this case we also establish interest in reading from this stream.</p>
 11
 12
 13
-14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// error!</span>
         <span class="k">return</span><span class="p">;</span>
@@ -166,7 +163,6 @@ In this case we also establish interest in reading from this stream.</p>
     <span class="k">else</span> <span class="p">{</span>
         <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
     <span class="p">}</span>
-<span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <p>The remaining set of functions is very similar to the streams example and can
@@ -326,9 +322,9 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
 <p>A socket can (un)subscribe to a multicast group using:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_udp_set_membership</span><span class="p">(</span><span class="kt">uv_udp_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
-    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">multicast_addr</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">interface_addr</span><span class="p">,</span>
-    <span class="n">uv_membership</span> <span class="n">membership</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre> <span class="o">*</span>
+ <span class="o">*</span> <span class="n">Returns</span><span class="o">:</span>
+ <span class="o">*</span>  <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">error</span><span class="p">.</span>
 </pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">membership</span></tt> is <tt class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></tt> or <tt class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></tt>.</p>
@@ -556,7 +552,7 @@ removed in v0.9.0.</td></tr>
 
     <div class="footer">
         &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
     </div>
   </body>
 </html>

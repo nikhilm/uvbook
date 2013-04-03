@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -16,7 +14,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -135,6 +133,15 @@ exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p><tt class="docutils literal"><span class="pre">options</span></tt> is implicitly initialized with zeros since it is a global
+variable.  If you change <tt class="docutils literal"><span class="pre">options</span></tt> to a local variable, remember to
+initialize it to null out all unused fields:</p>
+<div class="last highlight-c"><div class="highlight"><pre><span class="kt">uv_process_options_t</span> <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</pre></div>
+</div>
+</div>
 <p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the watcher, all options are set via
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. To simply launch a process, you need to set only the
 <tt class="docutils literal"><span class="pre">file</span></tt> and <tt class="docutils literal"><span class="pre">args</span></tt> fields. <tt class="docutils literal"><span class="pre">file</span></tt> is the program to execute. Since
@@ -413,15 +420,15 @@ The file descriptors of the child process are set using the <tt class="docutils 
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
 file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
 <tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
-  <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
+<div class="highlight-c"><pre> */
+UV_EXTERN void uv_freeaddrinfo(struct addrinfo* ai);
 
-  <span class="k">union</span> <span class="p">{</span>
-    <span class="kt">uv_stream_t</span><span class="o">*</span> <span class="n">stream</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
-  <span class="p">}</span> <span class="n">data</span><span class="p">;</span>
-<span class="p">}</span> <span class="kt">uv_stdio_container_t</span><span class="p">;</span>
-</pre></div>
+/* uv_spawn() options */
+typedef enum {
+  UV_IGNORE         = 0x00,
+  UV_CREATE_PIPE    = 0x01,
+  UV_INHERIT_FD     = 0x02,
+</pre>
 </div>
 <p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
 used. If the first three <tt class="docutils literal"><span class="pre">stdio</span></tt> fields are marked as <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> they&#8217;ll
@@ -563,7 +570,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 </span>    <span class="n">child_stdio</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_IGNORE</span><span class="p">;</span>
     <span class="n">options</span><span class="p">.</span><span class="n">stdio</span> <span class="o">=</span> <span class="n">child_stdio</span><span class="p">;</span>
 
-    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">cleanup_handles</span><span class="p">;</span>
     <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
     <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 
@@ -690,16 +697,18 @@ it by the master.</p>
  8
  9
 10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+11
+12</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="kt">uv_pipe_t</span> <span class="n">queue</span><span class="p">;</span>
+
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
-
-<span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+<span class="hll">
+</span><span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 </span><span class="hll">    <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="hll">    <span class="n">uv_read2_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
-</span>    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
+</span>    <span class="n">uv_read2_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
@@ -828,7 +837,7 @@ master and the individual process.</p>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">stdio</span> <span class="o">=</span> <span class="n">child_stdio</span><span class="p">;</span>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">stdio_count</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
 
-        <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+        <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">close_process_handle</span><span class="p">;</span>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 
@@ -920,7 +929,7 @@ well.</td></tr>
 
     <div class="footer">
         &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
     </div>
   </body>
 </html>
