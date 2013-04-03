@@ -31,6 +31,11 @@ exits. This is achieved using ``uv_spawn``.
     :lines: 5-7,13-
     :emphasize-lines: 11,13-17
 
+Note: ``options``, being a global variable, is implicitly initialized with 
+zeros.  If you change ``options`` to a local variable, memory corruption 
+will follow (thanks Valgrind for saving me a few hours!).  You can use 
+``memset`` to initialize a local variable of type ``uv_process_options_t``.
+
 The ``uv_process_t`` struct only acts as the watcher, all options are set via
 ``uv_process_options_t``. To simply launch a process, you need to set only the
 ``file`` and ``args`` fields. ``file`` is the program to execute. Since
