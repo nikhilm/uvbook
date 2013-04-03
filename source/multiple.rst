@@ -3,8 +3,8 @@ Multiple event loops
 
 It is possible to use multiple event loops in the same thread. But this usually
 makes no sense since the `uv_run()` call of one loop will block and stop the
-other loop from running at all. With a careful combination of `uv_run_once()`
-you could do some really fun things though.
+other loop from running at all. With a careful combination of `uv_run(loop,
+UV_RUN_ONCE)` you could do some really fun things though.
 
 Modality
 --------
