@@ -324,10 +324,10 @@ readers get a chance again.</p>
 very similar to their pthread counterparts.</p>
 <p>In the case of condition variables, libuv also has a timeout on a wait, with
 platform specific quirks <a class="footnote-reference" href="#id4" id="id1">[1]</a>.</p>
-<p>In addition, libuv provides a convenience function <tt class="docutils literal"><span class="pre">uv_once()</span></tt> (not to be
-confused with <tt class="docutils literal"><span class="pre">uv_run_once()</span></tt>. Multiple threads can attempt to call
-<tt class="docutils literal"><span class="pre">uv_once()</span></tt> with a given guard and a function pointer, <strong>only the first one
-will win, the function will be called once and only once</strong>:</p>
+<p>In addition, libuv provides a convenience function <tt class="docutils literal"><span class="pre">uv_once()</span></tt>. Multiple
+threads can attempt to call <tt class="docutils literal"><span class="pre">uv_once()</span></tt> with a given guard and a function
+pointer, <strong>only the first one will win, the function will be called once and
+only once</strong>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Initialize guard */</span>
 <span class="k">static</span> <span class="kt">uv_once_t</span> <span class="n">once_only</span> <span class="o">=</span> <span class="n">UV_ONCE_INIT</span><span class="p">;</span>
 

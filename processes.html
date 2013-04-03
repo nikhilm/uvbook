@@ -388,6 +388,14 @@ stop watching. Here is a small example demonstrating the various possibilities:<
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><tt class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_NOWAIT)</span></tt> is similar to <tt class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_ONCE)</span></tt>
+in that it will process only one event. UV_RUN_ONCE blocks if there are no
+pending events, while UV_RUN_NOWAIT will return immediately. We use NOWAIT
+so that one of the loops isn&#8217;t starved because the other one has no pending
+activity.</p>
+</div>
 <p>Send <tt class="docutils literal"><span class="pre">SIGUSR1</span></tt> to the process, and you&#8217;ll find the handler being invoked
 4 times, one for each <tt class="docutils literal"><span class="pre">uv_signal_t</span></tt>. The handler just stops each handle,
 so that the program exits. This sort of dispatch to all handlers is very

@@ -68,8 +68,8 @@
 <h1>Multiple event loops<a class="headerlink" href="#multiple-event-loops" title="Permalink to this headline">¶</a></h1>
 <p>It is possible to use multiple event loops in the same thread. But this usually
 makes no sense since the <cite>uv_run()</cite> call of one loop will block and stop the
-other loop from running at all. With a careful combination of <cite>uv_run_once()</cite>
-you could do some really fun things though.</p>
+other loop from running at all. With a careful combination of <cite>uv_run(loop,
+UV_RUN_ONCE)</cite> you could do some really fun things though.</p>
 <div class="section" id="modality">
 <h2>Modality<a class="headerlink" href="#modality" title="Permalink to this headline">¶</a></h2>
 <p>You can use multiple loops to create a &#8216;modal&#8217; step in your program, where the

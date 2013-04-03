@@ -138,10 +138,10 @@ platform specific quirks [#]_.
 .. _condition variables: http://en.wikipedia.org/wiki/Condition_variable#Waiting_and_signaling
 .. _barriers: http://en.wikipedia.org/wiki/Barrier_(computer_science)
 
-In addition, libuv provides a convenience function ``uv_once()`` (not to be
-confused with ``uv_run_once()``. Multiple threads can attempt to call
-``uv_once()`` with a given guard and a function pointer, **only the first one
-will win, the function will be called once and only once**::
+In addition, libuv provides a convenience function ``uv_once()``. Multiple
+threads can attempt to call ``uv_once()`` with a given guard and a function
+pointer, **only the first one will win, the function will be called once and
+only once**::
 
     /* Initialize guard */
     static uv_once_t once_only = UV_ONCE_INIT;
