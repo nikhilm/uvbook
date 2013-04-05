@@ -22,7 +22,8 @@ examples=\
 	tty-gravity\
 	interfaces\
 	locks \
-	signal
+	signal \
+	uvstop
 
 UV_PATH=$(shell pwd)/../libuv
 UV_LIB=$(UV_PATH)/libuv.a
