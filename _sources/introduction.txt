@@ -39,10 +39,15 @@ combined a model of I/O -- evented -- with a language that was well suited to
 the style of programming; due to the way it had been shaped by browsers. As
 node.js grew in popularity, it was important to make it work on Windows, but
 libev ran only on Unix. The Windows equivalent of kernel event notification
-mechanisms like kqueue or (e)poll is IOCP. libuv is an abstraction around libev
+mechanisms like kqueue or (e)poll is IOCP. libuv was an abstraction around libev
 or IOCP depending on the platform, providing users an API based on libev.
-As of the node-v0.9.0 version of libuv, `libev has been removed`_ and libuv
-directly interfaces with Unix.
+In the node-v0.9.0 version of libuv `libev was removed`_.
+
+Since then libuv has continued to mature and become a high quality standalone
+library for system programming. Users outside of node.js include Mozilla's
+Rust_ programming language, and a variety_ of language bindings.
+
+The first independently release version of libuv was 0.10.2.
 
 Code
 ----
@@ -60,4 +65,6 @@ which will be compiled automatically.
 .. _libev: http://software.schmorp.de/pkg/libev.html
 .. _libuv: https://github.com/joyent/libuv
 .. _node.js: http://www.nodejs.org
-.. _libev has been removed: https://github.com/joyent/libuv/issues/485
+.. _libev was removed: https://github.com/joyent/libuv/issues/485
+.. _Rust: http://rust-lang.org
+.. _variety: https://github.com/joyent/libuv/wiki/Projects-that-use-libuv
