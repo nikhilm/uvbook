@@ -23,7 +23,8 @@ examples=\
 	interfaces\
 	locks \
 	signal \
-	uvstop
+	uvstop \
+	queue-cancel
 
 UV_PATH=$(shell pwd)/../libuv
 UV_LIB=$(UV_PATH)/libuv.a
