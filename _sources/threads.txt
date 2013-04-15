@@ -220,6 +220,57 @@ will be called, again with the same structure.
 For writing wrappers to blocking libraries, a common :ref:`pattern <baton>`
 is to use a baton to exchange data.
 
+Since libuv version `0.9.4` an additional function, ``uv_cancel()``, is
+available. This allows you to cancel tasks on the libuv work queue. Only tasks
+that *are yet to be started* can be cancelled. If a task has *already started
+executing, or it has finished executing*, ``uv_cancel()`` **will fail**.
+
+.. WARNING::
+
+    ``uv_cancel()`` is only available on Unix!
+
+``uv_cancel()`` is useful to cleanup pending tasks if the user requests
+termination. For example, a music player may queue up multiple directories to
+be scanned for audio files. If the user terminates the program, it should quit
+quickly and not wait until all pending requests are run.
+
+Let's modify the fibonacci example to demonstrate ``uv_cancel()``. We first set
+up a signal handler for termination.
+
+.. rubric:: queue-cancel/main.c
+.. literalinclude:: ../code/queue-cancel/main.c
+    :linenos:
+    :lines: 43-
+
+When the user triggers the signal by pressing ``Ctrl+C`` we send
+``uv_cancel()`` to all the workers. ``uv_cancel()`` will return ``-1`` for those that are already executing or finished.
+
+.. rubric:: queue-cancel/main.c
+.. literalinclude:: ../code/queue-cancel/main.c
+    :linenos:
+    :lines: 33-41
+    :emphasize-lines: 6
+
+For tasks that do get cancelled successfully, the *after* function is called
+with ``status`` set to ``-1`` and the loop error code is set to
+``UV_ECANCELED``.
+
+.. rubric:: queue-cancel/main.c
+.. literalinclude:: ../code/queue-cancel/main.c
+    :linenos:
+    :lines: 28-31
+    :emphasize-lines: 2
+
+``uv_cancel()`` can also be used with ``uv_fs_t`` and ``uv_getaddrinfo_t``
+requests. For the filesystem family of functions, ``uv_fs_t.errorno`` will be
+set to ``UV_ECANCELED``.
+
+.. TIP::
+
+    A well designed program would have a way to terminate long running workers
+    that have already started executing. Such a worker could periodically check
+    for a variable that only the main process sets to signal termination.
+
 .. _inter-thread-communication:
 
 Inter-thread communication
