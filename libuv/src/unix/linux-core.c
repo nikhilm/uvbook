@@ -101,7 +101,7 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
   struct uv__epoll_event events[1024];
   struct uv__epoll_event* pe;
   struct uv__epoll_event e;
-  ngx_queue_t* q;
+  QUEUE* q;
   uv__io_t* w;
   uint64_t base;
   uint64_t diff;
@@ -113,16 +113,16 @@ void uv__io_poll(uv_loop_t* loop, int timeout) {
   int i;
 
   if (loop->nfds == 0) {
-    assert(ngx_queue_empty(&loop->watcher_queue));
+    assert(QUEUE_EMPTY(&loop->watcher_queue));
     return;
   }
 
-  while (!ngx_queue_empty(&loop->watcher_queue)) {
-    q = ngx_queue_head(&loop->watcher_queue);
-    ngx_queue_remove(q);
-    ngx_queue_init(q);
+  while (!QUEUE_EMPTY(&loop->watcher_queue)) {
+    q = QUEUE_HEAD(&loop->watcher_queue);
+    QUEUE_REMOVE(q);
+    QUEUE_INIT(q);
 
-    w = ngx_queue_data(q, uv__io_t, watcher_queue);
+    w = QUEUE_DATA(q, uv__io_t, watcher_queue);
     assert(w->pevents != 0);
     assert(w->fd >= 0);
     assert(w->fd < (int) loop->nwatchers);
@@ -688,9 +688,15 @@ uv_err_t uv_interface_addresses(uv_interface_address_t** addresses,
     address->name = strdup(ent->ifa_name);
 
     if (ent->ifa_addr->sa_family == AF_INET6) {
-      address->address.address6 = *((struct sockaddr_in6 *)ent->ifa_addr);
+      address->address.address6 = *((struct sockaddr_in6*) ent->ifa_addr);
     } else {
-      address->address.address4 = *((struct sockaddr_in *)ent->ifa_addr);
+      address->address.address4 = *((struct sockaddr_in*) ent->ifa_addr);
+    }
+
+    if (ent->ifa_netmask->sa_family == AF_INET6) {
+      address->netmask.netmask6 = *((struct sockaddr_in6*) ent->ifa_netmask);
+    } else {
+      address->netmask.netmask4 = *((struct sockaddr_in*) ent->ifa_netmask);
     }
 
     address->is_internal = ent->ifa_flags & IFF_LOOPBACK ? 1 : 0;

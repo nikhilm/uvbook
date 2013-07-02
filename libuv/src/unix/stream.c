@@ -33,6 +33,7 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <limits.h> /* IOV_MAX */
 
 #if defined(__APPLE__)
 # include <sys/event.h>
@@ -109,8 +110,8 @@ void uv__stream_init(uv_loop_t* loop,
   stream->shutdown_req = NULL;
   stream->accepted_fd = -1;
   stream->delayed_error = 0;
-  ngx_queue_init(&stream->write_queue);
-  ngx_queue_init(&stream->write_completed_queue);
+  QUEUE_INIT(&stream->write_queue);
+  QUEUE_INIT(&stream->write_completed_queue);
   stream->write_queue_size = 0;
 
   if (loop->emfile_fd == -1)
@@ -373,7 +374,7 @@ int uv__stream_open(uv_stream_t* stream, int fd, int flags) {
 
 void uv__stream_destroy(uv_stream_t* stream) {
   uv_write_t* req;
-  ngx_queue_t* q;
+  QUEUE* q;
 
   assert(!uv__io_active(&stream->io_watcher, UV__POLLIN | UV__POLLOUT));
   assert(stream->flags & UV_CLOSED);
@@ -385,11 +386,11 @@ void uv__stream_destroy(uv_stream_t* stream) {
     stream->connect_req = NULL;
   }
 
-  while (!ngx_queue_empty(&stream->write_queue)) {
-    q = ngx_queue_head(&stream->write_queue);
-    ngx_queue_remove(q);
+  while (!QUEUE_EMPTY(&stream->write_queue)) {
+    q = QUEUE_HEAD(&stream->write_queue);
+    QUEUE_REMOVE(q);
 
-    req = ngx_queue_data(q, uv_write_t, queue);
+    req = QUEUE_DATA(q, uv_write_t, queue);
     uv__req_unregister(stream->loop, req);
 
     if (req->bufs != req->bufsml)
@@ -401,11 +402,11 @@ void uv__stream_destroy(uv_stream_t* stream) {
     }
   }
 
-  while (!ngx_queue_empty(&stream->write_completed_queue)) {
-    q = ngx_queue_head(&stream->write_completed_queue);
-    ngx_queue_remove(q);
+  while (!QUEUE_EMPTY(&stream->write_completed_queue)) {
+    q = QUEUE_HEAD(&stream->write_completed_queue);
+    QUEUE_REMOVE(q);
 
-    req = ngx_queue_data(q, uv_write_t, queue);
+    req = QUEUE_DATA(q, uv_write_t, queue);
     uv__req_unregister(stream->loop, req);
 
     if (req->cb) {
@@ -484,8 +485,7 @@ void uv__server_io(uv_loop_t* loop, uv__io_t* w, unsigned int events) {
   assert(stream->accepted_fd == -1);
   assert(!(stream->flags & UV_CLOSING));
 
-  if (stream->accepted_fd == -1)
-    uv__io_start(stream->loop, &stream->io_watcher, UV__POLLIN);
+  uv__io_start(stream->loop, &stream->io_watcher, UV__POLLIN);
 
   /* connection_cb can close the server socket while we're
    * in the loop so check it on each iteration.
@@ -638,7 +638,7 @@ int uv_listen(uv_stream_t* stream, int backlog, uv_connection_cb cb) {
 static void uv__drain(uv_stream_t* stream) {
   uv_shutdown_t* req;
 
-  assert(ngx_queue_empty(&stream->write_queue));
+  assert(QUEUE_EMPTY(&stream->write_queue));
   assert(stream->write_queue_size == 0);
 
   uv__io_stop(stream->loop, &stream->io_watcher, UV__POLLOUT);
@@ -685,7 +685,7 @@ static void uv__write_req_finish(uv_write_t* req) {
   uv_stream_t* stream = req->handle;
 
   /* Pop the req off tcp->write_queue. */
-  ngx_queue_remove(&req->queue);
+  QUEUE_REMOVE(&req->queue);
   if (req->bufs != req->bufsml) {
     free(req->bufs);
   }
@@ -694,7 +694,7 @@ static void uv__write_req_finish(uv_write_t* req) {
   /* Add it to the write_completed_queue where it will have its
    * callback called in the near future.
    */
-  ngx_queue_insert_tail(&stream->write_completed_queue, &req->queue);
+  QUEUE_INSERT_TAIL(&stream->write_completed_queue, &req->queue);
   uv__io_feed(stream->loop, &stream->io_watcher);
 }
 
@@ -716,7 +716,7 @@ static int uv__handle_fd(uv_handle_t* handle) {
 
 static void uv__write(uv_stream_t* stream) {
   struct iovec* iov;
-  ngx_queue_t* q;
+  QUEUE* q;
   uv_write_t* req;
   int iovcnt;
   ssize_t n;
@@ -725,13 +725,13 @@ start:
 
   assert(uv__stream_fd(stream) >= 0);
 
-  if (ngx_queue_empty(&stream->write_queue)) {
+  if (QUEUE_EMPTY(&stream->write_queue)) {
     assert(stream->write_queue_size == 0);
     return;
   }
 
-  q = ngx_queue_head(&stream->write_queue);
-  req = ngx_queue_data(q, uv_write_t, queue);
+  q = QUEUE_HEAD(&stream->write_queue);
+  req = QUEUE_DATA(q, uv_write_t, queue);
   assert(req->handle == stream);
 
   /*
@@ -741,6 +741,10 @@ start:
   assert(sizeof(uv_buf_t) == sizeof(struct iovec));
   iov = (struct iovec*) &(req->bufs[req->write_index]);
   iovcnt = req->bufcnt - req->write_index;
+
+  /* Limit iov count to avoid EINVALs from writev() */
+  if (iovcnt > IOV_MAX)
+    iovcnt = IOV_MAX;
 
   /*
    * Now do the actual writev. Note that we've been updating the pointers
@@ -863,13 +867,13 @@ start:
 
 static void uv__write_callbacks(uv_stream_t* stream) {
   uv_write_t* req;
-  ngx_queue_t* q;
+  QUEUE* q;
 
-  while (!ngx_queue_empty(&stream->write_completed_queue)) {
+  while (!QUEUE_EMPTY(&stream->write_completed_queue)) {
     /* Pop a req off write_completed_queue. */
-    q = ngx_queue_head(&stream->write_completed_queue);
-    req = ngx_queue_data(q, uv_write_t, queue);
-    ngx_queue_remove(q);
+    q = QUEUE_HEAD(&stream->write_completed_queue);
+    req = QUEUE_DATA(q, uv_write_t, queue);
+    QUEUE_REMOVE(q);
     uv__req_unregister(stream->loop, req);
 
     /* NOTE: call callback AFTER freeing the request data. */
@@ -879,10 +883,10 @@ static void uv__write_callbacks(uv_stream_t* stream) {
     }
   }
 
-  assert(ngx_queue_empty(&stream->write_completed_queue));
+  assert(QUEUE_EMPTY(&stream->write_completed_queue));
 
   /* Write queue drained. */
-  if (ngx_queue_empty(&stream->write_queue))
+  if (QUEUE_EMPTY(&stream->write_queue))
     uv__drain(stream);
 }
 
@@ -962,7 +966,7 @@ static void uv__read(uv_stream_t* stream) {
       msg.msg_namelen = 0;
       /* Set up to receive a descriptor even if one isn't in the message */
       msg.msg_controllen = 64;
-      msg.msg_control = (void *) cmsg_space;
+      msg.msg_control = (void*)  cmsg_space;
 
       do {
         nread = recvmsg(uv__stream_fd(stream), &msg, 0);
@@ -1200,7 +1204,7 @@ int uv_write2(uv_write_t* req,
   req->handle = stream;
   req->error = 0;
   req->send_handle = send_handle;
-  ngx_queue_init(&req->queue);
+  QUEUE_INIT(&req->queue);
 
   if (bufcnt <= (int) ARRAY_SIZE(req->bufsml))
     req->bufs = req->bufsml;
@@ -1213,7 +1217,7 @@ int uv_write2(uv_write_t* req,
   stream->write_queue_size += uv__buf_count(bufs, bufcnt);
 
   /* Append the request to write_queue. */
-  ngx_queue_insert_tail(&stream->write_queue, &req->queue);
+  QUEUE_INSERT_TAIL(&stream->write_queue, &req->queue);
 
   /* If the queue was empty when this function began, we should attempt to
    * do the write immediately. Otherwise start the write_watcher and wait

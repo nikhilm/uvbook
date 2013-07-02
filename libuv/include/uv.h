@@ -45,11 +45,6 @@ extern "C" {
 # define UV_EXTERN /* nothing */
 #endif
 
-
-#define UV_VERSION_MAJOR 0
-#define UV_VERSION_MINOR 10
-
-
 #if defined(_MSC_VER) && _MSC_VER < 1600
 # include "uv-private/stdint-msvc2008.h"
 #else
@@ -294,8 +289,8 @@ UV_EXTERN uint64_t uv_now(uv_loop_t*);
  * Get backend file descriptor. Only kqueue, epoll and event ports are
  * supported.
  *
- * This can be used in conjunction with uv_run_once() to poll in one thread and
- * run the event loop's event callbacks in another.
+ * This can be used in conjunction with `uv_run(loop, UV_RUN_NOWAIT)` to
+ * poll in one thread and run the event loop's event callbacks in another.
  *
  * Useful for embedding libuv's event loop in another event loop.
  * See test/test-embed.c for an example.
@@ -364,6 +359,29 @@ typedef void (*uv_getaddrinfo_cb)(uv_getaddrinfo_t* req,
                                   int status,
                                   struct addrinfo* res);
 
+typedef struct {
+  long tv_sec;
+  long tv_nsec;
+} uv_timespec_t;
+
+
+typedef struct {
+  uint64_t st_dev;
+  uint64_t st_mode;
+  uint64_t st_nlink;
+  uint64_t st_uid;
+  uint64_t st_gid;
+  uint64_t st_rdev;
+  uint64_t st_ino;
+  uint64_t st_size;
+  uint64_t st_blksize;
+  uint64_t st_blocks;
+  uv_timespec_t st_atim;
+  uv_timespec_t st_mtim;
+  uv_timespec_t st_ctim;
+} uv_stat_t;
+
+
 /*
 * This will be called repeatedly after the uv_fs_event_t is initialized.
 * If uv_fs_event_t was initialized with a directory the filename parameter
@@ -375,8 +393,8 @@ typedef void (*uv_fs_event_cb)(uv_fs_event_t* handle, const char* filename,
 
 typedef void (*uv_fs_poll_cb)(uv_fs_poll_t* handle,
                               int status,
-                              const uv_statbuf_t* prev,
-                              const uv_statbuf_t* curr);
+                              const uv_stat_t* prev,
+                              const uv_stat_t* curr);
 
 typedef void (*uv_signal_cb)(uv_signal_t* handle, int signum);
 
@@ -411,7 +429,7 @@ UV_EXTERN const char* uv_err_name(uv_err_t err);
   /* read-only */                                                             \
   uv_req_type type;                                                           \
   /* private */                                                               \
-  ngx_queue_t active_queue;                                                   \
+  void* active_queue[2];                                                      \
   UV_REQ_PRIVATE_FIELDS                                                       \
 
 /* Abstract base class of all requests. */
@@ -451,7 +469,7 @@ struct uv_shutdown_s {
   uv_loop_t* loop;                                                            \
   uv_handle_type type;                                                        \
   /* private */                                                               \
-  ngx_queue_t handle_queue;                                                   \
+  void* handle_queue[2];                                                      \
   UV_HANDLE_PRIVATE_FIELDS                                                    \
 
 /* The abstract base class of all handles.  */
@@ -769,6 +787,12 @@ UV_EXTERN int uv_udp_init(uv_loop_t*, uv_udp_t* handle);
 
 /*
  * Opens an existing file descriptor or SOCKET as a udp handle.
+ *
+ * Unix only:
+ *  The only requirement of the sock argument is that it follows the
+ *  datagram contract (works in unconnected mode, supports sendmsg()/recvmsg(),
+ *  etc.). In other words, other datagram-type sockets like raw sockets or
+ *  netlink sockets can also be passed to this function.
  */
 UV_EXTERN int uv_udp_open(uv_udp_t* handle, uv_os_sock_t sock);
 
@@ -1455,6 +1479,10 @@ struct uv_interface_address_s {
     struct sockaddr_in address4;
     struct sockaddr_in6 address6;
   } address;
+  union {
+    struct sockaddr_in netmask4;
+    struct sockaddr_in6 netmask6;
+  } netmask;
 };
 
 UV_EXTERN char** uv_setup_args(int argc, char** argv);
@@ -1533,7 +1561,7 @@ struct uv_fs_s {
   void* ptr;
   const char* path;
   uv_err_code errorno;
-  uv_statbuf_t statbuf;  /* Stores the result of uv_fs_stat and uv_fs_fstat. */
+  uv_stat_t statbuf;  /* Stores the result of uv_fs_stat and uv_fs_fstat. */
   UV_FS_PRIVATE_FIELDS
 };
 
@@ -1660,7 +1688,7 @@ UV_EXTERN int uv_fs_poll_init(uv_loop_t* loop, uv_fs_poll_t* handle);
  * or the error reason changes).
  *
  * When `status == 0`, your callback receives pointers to the old and new
- * `uv_statbuf_t` structs. They are valid for the duration of the callback
+ * `uv_stat_t` structs. They are valid for the duration of the callback
  * only!
  *
  * For maximum portability, use multi-second intervals. Sub-second intervals
@@ -1916,35 +1944,16 @@ UV_EXTERN int uv_thread_create(uv_thread_t *tid,
 UV_EXTERN unsigned long uv_thread_self(void);
 UV_EXTERN int uv_thread_join(uv_thread_t *tid);
 
-/* the presence of these unions force similar struct layout */
+/* The presence of these unions force similar struct layout. */
+#define XX(_, name) uv_ ## name ## _t name;
 union uv_any_handle {
-  uv_handle_t handle;
-  uv_stream_t stream;
-  uv_tcp_t tcp;
-  uv_pipe_t pipe;
-  uv_prepare_t prepare;
-  uv_check_t check;
-  uv_idle_t idle;
-  uv_async_t async;
-  uv_timer_t timer;
-  uv_fs_event_t fs_event;
-  uv_fs_poll_t fs_poll;
-  uv_poll_t poll;
-  uv_process_t process;
-  uv_tty_t tty;
-  uv_udp_t udp;
+  UV_HANDLE_TYPE_MAP(XX)
 };
 
 union uv_any_req {
-  uv_req_t req;
-  uv_write_t write;
-  uv_connect_t connect;
-  uv_shutdown_t shutdown;
-  uv_fs_t fs_req;
-  uv_work_t work_req;
-  uv_udp_send_t udp_send_req;
-  uv_getaddrinfo_t getaddrinfo_req;
+  UV_REQ_TYPE_MAP(XX)
 };
+#undef XX
 
 
 struct uv_loop_s {
@@ -1954,8 +1963,8 @@ struct uv_loop_s {
   uv_err_t last_err;
   /* Loop reference counting */
   unsigned int active_handles;
-  ngx_queue_t handle_queue;
-  ngx_queue_t active_reqs;
+  void* handle_queue[2];
+  void* active_reqs[2];
   /* Internal flag to signal loop stop */
   unsigned int stop_flag;
   UV_LOOP_PRIVATE_FIELDS

@@ -45,7 +45,6 @@ typedef intptr_t ssize_t;
 #endif
 
 #include "tree.h"
-#include "ngx-queue.h"
 
 #define MAX_PIPENAME_LEN 256
 
@@ -206,8 +205,6 @@ typedef struct uv_buf_t {
 } uv_buf_t;
 
 typedef int uv_file;
-
-typedef struct _stati64 uv_statbuf_t;
 
 typedef SOCKET uv_os_sock_t;
 

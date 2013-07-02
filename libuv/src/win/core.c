@@ -55,7 +55,7 @@ static void uv_init(void) {
 
   /* Tell the CRT to not exit the application when an invalid parameter is */
   /* passed. The main issue is that invalid FDs will trigger this behavior. */
-#ifdef _WRITE_ABORT_MSG
+#if !defined(__MINGW32__) || __MSVCRT_VERSION__ >= 0x800
   _set_invalid_parameter_handler(uv__crt_invalid_parameter_handler);
 #endif
 
@@ -92,8 +92,8 @@ static void uv_loop_init(uv_loop_t* loop) {
   loop->time = 0;
   uv_update_time(loop);
 
-  ngx_queue_init(&loop->handle_queue);
-  ngx_queue_init(&loop->active_reqs);
+  QUEUE_INIT(&loop->handle_queue);
+  QUEUE_INIT(&loop->active_reqs);
   loop->active_handles = 0;
 
   loop->pending_reqs_tail = NULL;
@@ -185,7 +185,6 @@ int uv_backend_timeout(const uv_loop_t* loop) {
 
 
 static void uv_poll(uv_loop_t* loop, int block) {
-  BOOL success;
   DWORD bytes, timeout;
   ULONG_PTR key;
   OVERLAPPED* overlapped;
@@ -197,11 +196,11 @@ static void uv_poll(uv_loop_t* loop, int block) {
     timeout = 0;
   }
 
-  success = GetQueuedCompletionStatus(loop->iocp,
-                                      &bytes,
-                                      &key,
-                                      &overlapped,
-                                      timeout);
+  GetQueuedCompletionStatus(loop->iocp,
+                            &bytes,
+                            &key,
+                            &overlapped,
+                            timeout);
 
   if (overlapped) {
     /* Package was dequeued */
@@ -253,7 +252,7 @@ static void uv_poll_ex(uv_loop_t* loop, int block) {
 
 static int uv__loop_alive(uv_loop_t* loop) {
   return loop->active_handles > 0 ||
-         !ngx_queue_empty(&loop->active_reqs) ||
+         !QUEUE_EMPTY(&loop->active_reqs) ||
          loop->endgame_handles != NULL;
 }
 
@@ -291,7 +290,7 @@ int uv_run(uv_loop_t *loop, uv_run_mode mode) {
                   loop->endgame_handles == NULL &&
                   !loop->stop_flag &&
                   (loop->active_handles > 0 ||
-                   !ngx_queue_empty(&loop->active_reqs)) &&
+                   !QUEUE_EMPTY(&loop->active_reqs)) &&
                   !(mode & UV_RUN_NOWAIT));
 
     uv_check_invoke(loop);
