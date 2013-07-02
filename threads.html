@@ -161,11 +161,11 @@ the pthreads <a class="reference external" href="pthreads">man pages</a>.</p>
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
 <p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
 <p class="rubric">libuv mutex functions</p>
-<div class="highlight-c"><pre> * Close the shared library.
+<div class="highlight-c"><pre> * value will always be in nanoseconds.
  */
-UV_EXTERN void uv_dlclose(uv_lib_t* lib);
+UV_EXTERN extern uint64_t uv_hrtime(void);
 
-/*
+
 </pre>
 </div>
 <p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on

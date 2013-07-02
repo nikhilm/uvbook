@@ -180,12 +180,7 @@ you should be aware of this.</p>
 are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the watcher
 is used for. A full list of watchers supported by libuv is:</p>
 <p class="rubric">libuv watchers</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="kt">uv_loop_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_err_s</span> <span class="kt">uv_err_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="kt">uv_handle_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="kt">uv_stream_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="kt">uv_tcp_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="kt">uv_pipe_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="kt">uv_tty_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="kt">uv_poll_t</span><span class="p">;</span>
@@ -198,6 +193,11 @@ is used for. A full list of watchers supported by libuv is:</p>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_event_s</span> <span class="kt">uv_fs_event_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_poll_s</span> <span class="kt">uv_fs_poll_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_signal_s</span> <span class="kt">uv_signal_t</span><span class="p">;</span>
+
+<span class="cm">/* Request types. */</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_req_s</span> <span class="kt">uv_req_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getaddrinfo_s</span> <span class="kt">uv_getaddrinfo_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_shutdown_s</span> <span class="kt">uv_shutdown_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <div class="admonition note">

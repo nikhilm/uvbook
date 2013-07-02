@@ -176,8 +176,8 @@ using fields in <tt class="docutils literal"><span class="pre">uv_process_option
 </div>
 <div class="section" id="set-environment-variables">
 <h3>Set environment variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline">¶</a></h3>
-<p><tt class="docutils literal"><span class="pre">uv_process_options_t.env</span></tt> is an array of strings, each of the form
-<tt class="docutils literal"><span class="pre">VAR=VALUE</span></tt> used to set up the environment variables for the process. Set
+<p><tt class="docutils literal"><span class="pre">uv_process_options_t.env</span></tt> is a null-terminated array of strings, each of the
+form <tt class="docutils literal"><span class="pre">VAR=VALUE</span></tt> used to set up the environment variables for the process. Set
 this to <tt class="docutils literal"><span class="pre">NULL</span></tt> to inherit the environment from the parent (this) process.</p>
 </div>
 <div class="section" id="option-flags">
@@ -430,14 +430,14 @@ The file descriptors of the child process are set using the <tt class="docutils 
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
 file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
 <tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
-<div class="highlight-c"><pre> */
-UV_EXTERN void uv_freeaddrinfo(struct addrinfo* ai);
-
-/* uv_spawn() options */
-typedef enum {
-  UV_IGNORE         = 0x00,
-  UV_CREATE_PIPE    = 0x01,
-  UV_INHERIT_FD     = 0x02,
+<div class="highlight-c"><pre> * hints is a pointer to a struct addrinfo with additional address type
+ * constraints, or NULL. Consult `man -s 3 getaddrinfo` for details.
+ *
+ * Returns 0 on success, -1 on error. Call uv_last_error() to get the error.
+ *
+ * If successful, your callback gets called sometime in the future with the
+ * lookup result, which is either:
+ *
 </pre>
 </div>
 <p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be

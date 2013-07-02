@@ -231,7 +231,34 @@ supported asynchronously and have intuitive argument order. They follow the
 same patterns as the read/write/open calls, returning the result in the
 <tt class="docutils literal"><span class="pre">uv_fs_t.result</span></tt> field. The full list:</p>
 <p class="rubric">Filesystem operations</p>
-<div class="highlight-c"><div class="highlight"><pre>  <span class="n">UV_FS_FCHOWN</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
+  <span class="n">UV_FS_UNKNOWN</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+  <span class="n">UV_FS_CUSTOM</span><span class="p">,</span>
+  <span class="n">UV_FS_OPEN</span><span class="p">,</span>
+  <span class="n">UV_FS_CLOSE</span><span class="p">,</span>
+  <span class="n">UV_FS_READ</span><span class="p">,</span>
+  <span class="n">UV_FS_WRITE</span><span class="p">,</span>
+  <span class="n">UV_FS_SENDFILE</span><span class="p">,</span>
+  <span class="n">UV_FS_STAT</span><span class="p">,</span>
+  <span class="n">UV_FS_LSTAT</span><span class="p">,</span>
+  <span class="n">UV_FS_FSTAT</span><span class="p">,</span>
+  <span class="n">UV_FS_FTRUNCATE</span><span class="p">,</span>
+  <span class="n">UV_FS_UTIME</span><span class="p">,</span>
+  <span class="n">UV_FS_FUTIME</span><span class="p">,</span>
+  <span class="n">UV_FS_CHMOD</span><span class="p">,</span>
+  <span class="n">UV_FS_FCHMOD</span><span class="p">,</span>
+  <span class="n">UV_FS_FSYNC</span><span class="p">,</span>
+  <span class="n">UV_FS_FDATASYNC</span><span class="p">,</span>
+  <span class="n">UV_FS_UNLINK</span><span class="p">,</span>
+  <span class="n">UV_FS_RMDIR</span><span class="p">,</span>
+  <span class="n">UV_FS_MKDIR</span><span class="p">,</span>
+  <span class="n">UV_FS_RENAME</span><span class="p">,</span>
+  <span class="n">UV_FS_READDIR</span><span class="p">,</span>
+  <span class="n">UV_FS_LINK</span><span class="p">,</span>
+  <span class="n">UV_FS_SYMLINK</span><span class="p">,</span>
+  <span class="n">UV_FS_READLINK</span><span class="p">,</span>
+  <span class="n">UV_FS_CHOWN</span><span class="p">,</span>
+  <span class="n">UV_FS_FCHOWN</span>
 <span class="p">}</span> <span class="n">uv_fs_type</span><span class="p">;</span>
 
 <span class="cm">/* uv_fs_t is a subclass of uv_req_t */</span>
@@ -244,7 +271,7 @@ same patterns as the read/write/open calls, returning the result in the
   <span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">;</span>
   <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">;</span>
   <span class="n">uv_err_code</span> <span class="n">errorno</span><span class="p">;</span>
-  <span class="kt">uv_statbuf_t</span> <span class="n">statbuf</span><span class="p">;</span>  <span class="cm">/* Stores the result of uv_fs_stat and uv_fs_fstat. */</span>
+  <span class="kt">uv_stat_t</span> <span class="n">statbuf</span><span class="p">;</span>  <span class="cm">/* Stores the result of uv_fs_stat and uv_fs_fstat. */</span>
   <span class="n">UV_FS_PRIVATE_FIELDS</span>
 <span class="p">};</span>
 
@@ -261,35 +288,6 @@ same patterns as the read/write/open calls, returning the result in the
 
 <span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_unlink</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
     <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_write</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-    <span class="kt">void</span><span class="o">*</span> <span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">length</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_mkdir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
-    <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rmdir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
-    <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_readdir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
-    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_stat</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
-    <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fstat</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-    <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rename</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
-    <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">new_path</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fsync</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-    <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fdatasync</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-    <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="n">uv_fs_ftruncate</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
 </pre></div>
 </div>
 <p>Callbacks should free the <tt class="docutils literal"><span class="pre">uv_fs_t</span></tt> argument using <tt class="docutils literal"><span class="pre">uv_fs_req_cleanup()</span></tt>.</p>
@@ -516,9 +514,9 @@ a command whenever any of the watched files change:</p>
 </td></tr></table></div>
 <p>The third argument is the actual file or directory to monitor. The last
 argument, <tt class="docutils literal"><span class="pre">flags</span></tt>, can be:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="o">/*</span>
- <span class="o">*</span> <span class="n">Flags</span> <span class="n">to</span> <span class="n">be</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">uv_fs_event_init</span><span class="p">.</span>
-   <span class="o">*</span> <span class="n">flag</span> <span class="n">does</span> <span class="n">not</span> <span class="n">affect</span> <span class="n">individual</span> <span class="n">files</span> <span class="n">watched</span><span class="p">.</span>
+<div class="highlight-c"><div class="highlight"><pre> <span class="o">*</span>   <span class="n">handle</span> <span class="n">to</span> <span class="n">write</span> <span class="n">to</span> <span class="n">the</span> <span class="n">console</span><span class="p">.</span> <span class="n">SIGWINCH</span> <span class="n">may</span> <span class="n">not</span> <span class="n">always</span> <span class="n">be</span> <span class="n">delivered</span> <span class="n">in</span> <span class="n">a</span>
+ <span class="o">*</span> <span class="n">Note</span> <span class="n">that</span> <span class="n">calls</span> <span class="n">to</span> <span class="n">raise</span><span class="p">()</span> <span class="n">or</span> <span class="n">abort</span><span class="p">()</span> <span class="n">to</span> <span class="n">programmatically</span> <span class="n">raise</span> <span class="n">a</span> <span class="n">signal</span> <span class="n">are</span>
+  <span class="n">UV_SIGNAL_PRIVATE_FIELDS</span>
 </pre></div>
 </div>
 <p><tt class="docutils literal"><span class="pre">UV_FS_EVENT_WATCH_ENTRY</span></tt> and <tt class="docutils literal"><span class="pre">UV_FS_EVENT_STAT</span></tt> don&#8217;t do anything (yet).

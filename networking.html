@@ -324,10 +324,10 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
 <p>A socket can (un)subscribe to a multicast group using:</p>
-<div class="highlight-c"><div class="highlight"><pre> <span class="o">*</span>
- <span class="o">*</span> <span class="n">Returns</span><span class="o">:</span>
- <span class="o">*</span>  <span class="mi">0</span> <span class="n">on</span> <span class="n">success</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="n">on</span> <span class="n">error</span><span class="p">.</span>
-</pre></div>
+<div class="highlight-c"><pre> */
+UV_EXTERN int uv_udp_open(uv_udp_t* handle, uv_os_sock_t sock);
+
+</pre>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">membership</span></tt> is <tt class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></tt> or <tt class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></tt>.</p>
 <p>Local loopback of multicast packets is enabled by default <a class="footnote-reference" href="#id7" id="id3">[3]</a>, use

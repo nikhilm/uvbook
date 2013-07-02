@@ -76,8 +76,8 @@ Set ``uv_process_options_t.cwd`` to the corresponding directory.
 Set environment variables
 +++++++++++++++++++++++++
 
-``uv_process_options_t.env`` is an array of strings, each of the form
-``VAR=VALUE`` used to set up the environment variables for the process. Set
+``uv_process_options_t.env`` is a null-terminated array of strings, each of the
+form ``VAR=VALUE`` used to set up the environment variables for the process. Set
 this to ``NULL`` to inherit the environment from the parent (this) process.
 
 Option flags
