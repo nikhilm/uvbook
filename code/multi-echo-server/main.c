@@ -32,8 +32,8 @@ void on_new_connection(uv_stream_t *server, int status) {
         return;
     }
 
-    uv_pipe_t *client = (uv_pipe_t*) malloc(sizeof(uv_pipe_t));
-    uv_pipe_init(loop, client, 0);
+    uv_tcp_t *client = (uv_pipe_t*) malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(loop, client);
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
         uv_write_t *write_req = (uv_write_t*) malloc(sizeof(uv_write_t));
         dummy_buf = uv_buf_init(".", 1);
