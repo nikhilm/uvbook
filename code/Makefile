@@ -39,7 +39,7 @@ SHARED_LIB_FLAGS=-bundle -undefined dynamic_lookup -o plugin/libhello.dylib
 endif
 
 ifeq (Linux, $(uname_S))
-LIBS=-lrt -ldl -lm -lev -pthread
+LIBS=-lrt -ldl -lm -pthread
 SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
