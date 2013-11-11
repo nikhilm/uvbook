@@ -315,13 +315,13 @@ and freed by the application.</p>
 <p>To demonstrate streams we will need to use <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt>. This allows streaming
 local files <a class="footnote-reference" href="#id4" id="id2">[2]</a>. Here is a simple tee utility using libuv.  Doing all operations
 asynchronously shows the power of evented I/O. The two writes won&#8217;t block each
-other, but we&#8217;ve to be careful to copy over the buffer data to ensure we don&#8217;t
+other, but we have to be careful to copy over the buffer data to ensure we don&#8217;t
 free a buffer until it has been written.</p>
 <p>The program is to be executed as:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">uvtee</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
 </pre></div>
 </div>
-<p>We start of opening pipes on the files we require. libuv pipes to a file are
+<p>We start off opening pipes on the files we require. libuv pipes to a file are
 opened as bidirectional by default.</p>
 <p class="rubric">uvtee/main.c - read on pipes</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1

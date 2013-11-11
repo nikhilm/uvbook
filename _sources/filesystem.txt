@@ -164,14 +164,14 @@ and freed by the application.
 To demonstrate streams we will need to use ``uv_pipe_t``. This allows streaming
 local files [#]_. Here is a simple tee utility using libuv.  Doing all operations
 asynchronously shows the power of evented I/O. The two writes won't block each
-other, but we've to be careful to copy over the buffer data to ensure we don't
+other, but we have to be careful to copy over the buffer data to ensure we don't
 free a buffer until it has been written.
 
 The program is to be executed as::
 
     ./uvtee <output_file>
 
-We start of opening pipes on the files we require. libuv pipes to a file are
+We start off opening pipes on the files we require. libuv pipes to a file are
 opened as bidirectional by default.
 
 .. rubric:: uvtee/main.c - read on pipes

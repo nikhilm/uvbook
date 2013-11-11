@@ -368,80 +368,16 @@ progress with the download whenever libuv notifies of I/O readiness.</p>
 31
 32
 33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+34</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;stdlib.h&gt;</span>
 <span class="cp">#include &lt;uv.h&gt;</span>
 <span class="cp">#include &lt;curl/curl.h&gt;</span>
 
 <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="n">CURLM</span> <span class="o">*</span><span class="n">curl_handle</span><span class="p">;</span>
-<span class="hll"><span class="kt">uv_timer_t</span> <span class="n">timeout</span><span class="p">;</span>
-</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">curl_context_s</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_IN</span> <span class="o">||</span> <span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_OUT</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">curl_context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">else</span> <span class="p">{</span>
-            <span class="n">curl_context</span> <span class="o">=</span> <span class="n">create_curl_context</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
-        <span class="p">}</span>
-        <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">curl_context</span><span class="p">);</span>
-    <span class="p">}</span>
+<span class="hll"><span class="n">CURLM</span> <span class="o">*</span><span class="n">curl_handle</span><span class="p">;</span>
+</span><span class="kt">uv_timer_t</span> <span class="n">timeout</span><span class="p">;</span>
 
-    <span class="k">switch</span> <span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">        <span class="k">case</span> <span class="n">CURL_POLL_IN</span>:
-</span>            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_READABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
-            <span class="k">break</span><span class="p">;</span>
-<span class="hll">        <span class="k">case</span> <span class="n">CURL_POLL_OUT</span>:
-</span><span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_WRITABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
-</span>            <span class="k">break</span><span class="p">;</span>
-        <span class="k">case</span> <span class="n">CURL_POLL_REMOVE</span>:
-            <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
-                <span class="n">uv_poll_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">socketp</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">);</span>
-                <span class="n">destroy_curl_context</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">);</span>                
-                <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-            <span class="p">}</span>
-            <span class="k">break</span><span class="p">;</span>
-        <span class="nl">default:</span>
-            <span class="n">abort</span><span class="p">();</span>
-    <span class="p">}</span>
-
-    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
@@ -452,12 +388,12 @@ progress with the download whenever libuv notifies of I/O readiness.</p>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
-
+<span class="hll">    <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+</span>
     <span class="n">curl_handle</span> <span class="o">=</span> <span class="n">curl_multi_init</span><span class="p">();</span>
-    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_SOCKETFUNCTION</span><span class="p">,</span> <span class="n">handle_socket</span><span class="p">);</span>
-    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_TIMERFUNCTION</span><span class="p">,</span> <span class="n">start_timeout</span><span class="p">);</span>
-
+<span class="hll">    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_SOCKETFUNCTION</span><span class="p">,</span> <span class="n">handle_socket</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">curl_multi_setopt</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURLMOPT_TIMERFUNCTION</span><span class="p">,</span> <span class="n">start_timeout</span><span class="p">);</span>
+</span>
     <span class="k">while</span> <span class="p">(</span><span class="n">argc</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">add_download</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">argc</span><span class="p">);</span>
     <span class="p">}</span>
@@ -496,7 +432,9 @@ get the download moving.</p>
 14
 15
 16
-17</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="kt">uv_poll_t</span> <span class="n">poll_handle</span><span class="p">;</span>
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">curl_context_s</span> <span class="p">{</span>
+    <span class="kt">uv_poll_t</span> <span class="n">poll_handle</span><span class="p">;</span>
     <span class="kt">curl_socket_t</span> <span class="n">sockfd</span><span class="p">;</span>
 <span class="p">}</span> <span class="kt">curl_context_t</span><span class="p">;</span>
 
@@ -508,10 +446,10 @@ get the download moving.</p>
 
     <span class="n">context</span><span class="o">-&gt;</span><span class="n">sockfd</span> <span class="o">=</span> <span class="n">sockfd</span><span class="p">;</span>
 
-    <span class="n">r</span> <span class="o">=</span> <span class="n">uv_poll_init_socket</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">sockfd</span><span class="p">);</span>
-    <span class="n">context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">context</span><span class="p">;</span>
-<span class="hll">
-</span>    <span class="k">return</span> <span class="n">context</span><span class="p">;</span>
+<span class="hll">    <span class="n">r</span> <span class="o">=</span> <span class="n">uv_poll_init_socket</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">sockfd</span><span class="p">);</span>
+</span>    <span class="n">context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">context</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">context</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
@@ -555,40 +493,38 @@ on sockets whenever <tt class="docutils literal"><span class="pre">handle_socket
 29
 30
 31
-32
-33</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="kt">char</span> <span class="o">*</span><span class="n">done_url</span><span class="p">;</span>
-
-    <span class="n">CURLMsg</span> <span class="o">*</span><span class="n">message</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">pending</span><span class="p">;</span>
-    <span class="k">while</span> <span class="p">((</span><span class="n">message</span> <span class="o">=</span> <span class="n">curl_multi_info_read</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pending</span><span class="p">)))</span> <span class="p">{</span>
-        <span class="k">switch</span> <span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">case</span> <span class="n">CURLMSG_DONE</span>:
-                <span class="n">curl_easy_getinfo</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">,</span> <span class="n">CURLINFO_EFFECTIVE_URL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">done_url</span><span class="p">);</span>
-<span class="hll">                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s DONE</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">done_url</span><span class="p">);</span>
-</span>
-<span class="hll">                <span class="n">curl_multi_remove_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
-</span>                <span class="n">curl_easy_cleanup</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
-
-                <span class="k">break</span><span class="p">;</span>
-            <span class="nl">default:</span>
-<span class="hll">                <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;CURLMSG default</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span>                <span class="n">abort</span><span class="p">();</span>
+32</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">handle_socket</span><span class="p">(</span><span class="n">CURL</span> <span class="o">*</span><span class="n">easy</span><span class="p">,</span> <span class="kt">curl_socket_t</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">curl_context</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_IN</span> <span class="o">||</span> <span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_OUT</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">curl_context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">;</span>
         <span class="p">}</span>
-<span class="hll">    <span class="p">}</span>
-</span><span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+<span class="hll">            <span class="n">curl_context</span> <span class="o">=</span> <span class="n">create_curl_context</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span>        <span class="p">}</span>
+<span class="hll">        <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">curl_context</span><span class="p">);</span>
+</span>    <span class="p">}</span>
 
-<span class="kt">void</span> <span class="n">on_timeout</span><span class="p">(</span><span class="kt">uv_timer_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="kt">int</span> <span class="n">running_handles</span><span class="p">;</span>
-</span>    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">CURL_SOCKET_TIMEOUT</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_IN</span>:
+<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_READABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+</span>            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_OUT</span>:
+<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_WRITABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+</span>            <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="n">CURL_POLL_REMOVE</span>:
+            <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">                <span class="n">uv_poll_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">socketp</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">);</span>
+</span>                <span class="n">destroy_curl_context</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">);</span>                
+                <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="nl">default:</span>
+            <span class="n">abort</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
-
-<span class="kt">void</span> <span class="n">start_timeout</span><span class="p">(</span><span class="n">CURLM</span> <span class="o">*</span><span class="n">multi</span><span class="p">,</span> <span class="kt">long</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">timeout_ms</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">timeout_ms</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="cm">/* 0 means directly call socket_action, but we&#39;ll do it in a bit */</span>
-    <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timeout</span><span class="p">,</span> <span class="n">on_timeout</span><span class="p">,</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="p">}</span>
-
-<span class="kt">int</span> <span class="n">handle_socket</span><span class="p">(</span><span class="n">CURL</span> <span class="o">*</span><span class="n">easy</span><span class="p">,</span> <span class="kt">curl_socket_t</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
 </pre></div>
 </td></tr></table></div>
 <p>We are interested in the socket fd <tt class="docutils literal"><span class="pre">s</span></tt>, and the <tt class="docutils literal"><span class="pre">action</span></tt>. For every socket
@@ -631,35 +567,43 @@ mask with the new value. <tt class="docutils literal"><span class="pre">curl_per
 26
 27
 28
-29</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">curl_close_cb</span><span class="p">(</span><span class="kt">uv_handle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
-</span>    <span class="n">free</span><span class="p">(</span><span class="n">context</span><span class="p">);</span>
-<span class="p">}</span>
-<span class="hll">
-</span><span class="hll"><span class="kt">void</span> <span class="nf">destroy_curl_context</span><span class="p">(</span><span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">context</span><span class="p">)</span> <span class="p">{</span>
-</span>    <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">curl_close_cb</span><span class="p">);</span>
-<span class="hll"><span class="p">}</span>
+29
+30
+31
+32
+33</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">curl_perform</span><span class="p">(</span><span class="kt">uv_poll_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="n">uv_timer_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+</span>    <span class="kt">int</span> <span class="n">running_handles</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_READABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_IN</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_WRITABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_OUT</span><span class="p">;</span>
 </span>
+    <span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">context</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">add_download</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">,</span> <span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kt">char</span> <span class="n">filename</span><span class="p">[</span><span class="mi">50</span><span class="p">];</span>
-    <span class="n">sprintf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;%d.download&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
-<span class="hll">    <span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">req</span><span class="p">;</span>
+
+<span class="hll">    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">context</span><span class="o">-&gt;</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
 </span>
-<span class="hll">    <span class="n">file</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;w&quot;</span><span class="p">);</span>
-</span>    <span class="k">if</span> <span class="p">(</span><span class="n">file</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Error opening %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
-        <span class="k">return</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">done_url</span><span class="p">;</span>
+
+    <span class="n">CURLMsg</span> <span class="o">*</span><span class="n">message</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">pending</span><span class="p">;</span>
+<span class="hll">    <span class="k">while</span> <span class="p">((</span><span class="n">message</span> <span class="o">=</span> <span class="n">curl_multi_info_read</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">pending</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="k">switch</span> <span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">            <span class="k">case</span> <span class="n">CURLMSG_DONE</span>:
+</span>                <span class="n">curl_easy_getinfo</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">,</span> <span class="n">CURLINFO_EFFECTIVE_URL</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">done_url</span><span class="p">);</span>
+                <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s DONE</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">done_url</span><span class="p">);</span>
+
+                <span class="n">curl_multi_remove_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
+                <span class="n">curl_easy_cleanup</span><span class="p">(</span><span class="n">message</span><span class="o">-&gt;</span><span class="n">easy_handle</span><span class="p">);</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="nl">default:</span>
+                <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;CURLMSG default</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+                <span class="n">abort</span><span class="p">();</span>
+        <span class="p">}</span>
     <span class="p">}</span>
-
-    <span class="n">CURL</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="n">curl_easy_init</span><span class="p">();</span>
-    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_WRITEDATA</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
-    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_URL</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
-    <span class="n">curl_multi_add_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Added download %s -&gt; %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
 <span class="p">}</span>
-
-<span class="kt">void</span> <span class="nf">curl_perform</span><span class="p">(</span><span class="kt">uv_poll_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">)</span> <span class="p">{</span>
 </pre></div>
 </td></tr></table></div>
 <p>The first thing we do is to stop the timer, since there has been some progress

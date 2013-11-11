@@ -217,8 +217,8 @@ progress with the download whenever libuv notifies of I/O readiness.
 .. rubric:: uvwget/main.c - The setup
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 1-10,104-
-    :emphasize-lines: 8,22,25-26
+    :lines: 1-9,135-
+    :emphasize-lines: 7,21,24-25
 
 The way each library is integrated with libuv will vary. In the case of
 libcurl, we can register two callbacks. The socket callback ``handle_socket``
@@ -237,8 +237,8 @@ So we add each argument as an URL
 .. rubric:: uvwget/main.c - Adding urls
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 11-27
-    :emphasize-lines: 15
+    :lines: 10-27
+    :emphasize-lines: 14
 
 We let libcurl directly write the data to a file, but much more is possible if
 you so desire.
@@ -253,8 +253,8 @@ on sockets whenever ``handle_socket`` is called.
 .. rubric:: uvwget/main.c - Setting up polling
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 70-102
-    :emphasize-lines: 9,11,16,19,23
+    :lines: 102-133
+    :emphasize-lines: 8,10,15,18,22
 
 We are interested in the socket fd ``s``, and the ``action``. For every socket
 we create a ``uv_poll_t`` handle if it doesn't exist, and associate it with the
@@ -273,8 +273,8 @@ mask with the new value. ``curl_perform`` is the crux of this program.
 .. rubric:: uvwget/main.c - Setting up polling
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 29-57
-    :emphasize-lines: 2,5-6,8,14,16
+    :lines: 57-89
+    :emphasize-lines: 2,5-6,12,18,20
 
 The first thing we do is to stop the timer, since there has been some progress
 in the interval. Then depending on what event triggered the callback, we inform
