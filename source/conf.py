@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'An Introduction to libuv'
-copyright = u'2012, Nikhil Marathe'
+copyright = u'2012-2014, Nikhil Marathe'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
