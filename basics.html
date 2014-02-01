@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,11 +10,10 @@
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -27,7 +24,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Filesystem" href="filesystem.html" />
@@ -174,6 +170,79 @@ you should be aware of this.</p>
 </div>
 </div>
 </div>
+<div class="section" id="error-handling">
+<h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
+<p>libuv functions which may fail return <tt class="docutils literal"><span class="pre">-1</span></tt> on error. The error code itself is
+set on the event loop as <tt class="docutils literal"><span class="pre">last_err</span></tt>. Use <tt class="docutils literal"><span class="pre">uv_last_error(loop)</span></tt> to get
+a <tt class="docutils literal"><span class="pre">uv_err_t</span></tt> which has a <tt class="docutils literal"><span class="pre">code</span></tt> member with the error code. <tt class="docutils literal"><span class="pre">code</span></tt> is an
+enumeration of <tt class="docutils literal"><span class="pre">UV_*</span></tt> as defined here:</p>
+<p class="rubric">libuv error codes</p>
+<div class="highlight-c"><div class="highlight"><pre>  <span class="n">XX</span><span class="p">(</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">UNKNOWN</span><span class="p">,</span> <span class="s">&quot;unknown error&quot;</span><span class="p">)</span>                                           \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span> <span class="n">OK</span><span class="p">,</span> <span class="s">&quot;success&quot;</span><span class="p">)</span>                                                      \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">1</span><span class="p">,</span> <span class="n">EOF</span><span class="p">,</span> <span class="s">&quot;end of file&quot;</span><span class="p">)</span>                                                 \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">2</span><span class="p">,</span> <span class="n">EADDRINFO</span><span class="p">,</span> <span class="s">&quot;getaddrinfo error&quot;</span><span class="p">)</span>                                     \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">3</span><span class="p">,</span> <span class="n">EACCES</span><span class="p">,</span> <span class="s">&quot;permission denied&quot;</span><span class="p">)</span>                                        \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">4</span><span class="p">,</span> <span class="n">EAGAIN</span><span class="p">,</span> <span class="s">&quot;resource temporarily unavailable&quot;</span><span class="p">)</span>                         \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">5</span><span class="p">,</span> <span class="n">EADDRINUSE</span><span class="p">,</span> <span class="s">&quot;address already in use&quot;</span><span class="p">)</span>                               \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">6</span><span class="p">,</span> <span class="n">EADDRNOTAVAIL</span><span class="p">,</span> <span class="s">&quot;address not available&quot;</span><span class="p">)</span>                             \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">7</span><span class="p">,</span> <span class="n">EAFNOSUPPORT</span><span class="p">,</span> <span class="s">&quot;address family not supported&quot;</span><span class="p">)</span>                       \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">8</span><span class="p">,</span> <span class="n">EALREADY</span><span class="p">,</span> <span class="s">&quot;connection already in progress&quot;</span><span class="p">)</span>                         \
+  <span class="n">XX</span><span class="p">(</span>  <span class="mi">9</span><span class="p">,</span> <span class="n">EBADF</span><span class="p">,</span> <span class="s">&quot;bad file descriptor&quot;</span><span class="p">)</span>                                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="n">EBUSY</span><span class="p">,</span> <span class="s">&quot;resource busy or locked&quot;</span><span class="p">)</span>                                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">11</span><span class="p">,</span> <span class="n">ECONNABORTED</span><span class="p">,</span> <span class="s">&quot;software caused connection abort&quot;</span><span class="p">)</span>                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">12</span><span class="p">,</span> <span class="n">ECONNREFUSED</span><span class="p">,</span> <span class="s">&quot;connection refused&quot;</span><span class="p">)</span>                                 \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">13</span><span class="p">,</span> <span class="n">ECONNRESET</span><span class="p">,</span> <span class="s">&quot;connection reset by peer&quot;</span><span class="p">)</span>                             \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">14</span><span class="p">,</span> <span class="n">EDESTADDRREQ</span><span class="p">,</span> <span class="s">&quot;destination address required&quot;</span><span class="p">)</span>                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">15</span><span class="p">,</span> <span class="n">EFAULT</span><span class="p">,</span> <span class="s">&quot;bad address in system call argument&quot;</span><span class="p">)</span>                      \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">16</span><span class="p">,</span> <span class="n">EHOSTUNREACH</span><span class="p">,</span> <span class="s">&quot;host is unreachable&quot;</span><span class="p">)</span>                                \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">17</span><span class="p">,</span> <span class="n">EINTR</span><span class="p">,</span> <span class="s">&quot;interrupted system call&quot;</span><span class="p">)</span>                                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">18</span><span class="p">,</span> <span class="n">EINVAL</span><span class="p">,</span> <span class="s">&quot;invalid argument&quot;</span><span class="p">)</span>                                         \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">19</span><span class="p">,</span> <span class="n">EISCONN</span><span class="p">,</span> <span class="s">&quot;socket is already connected&quot;</span><span class="p">)</span>                             \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">20</span><span class="p">,</span> <span class="n">EMFILE</span><span class="p">,</span> <span class="s">&quot;too many open files&quot;</span><span class="p">)</span>                                      \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">21</span><span class="p">,</span> <span class="n">EMSGSIZE</span><span class="p">,</span> <span class="s">&quot;message too long&quot;</span><span class="p">)</span>                                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">22</span><span class="p">,</span> <span class="n">ENETDOWN</span><span class="p">,</span> <span class="s">&quot;network is down&quot;</span><span class="p">)</span>                                        \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">23</span><span class="p">,</span> <span class="n">ENETUNREACH</span><span class="p">,</span> <span class="s">&quot;network is unreachable&quot;</span><span class="p">)</span>                              \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">24</span><span class="p">,</span> <span class="n">ENFILE</span><span class="p">,</span> <span class="s">&quot;file table overflow&quot;</span><span class="p">)</span>                                      \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">25</span><span class="p">,</span> <span class="n">ENOBUFS</span><span class="p">,</span> <span class="s">&quot;no buffer space available&quot;</span><span class="p">)</span>                               \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">26</span><span class="p">,</span> <span class="n">ENOMEM</span><span class="p">,</span> <span class="s">&quot;not enough memory&quot;</span><span class="p">)</span>                                        \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">27</span><span class="p">,</span> <span class="n">ENOTDIR</span><span class="p">,</span> <span class="s">&quot;not a directory&quot;</span><span class="p">)</span>                                         \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">28</span><span class="p">,</span> <span class="n">EISDIR</span><span class="p">,</span> <span class="s">&quot;illegal operation on a directory&quot;</span><span class="p">)</span>                         \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">29</span><span class="p">,</span> <span class="n">ENONET</span><span class="p">,</span> <span class="s">&quot;machine is not on the network&quot;</span><span class="p">)</span>                            \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">31</span><span class="p">,</span> <span class="n">ENOTCONN</span><span class="p">,</span> <span class="s">&quot;socket is not connected&quot;</span><span class="p">)</span>                                \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">32</span><span class="p">,</span> <span class="n">ENOTSOCK</span><span class="p">,</span> <span class="s">&quot;socket operation on non-socket&quot;</span><span class="p">)</span>                         \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">33</span><span class="p">,</span> <span class="n">ENOTSUP</span><span class="p">,</span> <span class="s">&quot;operation not supported on socket&quot;</span><span class="p">)</span>                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">34</span><span class="p">,</span> <span class="n">ENOENT</span><span class="p">,</span> <span class="s">&quot;no such file or directory&quot;</span><span class="p">)</span>                                \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">35</span><span class="p">,</span> <span class="n">ENOSYS</span><span class="p">,</span> <span class="s">&quot;function not implemented&quot;</span><span class="p">)</span>                                 \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">36</span><span class="p">,</span> <span class="n">EPIPE</span><span class="p">,</span> <span class="s">&quot;broken pipe&quot;</span><span class="p">)</span>                                               \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">37</span><span class="p">,</span> <span class="n">EPROTO</span><span class="p">,</span> <span class="s">&quot;protocol error&quot;</span><span class="p">)</span>                                           \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">38</span><span class="p">,</span> <span class="n">EPROTONOSUPPORT</span><span class="p">,</span> <span class="s">&quot;protocol not supported&quot;</span><span class="p">)</span>                          \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">39</span><span class="p">,</span> <span class="n">EPROTOTYPE</span><span class="p">,</span> <span class="s">&quot;protocol wrong type for socket&quot;</span><span class="p">)</span>                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">40</span><span class="p">,</span> <span class="n">ETIMEDOUT</span><span class="p">,</span> <span class="s">&quot;connection timed out&quot;</span><span class="p">)</span>                                  \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">41</span><span class="p">,</span> <span class="n">ECHARSET</span><span class="p">,</span> <span class="s">&quot;invalid Unicode character&quot;</span><span class="p">)</span>                              \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">42</span><span class="p">,</span> <span class="n">EAIFAMNOSUPPORT</span><span class="p">,</span> <span class="s">&quot;address family for hostname not supported&quot;</span><span class="p">)</span>       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">44</span><span class="p">,</span> <span class="n">EAISERVICE</span><span class="p">,</span> <span class="s">&quot;servname not supported for ai_socktype&quot;</span><span class="p">)</span>               \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">45</span><span class="p">,</span> <span class="n">EAISOCKTYPE</span><span class="p">,</span> <span class="s">&quot;ai_socktype not supported&quot;</span><span class="p">)</span>                           \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">46</span><span class="p">,</span> <span class="n">ESHUTDOWN</span><span class="p">,</span> <span class="s">&quot;cannot send after transport endpoint shutdown&quot;</span><span class="p">)</span>         \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">47</span><span class="p">,</span> <span class="n">EEXIST</span><span class="p">,</span> <span class="s">&quot;file already exists&quot;</span><span class="p">)</span>                                      \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">48</span><span class="p">,</span> <span class="n">ESRCH</span><span class="p">,</span> <span class="s">&quot;no such process&quot;</span><span class="p">)</span>                                           \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">49</span><span class="p">,</span> <span class="n">ENAMETOOLONG</span><span class="p">,</span> <span class="s">&quot;name too long&quot;</span><span class="p">)</span>                                      \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">50</span><span class="p">,</span> <span class="n">EPERM</span><span class="p">,</span> <span class="s">&quot;operation not permitted&quot;</span><span class="p">)</span>                                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">51</span><span class="p">,</span> <span class="n">ELOOP</span><span class="p">,</span> <span class="s">&quot;too many symbolic links encountered&quot;</span><span class="p">)</span>                       \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">52</span><span class="p">,</span> <span class="n">EXDEV</span><span class="p">,</span> <span class="s">&quot;cross-device link not permitted&quot;</span><span class="p">)</span>                           \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">53</span><span class="p">,</span> <span class="n">ENOTEMPTY</span><span class="p">,</span> <span class="s">&quot;directory not empty&quot;</span><span class="p">)</span>                                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">54</span><span class="p">,</span> <span class="n">ENOSPC</span><span class="p">,</span> <span class="s">&quot;no space left on device&quot;</span><span class="p">)</span>                                  \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">55</span><span class="p">,</span> <span class="n">EIO</span><span class="p">,</span> <span class="s">&quot;i/o error&quot;</span><span class="p">)</span>                                                   \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">56</span><span class="p">,</span> <span class="n">EROFS</span><span class="p">,</span> <span class="s">&quot;read-only file system&quot;</span><span class="p">)</span>                                     \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">57</span><span class="p">,</span> <span class="n">ENODEV</span><span class="p">,</span> <span class="s">&quot;no such device&quot;</span><span class="p">)</span>                                           \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">58</span><span class="p">,</span> <span class="n">ESPIPE</span><span class="p">,</span> <span class="s">&quot;invalid seek&quot;</span><span class="p">)</span>                                             \
+  <span class="n">XX</span><span class="p">(</span> <span class="mi">59</span><span class="p">,</span> <span class="n">ECANCELED</span><span class="p">,</span> <span class="s">&quot;operation canceled&quot;</span><span class="p">)</span>                                    \
+</pre></div>
+</div>
+<p>You can use the <tt class="docutils literal"><span class="pre">uv_strerror(uv_err_t)</span></tt> and <tt class="docutils literal"><span class="pre">uv_err_name(uv_err_t)</span></tt> functions
+to get a <tt class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></tt> describing the error or the error name respectively.</p>
+<p>Async callbacks have a <tt class="docutils literal"><span class="pre">status</span></tt> argument as the last argument. Use this instead
+of the return value.</p>
+</div>
 <div class="section" id="watchers">
 <h2>Watchers<a class="headerlink" href="#watchers" title="Permalink to this headline">¶</a></h2>
 <p>Watchers are how users of libuv express interest in particular events. Watchers
@@ -289,8 +358,8 @@ exits since no event watchers are active.</p>
       </div>
 
     <div class="footer">
-        &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        &copy; Copyright 2012-2014, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
     </div>
   </body>
 </html>

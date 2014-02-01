@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,11 +10,10 @@
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -27,7 +24,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="About" href="about.html" />
@@ -412,7 +408,8 @@ interval, after which we should drive libcurl forward regardless of I/O status.
 This is so that libcurl can handle errors or do whatever else is required to
 get the download moving.</p>
 <p>Our downloader is to be invoked as:</p>
-<div class="highlight-c"><pre>$ ./uvwget [url1] [url2] ...</pre>
+<div class="highlight-c"><div class="highlight"><pre>$ ./uvwget [url1] [url2] ...
+</pre></div>
 </div>
 <p>So we add each argument as an URL</p>
 <p class="rubric">uvwget/main.c - Adding urls</p>
@@ -674,9 +671,10 @@ things in your application <a class="footnote-reference" href="#id4" id="id2">[2
 <p>Our interface defines that all plugins should have an <tt class="docutils literal"><span class="pre">initialize</span></tt> function
 which will be called by the application. This plugin is compiled as a shared
 library and can be loaded by running our application:</p>
-<div class="highlight-c"><pre>$ ./plugin libhello.dylib
+<div class="highlight-c"><div class="highlight"><pre>$ ./plugin libhello.dylib
 Loading libhello.dylib
-Registered plugin "Hello World!"</pre>
+Registered plugin &quot;Hello World!&quot;
+</pre></div>
 </div>
 <p>This is done by using <tt class="docutils literal"><span class="pre">uv_dlopen</span></tt> to first load the shared library
 <tt class="docutils literal"><span class="pre">libhello.dylib</span></tt>. Then we get access to the <tt class="docutils literal"><span class="pre">initialize</span></tt> function using
@@ -1002,8 +1000,8 @@ Käfer&#8217;s excellent slides on writing node.js bindings &#8211;
       </div>
 
     <div class="footer">
-        &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        &copy; Copyright 2012-2014, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
     </div>
   </body>
 </html>

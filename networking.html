@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -12,11 +10,10 @@
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/print.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
+        URL_ROOT:    './',
         VERSION:     '1.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -27,7 +24,6 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="_static/theme_extras.js"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Threads" href="threads.html" />
@@ -177,14 +173,14 @@ interested in accepting the connection.</p>
 <p>Where you do bind/listen/accept, on the client side its simply a matter of
 calling <tt class="docutils literal"><span class="pre">uv_tcp_connect</span></tt>. The same <tt class="docutils literal"><span class="pre">uv_connect_cb</span></tt> style callback of
 <tt class="docutils literal"><span class="pre">uv_listen</span></tt> is used by <tt class="docutils literal"><span class="pre">uv_tcp_connect</span></tt>. Try:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">uv_tcp_t</span> <span class="n">socket</span><span class="p">;</span>
-<span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">socket</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">uv_tcp_t</span><span class="o">*</span> <span class="n">socket</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_tcp_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_tcp_t</span><span class="p">));</span>
+<span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">socket</span><span class="p">);</span>
 
-<span class="kt">uv_connect_t</span> <span class="n">connect</span><span class="p">;</span>
+<span class="kt">uv_connect_t</span><span class="o">*</span> <span class="n">connect</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_connect_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_connect_t</span><span class="p">));</span>
 
 <span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="n">dest</span> <span class="o">=</span> <span class="n">uv_ip4_addr</span><span class="p">(</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">);</span>
 
-<span class="n">uv_tcp_connect</span><span class="p">(</span><span class="o">&amp;</span><span class="n">connect</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">socket</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">on_connect</span><span class="p">);</span>
+<span class="n">uv_tcp_connect</span><span class="p">(</span><span class="n">connect</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">on_connect</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">on_connect</span></tt> will be called after the connection is established.</p>
@@ -324,10 +320,9 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
 <p>A socket can (un)subscribe to a multicast group using:</p>
-<div class="highlight-c"><pre> */
+<div class="highlight-c"><div class="highlight"><pre> */
 UV_EXTERN int uv_udp_open(uv_udp_t* handle, uv_os_sock_t sock);
-
-</pre>
+</pre></div>
 </div>
 <p>where <tt class="docutils literal"><span class="pre">membership</span></tt> is <tt class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></tt> or <tt class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></tt>.</p>
 <p>Local loopback of multicast packets is enabled by default <a class="footnote-reference" href="#id7" id="id3">[3]</a>, use
@@ -553,8 +548,8 @@ removed in v0.9.0.</td></tr>
       </div>
 
     <div class="footer">
-        &copy; Copyright 2012, Nikhil Marathe.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        &copy; Copyright 2012-2014, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
     </div>
   </body>
 </html>
