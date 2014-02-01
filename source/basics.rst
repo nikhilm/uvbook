@@ -102,6 +102,24 @@ loop.
     node.js uses the default loop as its main loop. If you are writing bindings
     you should be aware of this.
 
+Error handling
+--------------
+
+libuv functions which may fail return ``-1`` on error. The error code itself is
+set on the event loop as ``last_err``. Use ``uv_last_error(loop)`` to get
+a ``uv_err_t`` which has a ``code`` member with the error code. ``code`` is an
+enumeration of ``UV_*`` as defined here:
+
+.. rubric:: libuv error codes
+.. literalinclude:: ../libuv/include/uv.h
+    :lines: 69-127
+
+You can use the ``uv_strerror(uv_err_t)`` and ``uv_err_name(uv_err_t)`` functions
+to get a ``const char *`` describing the error or the error name respectively.
+
+Async callbacks have a ``status`` argument as the last argument. Use this instead
+of the return value.
+
 Watchers
 --------
 
