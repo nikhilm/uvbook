@@ -37,6 +37,9 @@
 
 #include <semaphore.h>
 #include <pthread.h>
+#ifdef __ANDROID__
+#include "pthread-fixes.h"
+#endif
 #include <signal.h>
 
 #if defined(__linux__)
@@ -56,9 +59,6 @@
 # define UV_IO_PRIVATE_PLATFORM_FIELDS /* empty */
 #endif
 
-#define UV_IO_PRIVATE_FIELDS                                                  \
-  UV_IO_PRIVATE_PLATFORM_FIELDS                                               \
-
 struct uv__io_s;
 struct uv__async;
 struct uv_loop_s;
@@ -75,7 +75,7 @@ struct uv__io_s {
   unsigned int pevents; /* Pending event mask i.e. mask at next tick. */
   unsigned int events;  /* Current event mask. */
   int fd;
-  UV_IO_PRIVATE_FIELDS
+  UV_IO_PRIVATE_PLATFORM_FIELDS
 };
 
 typedef void (*uv__async_cb)(struct uv_loop_s* loop,
@@ -128,7 +128,7 @@ typedef pthread_mutex_t uv_mutex_t;
 typedef pthread_rwlock_t uv_rwlock_t;
 typedef UV_PLATFORM_SEM_T uv_sem_t;
 typedef pthread_cond_t uv_cond_t;
-
+typedef pthread_key_t uv_key_t;
 
 #if defined(__APPLE__) && defined(__MACH__)
 
@@ -169,6 +169,7 @@ typedef struct {
   void* wq[2];                                                                \
   uv_mutex_t wq_mutex;                                                        \
   uv_async_t wq_async;                                                        \
+  uv_rwlock_t cloexec_lock;                                                   \
   uv_handle_t* closing_handles;                                               \
   void* process_handles[1][2];                                                \
   void* prepare_handles[2];                                                   \
@@ -176,16 +177,16 @@ typedef struct {
   void* idle_handles[2];                                                      \
   void* async_handles[2];                                                     \
   struct uv__async async_watcher;                                             \
-  /* RB_HEAD(uv__timers, uv_timer_s) */                                       \
-  struct uv__timers {                                                         \
-    struct uv_timer_s* rbh_root;                                              \
-  } timer_handles;                                                            \
+  struct {                                                                    \
+    void* min;                                                                \
+    unsigned int nelts;                                                       \
+  } timer_heap;                                                               \
+  uint64_t timer_counter;                                                     \
   uint64_t time;                                                              \
   int signal_pipefd[2];                                                       \
   uv__io_t signal_io_watcher;                                                 \
   uv_signal_t child_watcher;                                                  \
   int emfile_fd;                                                              \
-  uint64_t timer_counter;                                                     \
   UV_PLATFORM_LOOP_FIELDS                                                     \
 
 #define UV_REQ_TYPE_PRIVATE /* empty */
@@ -196,9 +197,9 @@ typedef struct {
 
 #define UV_WRITE_PRIVATE_FIELDS                                               \
   void* queue[2];                                                             \
-  int write_index;                                                            \
+  unsigned int write_index;                                                   \
   uv_buf_t* bufs;                                                             \
-  int bufcnt;                                                                 \
+  unsigned int nbufs;                                                         \
   int error;                                                                  \
   uv_buf_t bufsml[4];                                                         \
 
@@ -210,7 +211,7 @@ typedef struct {
 #define UV_UDP_SEND_PRIVATE_FIELDS                                            \
   void* queue[2];                                                             \
   struct sockaddr_in6 addr;                                                   \
-  int bufcnt;                                                                 \
+  unsigned int nbufs;                                                         \
   uv_buf_t* bufs;                                                             \
   ssize_t status;                                                             \
   uv_udp_send_cb send_cb;                                                     \
@@ -229,6 +230,7 @@ typedef struct {
   uv_connection_cb connection_cb;                                             \
   int delayed_error;                                                          \
   int accepted_fd;                                                            \
+  void* queued_fds;                                                           \
   UV_STREAM_PRIVATE_PLATFORM_FIELDS                                           \
 
 #define UV_TCP_PRIVATE_FIELDS /* empty */
@@ -264,14 +266,8 @@ typedef struct {
   int pending;                                                                \
 
 #define UV_TIMER_PRIVATE_FIELDS                                               \
-  /* RB_ENTRY(uv_timer_s) tree_entry; */                                      \
-  struct {                                                                    \
-    struct uv_timer_s* rbe_left;                                              \
-    struct uv_timer_s* rbe_right;                                             \
-    struct uv_timer_s* rbe_parent;                                            \
-    int rbe_color;                                                            \
-  } tree_entry;                                                               \
   uv_timer_cb timer_cb;                                                       \
+  void* heap_node[3];                                                         \
   uint64_t timeout;                                                           \
   uint64_t repeat;                                                            \
   uint64_t start_id;
@@ -287,21 +283,22 @@ typedef struct {
 
 #define UV_PROCESS_PRIVATE_FIELDS                                             \
   void* queue[2];                                                             \
-  int errorno;                                                                \
+  int status;                                                                 \
 
 #define UV_FS_PRIVATE_FIELDS                                                  \
   const char *new_path;                                                       \
   uv_file file;                                                               \
   int flags;                                                                  \
   mode_t mode;                                                                \
-  void* buf;                                                                  \
-  size_t len;                                                                 \
+  unsigned int nbufs;                                                         \
+  uv_buf_t* bufs;                                                             \
   off_t off;                                                                  \
-  uid_t uid;                                                                  \
-  gid_t gid;                                                                  \
+  uv_uid_t uid;                                                               \
+  uv_gid_t gid;                                                               \
   double atime;                                                               \
   double mtime;                                                               \
   struct uv__work work_req;                                                   \
+  uv_buf_t bufsml[4];                                                         \
 
 #define UV_WORK_PRIVATE_FIELDS                                                \
   struct uv__work work_req;

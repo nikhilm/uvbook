@@ -1,4 +1,4 @@
-# Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+# Copyright StrongLoop, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -18,36 +18,29 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-SRCDIR ?= $(CURDIR)
-
-ifeq (,$(builddir_name))
-
-VPATH := $(SRCDIR)
-include $(SRCDIR)/build.mk
-
-else  # Out of tree build.
-
-# Drop all built-in rules.
-.SUFFIXES:
-
-.PHONY:	$(builddir_name)
-$(builddir_name): $(builddir_name)/.buildstamp
-	$(MAKE) -C $@ -f $(CURDIR)/Makefile $(MAKECMDGOALS) \
-		SRCDIR=$(CURDIR) builddir_name=
-
-$(builddir_name)/.buildstamp:
-	mkdir -p $(dir $@)
-	touch $@
-
-# Add no-op rules for Makefiles to stop make from trying to rebuild them.
-Makefile:: ;
-%.mk:: ;
-
-# Turn everything else into a no-op rule that depends on the build directory.
-%:: $(builddir_name) ;
-
-.PHONY: clean distclean
-clean distclean:
-	$(RM) -fr $(builddir_name)
-
-endif
+{
+  'targets': [
+    {
+      'dependencies': ['../../uv.gyp:libuv'],
+      'target_name': 's5-proxy',
+      'type': 'executable',
+      'sources': [
+        'client.c',
+        'defs.h',
+        'main.c',
+        's5.c',
+        's5.h',
+        'server.c',
+        'util.c',
+      ],
+      'conditions': [
+        ['OS=="win"', {
+          'defines': ['HAVE_UNISTD_H=0'],
+          'sources': ['getopt.c']
+        }, {
+          'defines': ['HAVE_UNISTD_H=1']
+        }]
+      ]
+    }
+  ]
+}

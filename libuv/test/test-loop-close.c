@@ -22,76 +22,32 @@
 #include "uv.h"
 #include "task.h"
 
-#include <string.h>
+static uv_timer_t timer_handle;
 
-#define memeq(a, b, c) (memcmp((a), (b), (c)) == 0)
-
-
-TEST_IMPL(strlcpy) {
-  size_t r;
-
-  {
-    char dst[2] = "A";
-    r = uv_strlcpy(dst, "", 0);
-    ASSERT(r == 0);
-    ASSERT(memeq(dst, "A", 1));
-  }
-
-  {
-    char dst[2] = "A";
-    r = uv_strlcpy(dst, "B", 1);
-    ASSERT(r == 0);
-    ASSERT(memeq(dst, "", 1));
-  }
-
-  {
-    char dst[2] = "A";
-    r = uv_strlcpy(dst, "B", 2);
-    ASSERT(r == 1);
-    ASSERT(memeq(dst, "B", 2));
-  }
-
-  {
-    char dst[3] = "AB";
-    r = uv_strlcpy(dst, "CD", 3);
-    ASSERT(r == 2);
-    ASSERT(memeq(dst, "CD", 3));
-  }
-
-  return 0;
+static void timer_cb(uv_timer_t* handle) {
+  ASSERT(handle);
+  uv_stop(handle->loop);
 }
 
 
-TEST_IMPL(strlcat) {
-  size_t r;
+TEST_IMPL(loop_close) {
+  int r;
+  uv_loop_t loop;
 
-  {
-    char dst[2] = "A";
-    r = uv_strlcat(dst, "B", 1);
-    ASSERT(r == 1);
-    ASSERT(memeq(dst, "A", 2));
-  }
+  ASSERT(0 == uv_loop_init(&loop));
 
-  {
-    char dst[2] = "A";
-    r = uv_strlcat(dst, "B", 2);
-    ASSERT(r == 1);
-    ASSERT(memeq(dst, "A", 2));
-  }
+  uv_timer_init(&loop, &timer_handle);
+  uv_timer_start(&timer_handle, timer_cb, 100, 100);
 
-  {
-    char dst[3] = "A";
-    r = uv_strlcat(dst, "B", 3);
-    ASSERT(r == 2);
-    ASSERT(memeq(dst, "AB", 3));
-  }
+  ASSERT(UV_EBUSY == uv_loop_close(&loop));
 
-  {
-    char dst[5] = "AB";
-    r = uv_strlcat(dst, "CD", 5);
-    ASSERT(r == 4);
-    ASSERT(memeq(dst, "ABCD", 5));
-  }
+  uv_run(&loop, UV_RUN_DEFAULT);
+
+  uv_close((uv_handle_t*) &timer_handle, NULL);
+  r = uv_run(&loop, UV_RUN_DEFAULT);
+  ASSERT(r == 0);
+
+  ASSERT(0 == uv_loop_close(&loop));
 
   return 0;
 }

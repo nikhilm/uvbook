@@ -41,7 +41,7 @@ struct poll_ctx {
 
 static int statbuf_eq(const uv_stat_t* a, const uv_stat_t* b);
 static void poll_cb(uv_fs_t* req);
-static void timer_cb(uv_timer_t* timer, int status);
+static void timer_cb(uv_timer_t* timer);
 static void timer_close_cb(uv_handle_t* handle);
 
 static uv_stat_t zero_statbuf;
@@ -69,7 +69,7 @@ int uv_fs_poll_start(uv_fs_poll_t* handle,
   ctx = calloc(1, sizeof(*ctx) + len);
 
   if (ctx == NULL)
-    return uv__set_artificial_error(loop, UV_ENOMEM);
+    return UV_ENOMEM;
 
   ctx->loop = loop;
   ctx->poll_cb = cb;
@@ -118,12 +118,37 @@ int uv_fs_poll_stop(uv_fs_poll_t* handle) {
 }
 
 
+int uv_fs_poll_getpath(uv_fs_poll_t* handle, char* buf, size_t* len) {
+  struct poll_ctx* ctx;
+  size_t required_len;
+
+  if (!uv__is_active(handle)) {
+    *len = 0;
+    return UV_EINVAL;
+  }
+
+  ctx = handle->poll_ctx;
+  assert(ctx != NULL);
+
+  required_len = strlen(ctx->path) + 1;
+  if (required_len > *len) {
+    *len = required_len;
+    return UV_ENOBUFS;
+  }
+
+  memcpy(buf, ctx->path, required_len);
+  *len = required_len;
+
+  return 0;
+}
+
+
 void uv__fs_poll_close(uv_fs_poll_t* handle) {
   uv_fs_poll_stop(handle);
 }
 
 
-static void timer_cb(uv_timer_t* timer, int status) {
+static void timer_cb(uv_timer_t* timer) {
   struct poll_ctx* ctx;
 
   ctx = container_of(timer, struct poll_ctx, timer_handle);
@@ -150,10 +175,12 @@ static void poll_cb(uv_fs_t* req) {
   }
 
   if (req->result != 0) {
-    if (ctx->busy_polling != -req->errorno) {
-      uv__set_artificial_error(ctx->loop, req->errorno);
-      ctx->poll_cb(ctx->parent_handle, -1, &ctx->statbuf, &zero_statbuf);
-      ctx->busy_polling = -req->errorno;
+    if (ctx->busy_polling != req->result) {
+      ctx->poll_cb(ctx->parent_handle,
+                   req->result,
+                   &ctx->statbuf,
+                   &zero_statbuf);
+      ctx->busy_polling = req->result;
     }
     goto out;
   }
@@ -192,14 +219,18 @@ static void timer_close_cb(uv_handle_t* handle) {
 static int statbuf_eq(const uv_stat_t* a, const uv_stat_t* b) {
   return a->st_ctim.tv_nsec == b->st_ctim.tv_nsec
       && a->st_mtim.tv_nsec == b->st_mtim.tv_nsec
+      && a->st_birthtim.tv_nsec == b->st_birthtim.tv_nsec
       && a->st_ctim.tv_sec == b->st_ctim.tv_sec
       && a->st_mtim.tv_sec == b->st_mtim.tv_sec
+      && a->st_birthtim.tv_sec == b->st_birthtim.tv_sec
       && a->st_size == b->st_size
       && a->st_mode == b->st_mode
       && a->st_uid == b->st_uid
       && a->st_gid == b->st_gid
       && a->st_ino == b->st_ino
-      && a->st_dev == b->st_dev;
+      && a->st_dev == b->st_dev
+      && a->st_flags == b->st_flags
+      && a->st_gen == b->st_gen;
 }
 
 

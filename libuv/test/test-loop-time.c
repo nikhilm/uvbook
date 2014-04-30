@@ -19,16 +19,16 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_LINUX_H
-#define UV_LINUX_H
+#include "uv.h"
+#include "task.h"
 
-#define UV_PLATFORM_LOOP_FIELDS                                               \
-  uv__io_t inotify_read_watcher;                                              \
-  void* inotify_watchers;                                                     \
-  int inotify_fd;                                                             \
 
-#define UV_PLATFORM_FS_EVENT_FIELDS                                           \
-  void* watchers[2];                                                          \
-  int wd;                                                                     \
+TEST_IMPL(loop_update_time) {
+  uint64_t start;
 
-#endif /* UV_LINUX_H */
+  start = uv_now(uv_default_loop());
+  while (uv_now(uv_default_loop()) - start < 1000)
+    ASSERT(0 == uv_run(uv_default_loop(), UV_RUN_NOWAIT));
+
+  return 0;
+}

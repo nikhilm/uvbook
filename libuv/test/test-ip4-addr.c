@@ -19,16 +19,28 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_BSD_H
-#define UV_BSD_H
+#include "uv.h"
+#include "task.h"
 
-#define UV_PLATFORM_FS_EVENT_FIELDS                                           \
-  uv__io_t event_watcher;                                                     \
+#include <stdio.h>
+#include <string.h>
 
-#define UV_IO_PRIVATE_PLATFORM_FIELDS                                         \
-  int rcount;                                                                 \
-  int wcount;                                                                 \
 
-#define UV_HAVE_KQUEUE 1
+TEST_IMPL(ip4_addr) {
 
-#endif /* UV_BSD_H */
+  struct sockaddr_in addr;
+
+  ASSERT(0 == uv_ip4_addr("127.0.0.1", TEST_PORT, &addr));
+  ASSERT(0 == uv_ip4_addr("255.255.255.255", TEST_PORT, &addr));
+  ASSERT(UV_EINVAL == uv_ip4_addr("255.255.255*000", TEST_PORT, &addr));
+  ASSERT(UV_EINVAL == uv_ip4_addr("255.255.255.256", TEST_PORT, &addr));
+  ASSERT(UV_EINVAL == uv_ip4_addr("2555.0.0.0", TEST_PORT, &addr));
+  ASSERT(UV_EINVAL == uv_ip4_addr("255", TEST_PORT, &addr));
+
+  /* for broken address family */
+  ASSERT(UV_EAFNOSUPPORT == uv_inet_pton(42, "127.0.0.1",
+    &addr.sin_addr.s_addr));
+
+  MAKE_VALGRIND_HAPPY();
+  return 0;
+}

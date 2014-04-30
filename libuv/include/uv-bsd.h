@@ -19,26 +19,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_SUNOS_H
-#define UV_SUNOS_H
+#ifndef UV_BSD_H
+#define UV_BSD_H
 
-#include <sys/port.h>
-#include <port.h>
+#define UV_PLATFORM_FS_EVENT_FIELDS                                           \
+  uv__io_t event_watcher;                                                     \
 
-/* For the sake of convenience and reduced #ifdef-ery in src/unix/sunos.c,
- * add the fs_event fields even when this version of SunOS doesn't support
- * file watching.
- */
-#define UV_PLATFORM_LOOP_FIELDS                                               \
-  uv__io_t fs_event_watcher;                                                  \
-  int fs_fd;                                                                  \
+#define UV_IO_PRIVATE_PLATFORM_FIELDS                                         \
+  int rcount;                                                                 \
+  int wcount;                                                                 \
 
-#if defined(PORT_SOURCE_FILE)
+#define UV_HAVE_KQUEUE 1
 
-# define UV_PLATFORM_FS_EVENT_FIELDS                                          \
-  file_obj_t fo;                                                              \
-  int fd;                                                                     \
+#define UV_PLATFORM_HAS_IP6_LINK_LOCAL_ADDRESS
 
-#endif /* defined(PORT_SOURCE_FILE) */
-
-#endif /* UV_SUNOS_H */
+#endif /* UV_BSD_H */
