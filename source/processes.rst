@@ -171,20 +171,21 @@ A normal, newly spawned process has its own set of file descriptors, with 0,
 may want to share file descriptors with the child. For example, perhaps your
 applications launches a sub-command and you want any errors to go in the log
 file, but ignore ``stdout``. For this you'd like to have ``stderr`` of the
-child to be displayed. In this case, libuv supports *inheriting* file
-descriptors. In this sample, we invoke the test program, which is:
+child be the same as the stderr of the parent. In this case, libuv supports
+*inheriting* file descriptors. In this sample, we invoke the test program,
+which is:
 
 .. rubric:: proc-streams/test.c
 .. literalinclude:: ../code/proc-streams/test.c
 
-The actual program ``proc-streams`` runs this while inheriting only ``stderr``.
+The actual program ``proc-streams`` runs this while sharing only ``stderr``.
 The file descriptors of the child process are set using the ``stdio`` field in
 ``uv_process_options_t``. First set the ``stdio_count`` field to the number of
 file descriptors being set. ``uv_process_options_t.stdio`` is an array of
 ``uv_stdio_container_t``, which is:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1263-1270
+    :lines: 1305-1312
 
 where flags can have several values. Use ``UV_IGNORE`` if it isn't going to be
 used. If the first three ``stdio`` fields are marked as ``UV_IGNORE`` they'll
