@@ -8,6 +8,9 @@ int main() {
   
     printf("Now quitting.\n");
     uv_run(loop, UV_RUN_DEFAULT);
+    
+    uv_loop_close(loop);
+    free(loop);
 
     return 0;
 }
