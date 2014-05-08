@@ -27,7 +27,7 @@ void after(uv_work_t *req, int status) {
     uv_close((uv_handle_t*) &async, NULL);
 }
 
-void print_progress(uv_async_t *handle, int status /*UNUSED*/) {
+void print_progress(uv_async_t *handle) {
     double percentage = *((double*) handle->data);
     fprintf(stderr, "Downloaded %.2f%%\n", percentage);
 }

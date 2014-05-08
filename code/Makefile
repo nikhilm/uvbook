@@ -3,14 +3,15 @@ examples=\
 	idle-basic\
 	uvcat\
 	uvtee\
-	#onchange\
-	#thread-create\
-	#queue-work\
-	#progress\
+	onchange\
+	thread-create\
+	queue-work\
+	progress\
+	idle-compute\
+	uvstop \
 	#tcp-echo-server\
 	#dns\
 	#udp-dhcp\
-	#idle-compute\
 	#multi-echo-server\
 	#ref-timer\
 	#spawn\
@@ -23,7 +24,6 @@ examples=\
 	#interfaces\
 	#locks \
 	#signal \
-	#uvstop \
 	#queue-cancel
 
 UV_PATH=$(shell pwd)/../libuv
