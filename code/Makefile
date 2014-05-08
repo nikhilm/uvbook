@@ -3,31 +3,31 @@ examples=\
 	idle-basic\
 	uvcat\
 	uvtee\
-	onchange\
-	thread-create\
-	queue-work\
-	progress\
-	tcp-echo-server\
-	dns\
-	udp-dhcp\
-	idle-compute\
-	ref-timer\
-	spawn\
-	detach\
-	proc-streams\
-	cgi\
-	pipe-echo-server\
-	multi-echo-server\
-	tty\
-	tty-gravity\
-	interfaces\
-	locks \
-	signal \
-	uvstop \
-	queue-cancel
+	#onchange\
+	#thread-create\
+	#queue-work\
+	#progress\
+	#tcp-echo-server\
+	#dns\
+	#udp-dhcp\
+	#idle-compute\
+	#multi-echo-server\
+	#ref-timer\
+	#spawn\
+	#detach\
+	#proc-streams\
+	#cgi\
+	#pipe-echo-server\
+	#tty\
+	#tty-gravity\
+	#interfaces\
+	#locks \
+	#signal \
+	#uvstop \
+	#queue-cancel
 
 UV_PATH=$(shell pwd)/../libuv
-UV_LIB=$(UV_PATH)/libuv.a
+UV_LIB=$(UV_PATH)/.libs/libuv.so
 CFLAGS=-g -Wall -I$(UV_PATH)/include
 LIBS=
 
@@ -48,24 +48,29 @@ all: $(UV_LIB) plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_LIB) $(LIBS); cd ..; done
 
 plugin/plugin: plugin/*.c
-	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_LIB) $(LIBS)
-	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
-	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
+	echo "FIXME plugin"
+	#gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_LIB) $(LIBS)
+	#gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
+	#gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
 proc-streams/test: proc-streams/test.c
-	gcc -g -Wall -o proc-streams/test proc-streams/test.c
+	echo "FIXME proc-streams/test.c"
+	#gcc -g -Wall -o proc-streams/test proc-streams/test.c
 
 cgi/tick: cgi/tick.c
-	gcc -g -Wall -o cgi/tick cgi/tick.c
+	echo "FIXME cgi/tick.c"
+	#gcc -g -Wall -o cgi/tick cgi/tick.c
 
 multi-echo-server/worker: multi-echo-server/worker.c
-	gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_LIB) $(LIBS)
+	echo "FIXME multi-echo-server/worker.c"
+	#gcc $(CFLAGS) -o multi-echo-server/worker multi-echo-server/worker.c $(UV_LIB) $(LIBS)
 
 uvwget/uvwget: uvwget/main.c
-	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_LIB) $(LIBS)
+	echo "FIXME uvwget/main.c"
+	#gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_LIB) $(LIBS)
 
 $(UV_LIB):
-	make -C ../libuv
+	cd ../libuv && sh autogen.sh && ./configure && make
 
 clean:
 	for dir in $(examples); do cd $$dir; rm -f $$dir; rm -rf $$dir.dSYM; cd ..; done
