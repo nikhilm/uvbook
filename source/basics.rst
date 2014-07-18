@@ -57,7 +57,7 @@ point, then used the data at another point (in time and space). It is
 **non-blocking** because the application process was free to do other tasks.
 This fits in well with libuv's event-loop approach, since the operating system
 events can be treated as just another libuv event. The non-blocking ensures
-that other events can continue to be handled as fast they come in [#]_.
+that other events can continue to be handled as fast as they come in [#]_.
 
 .. NOTE::
 
