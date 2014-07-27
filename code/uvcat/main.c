@@ -42,7 +42,7 @@ void on_open(uv_fs_t *req) {
                    buffer, sizeof(buffer), -1, on_read);
     }
     else {
-        fprintf(stderr, "error opening file: %d\n", req->errorno);
+        fprintf(stderr, "error opening file: %s\n", uv_strerror((int)req->result));
     }
     uv_fs_req_cleanup(req);
 }
