@@ -3,7 +3,11 @@
 #include <string.h>
 #include <uv.h>
 
+#define DEFAULT_PORT 7000
+#define DEFAULT_BACKLOG 128
+
 uv_loop_t *loop;
+struct sockaddr_in addr;
 
 uv_buf_t alloc_buffer(uv_handle_t *handle, size_t suggested_size) {
     return uv_buf_init((char*) malloc(suggested_size), suggested_size);
@@ -54,11 +58,12 @@ int main() {
     uv_tcp_t server;
     uv_tcp_init(loop, &server);
 
-    struct sockaddr_in bind_addr = uv_ip4_addr("0.0.0.0", 7000);
-    uv_tcp_bind(&server, bind_addr);
-    int r = uv_listen((uv_stream_t*) &server, 128, on_new_connection);
+    uv_ip4_addr("0.0.0.0", DEFAULT_PORT, &addr);
+
+    uv_tcp_bind(&server, (const struct sockaddr*)&bind_addr, 0);
+    int r = uv_listen((uv_stream_t*) &server, DEFAULT_BACKLOG, on_new_connection);
     if (r) {
-        fprintf(stderr, "Listen error %s\n", uv_err_name(uv_last_error(loop)));
+        fprintf(stderr, "Listen error %s\n", uv_strerror(r));
         return 1;
     }
     return uv_run(loop, UV_RUN_DEFAULT);
