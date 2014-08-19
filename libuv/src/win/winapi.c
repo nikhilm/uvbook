@@ -30,6 +30,7 @@ sRtlNtStatusToDosError pRtlNtStatusToDosError;
 sNtDeviceIoControlFile pNtDeviceIoControlFile;
 sNtQueryInformationFile pNtQueryInformationFile;
 sNtSetInformationFile pNtSetInformationFile;
+sNtQueryVolumeInformationFile pNtQueryVolumeInformationFile;
 sNtQuerySystemInformation pNtQuerySystemInformation;
 
 
@@ -50,6 +51,7 @@ sSleepConditionVariableCS pSleepConditionVariableCS;
 sSleepConditionVariableSRW pSleepConditionVariableSRW;
 sWakeAllConditionVariable pWakeAllConditionVariable;
 sWakeConditionVariable pWakeConditionVariable;
+sCancelSynchronousIo pCancelSynchronousIo;
 
 
 void uv_winapi_init() {
@@ -68,13 +70,6 @@ void uv_winapi_init() {
     uv_fatal_error(GetLastError(), "GetProcAddress");
   }
 
-  pNtQueryInformationFile = (sNtQueryInformationFile) GetProcAddress(
-      ntdll_module,
-      "NtQueryInformationFile");
-  if (pNtQueryInformationFile == NULL) {
-    uv_fatal_error(GetLastError(), "GetProcAddress");
-  }
-
   pNtDeviceIoControlFile = (sNtDeviceIoControlFile) GetProcAddress(
       ntdll_module,
       "NtDeviceIoControlFile");
@@ -82,10 +77,23 @@ void uv_winapi_init() {
     uv_fatal_error(GetLastError(), "GetProcAddress");
   }
 
+  pNtQueryInformationFile = (sNtQueryInformationFile) GetProcAddress(
+      ntdll_module,
+      "NtQueryInformationFile");
+  if (pNtQueryInformationFile == NULL) {
+    uv_fatal_error(GetLastError(), "GetProcAddress");
+  }
+
   pNtSetInformationFile = (sNtSetInformationFile) GetProcAddress(
       ntdll_module,
       "NtSetInformationFile");
   if (pNtSetInformationFile == NULL) {
+    uv_fatal_error(GetLastError(), "GetProcAddress");
+  }
+
+  pNtQueryVolumeInformationFile = (sNtQueryVolumeInformationFile)
+      GetProcAddress(ntdll_module, "NtQueryVolumeInformationFile");
+  if (pNtQueryVolumeInformationFile == NULL) {
     uv_fatal_error(GetLastError(), "GetProcAddress");
   }
 
@@ -149,4 +157,7 @@ void uv_winapi_init() {
 
   pWakeConditionVariable = (sWakeConditionVariable)
     GetProcAddress(kernel32_module, "WakeConditionVariable");
+
+  pCancelSynchronousIo = (sCancelSynchronousIo)
+    GetProcAddress(kernel32_module, "CancelSynchronousIo");
 }

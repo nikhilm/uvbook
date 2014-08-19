@@ -27,33 +27,82 @@
 #include <string.h>
 
 
-static void uv__getaddrinfo_work(struct uv__work* w) {
-  uv_getaddrinfo_t* req = container_of(w, uv_getaddrinfo_t, work_req);
+int uv__getaddrinfo_translate_error(int sys_err) {
+  switch (sys_err) {
+  case 0: return 0;
+#if defined(EAI_ADDRFAMILY)
+  case EAI_ADDRFAMILY: return UV_EAI_ADDRFAMILY;
+#endif
+#if defined(EAI_AGAIN)
+  case EAI_AGAIN: return UV_EAI_AGAIN;
+#endif
+#if defined(EAI_BADFLAGS)
+  case EAI_BADFLAGS: return UV_EAI_BADFLAGS;
+#endif
+#if defined(EAI_BADHINTS)
+  case EAI_BADHINTS: return UV_EAI_BADHINTS;
+#endif
+#if defined(EAI_CANCELED)
+  case EAI_CANCELED: return UV_EAI_CANCELED;
+#endif
+#if defined(EAI_FAIL)
+  case EAI_FAIL: return UV_EAI_FAIL;
+#endif
+#if defined(EAI_FAMILY)
+  case EAI_FAMILY: return UV_EAI_FAMILY;
+#endif
+#if defined(EAI_MEMORY)
+  case EAI_MEMORY: return UV_EAI_MEMORY;
+#endif
+#if defined(EAI_NODATA)
+  case EAI_NODATA: return UV_EAI_NODATA;
+#endif
+#if defined(EAI_NONAME)
+# if !defined(EAI_NODATA) || EAI_NODATA != EAI_NONAME
+  case EAI_NONAME: return UV_EAI_NONAME;
+# endif
+#endif
+#if defined(EAI_OVERFLOW)
+  case EAI_OVERFLOW: return UV_EAI_OVERFLOW;
+#endif
+#if defined(EAI_PROTOCOL)
+  case EAI_PROTOCOL: return UV_EAI_PROTOCOL;
+#endif
+#if defined(EAI_SERVICE)
+  case EAI_SERVICE: return UV_EAI_SERVICE;
+#endif
+#if defined(EAI_SOCKTYPE)
+  case EAI_SOCKTYPE: return UV_EAI_SOCKTYPE;
+#endif
+#if defined(EAI_SYSTEM)
+  case EAI_SYSTEM: return -errno;
+#endif
+  }
+  assert(!"unknown EAI_* error code");
+  abort();
+  return 0;  /* Pacify compiler. */
+}
 
-  req->retcode = getaddrinfo(req->hostname,
-                             req->service,
-                             req->hints,
-                             &req->res);
+
+static void uv__getaddrinfo_work(struct uv__work* w) {
+  uv_getaddrinfo_t* req;
+  int err;
+
+  req = container_of(w, uv_getaddrinfo_t, work_req);
+  err = getaddrinfo(req->hostname, req->service, req->hints, &req->res);
+  req->retcode = uv__getaddrinfo_translate_error(err);
 }
 
 
 static void uv__getaddrinfo_done(struct uv__work* w, int status) {
   uv_getaddrinfo_t* req;
   struct addrinfo *res;
-  size_t hostlen;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
   uv__req_unregister(req->loop, req);
 
   res = req->res;
   req->res = NULL;
-
-  (void) &hostlen;  /* Silence unused variable warning. */
-  hostlen = 0;
-#if defined(__sun)
-  if (req->hostname != NULL)
-    hostlen = strlen(req->hostname);
-#endif
 
   /* See initialization in uv_getaddrinfo(). */
   if (req->hints)
@@ -69,35 +118,12 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
   req->service = NULL;
   req->hostname = NULL;
 
-  if (status == -UV_ECANCELED) {
+  if (status == -ECANCELED) {
     assert(req->retcode == 0);
-    req->retcode = UV_ECANCELED;
-    uv__set_artificial_error(req->loop, UV_ECANCELED);
-    req->cb(req, -1, NULL);
-    return;
+    req->retcode = UV_EAI_CANCELED;
   }
 
-  if (req->retcode == 0) {
-    req->cb(req, 0, res);
-    return;
-  }
-
-  if (req->retcode == EAI_NONAME)
-    uv__set_sys_error(req->loop, ENOENT);
-#if defined(EAI_NODATA)  /* Newer FreeBSDs don't have EAI_NODATA. */
-  else if (req->retcode == EAI_NODATA)
-    uv__set_sys_error(req->loop, ENOENT);
-#endif
-#if defined(__sun)
-  else if (req->retcode == EAI_MEMORY && hostlen >= MAXHOSTNAMELEN)
-    uv__set_sys_error(req->loop, ENOENT);
-#endif
-  else {
-    req->loop->last_err.code = UV_EADDRINFO;
-    req->loop->last_err.sys_errno_ = req->retcode;
-  }
-
-  req->cb(req, -1, res);
+  req->cb(req, req->retcode, res);
 }
 
 
@@ -114,7 +140,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   char* buf;
 
   if (req == NULL || cb == NULL || (hostname == NULL && service == NULL))
-    return uv__set_artificial_error(loop, UV_EINVAL);
+    return -EINVAL;
 
   hostname_len = hostname ? strlen(hostname) + 1 : 0;
   service_len = service ? strlen(service) + 1 : 0;
@@ -122,7 +148,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   buf = malloc(hostname_len + service_len + hints_len);
 
   if (buf == NULL)
-    return uv__set_artificial_error(loop, UV_ENOMEM);
+    return -ENOMEM;
 
   uv__req_init(loop, req, UV_GETADDRINFO);
   req->loop = loop;
