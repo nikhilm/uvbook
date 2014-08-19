@@ -2,23 +2,23 @@ Threads
 =======
 
 Wait a minute? Why are we on threads? Aren't event loops supposed to be **the
-way** to do *web-scale programming*? Well no. Threads are still the medium in
-which the processor does its job, and threads are mighty useful sometimes, even
-though you might have to wade through synchronization primitives.
+way** to do *web-scale programming*? Well... no. Threads are still the medium in
+which processors do their jobs. Threads are therefore mighty useful sometimes, even
+though you might have to wade through various synchronization primitives.
 
-Threads are used internally to fake the asynchronous nature of all the system
+Threads are used internally to fake the asynchronous nature of all of the system
 calls. libuv also uses threads to allow you, the application, to perform a task
 asynchronously that is actually blocking, by spawning a thread and collecting
 the result when it is done.
 
-Today there are two predominant thread libraries. The Windows threads
-implementation and `pthreads`_. libuv's thread API is analogous to
-the pthread API and often has similar semantics.
+Today there are two predominant thread libraries: the Windows threads
+implementation and POSIX's `pthreads`_. libuv's thread API is analogous to
+the pthreads API and often has similar semantics.
 
 A notable aspect of libuv's thread facilities is that it is a self contained
 section within libuv. Whereas other features intimately depend on the event
 loop and callback principles, threads are complete agnostic, they block as
-required, signal errors directly via return values and, as shown in the
+required, signal errors directly via return values, and, as shown in the
 :ref:`first example <thread-create-example>`, don't even require a running
 event loop.
 
@@ -179,10 +179,10 @@ task is done. A seemingly simple function, what makes ``uv_queue_work()``
 tempting is that it allows potentially any third-party libraries to be used
 with the event-loop paradigm. When you use event loops, it is *imperative to
 make sure that no function which runs periodically in the loop thread blocks
-when performing I/O or is a serious CPU hog*, because this means the loop slows
-down and events are not being dealt with at full capacity.
+when performing I/O or is a serious CPU hog*, because this means that the loop
+slows down and events are not being handled at full capacity.
 
-But a lot of existing code out there features blocking functions (for example
+However, a lot of existing code out there features blocking functions (for example
 a routine which performs I/O under the hood) to be used with threads if you
 want responsiveness (the classic 'one thread per client' server model), and
 getting them to play with an event loop library generally involves rolling your
@@ -295,7 +295,7 @@ with the async watcher whenever it receives a message.
 
 .. warning::
 
-    It is important to realize that the message send is *async*, the callback
+    It is important to realize that since the message send is *async*, the callback
     may be invoked immediately after ``uv_async_send`` is called in another
     thread, or it may be invoked after some time. libuv may also combine
     multiple calls to ``uv_async_send`` and invoke your callback only once. The
@@ -313,7 +313,7 @@ with the async watcher whenever it receives a message.
     :lines: 10-23
     :emphasize-lines: 7-8
 
-In the download function we modify the progress indicator and queue the message
+In the download function, we modify the progress indicator and queue the message
 for delivery with ``uv_async_send``. Remember: ``uv_async_send`` is also
 non-blocking and will return immediately.
 
@@ -375,7 +375,7 @@ which binds a third party library. It may go something like this:
 
 ----
 
-.. _node.js is cancer: https://raw.github.com/teddziuba/teddziuba.github.com/master/_posts/2011-10-01-node-js-is-cancer.html
+.. _node.js is cancer: http://teddziuba.github.io/2011/10/node-js-is-cancer.html
 .. _bnoordhuis: https://github.com/bnoordhuis
 
 .. [#] https://github.com/joyent/libuv/blob/master/include/uv.h#L1853
