@@ -3,7 +3,7 @@
 
 int64_t counter = 0;
 
-void wait_for_a_while(uv_idle_t* handle, int status) {
+void wait_for_a_while(uv_idle_t* handle) {
     counter++;
 
     if (counter >= 10e6)
