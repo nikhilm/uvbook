@@ -27,7 +27,7 @@ examples=\
 	queue-cancel
 
 UV_PATH=$(shell pwd)/../libuv
-UV_LIB=$(UV_PATH)/libuv.a
+UV_LIB=$(UV_PATH)/.libs/libuv.a
 CFLAGS=-g -Wall -I$(UV_PATH)/include
 LIBS=
 
@@ -44,7 +44,7 @@ SHARED_LIB_FLAGS=-shared -Wl,-soname,libhello.so -o plugin/libhello.so
 PLUGIN_EXE_FLAGS=-Wl,-export-dynamic
 endif
 
-all: $(UV_LIB) plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
+all: plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uvwget
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_LIB) $(LIBS); cd ..; done
 
 plugin/plugin: plugin/*.c
@@ -63,9 +63,6 @@ multi-echo-server/worker: multi-echo-server/worker.c
 
 uvwget/uvwget: uvwget/main.c
 	gcc $(CFLAGS) `curl-config --cflags --libs` -o uvwget/uvwget uvwget/main.c $(UV_LIB) $(LIBS)
-
-$(UV_LIB):
-	make -C ../libuv
 
 clean:
 	for dir in $(examples); do cd $$dir; rm -f $$dir; rm -rf $$dir.dSYM; cd ..; done
