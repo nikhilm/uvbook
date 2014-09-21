@@ -9,31 +9,30 @@
 uv_loop_t *loop;
 struct sockaddr_in addr;
 
-uv_buf_t alloc_buffer(uv_handle_t *handle, size_t suggested_size) {
-    return uv_buf_init((char*) malloc(suggested_size), suggested_size);
+void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+    buf->base = (char*) malloc(suggested_size);
+    buf->len = suggested_size;
 }
 
 void echo_write(uv_write_t *req, int status) {
-    if (status == -1) {
-        fprintf(stderr, "Write error %s\n", uv_err_name(uv_last_error(loop)));
+    if (status) {
+        fprintf(stderr, "Write error %s\n", uv_err_name(status));
     }
-    char *base = (char*) req->data;
-    free(base);
     free(req);
 }
 
-void echo_read(uv_stream_t *client, ssize_t nread, uv_buf_t buf) {
-    if (nread == -1) {
-        if (uv_last_error(loop).code != UV_EOF)
-            fprintf(stderr, "Read error %s\n", uv_err_name(uv_last_error(loop)));
+void echo_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
+    if (nread < 0) {
+        if (nread != UV_EOF)
+            fprintf(stderr, "Read error %s\n", uv_err_name(nread));
         uv_close((uv_handle_t*) client, NULL);
         return;
     }
 
     uv_write_t *req = (uv_write_t *) malloc(sizeof(uv_write_t));
-    req->data = (void*) buf.base;
-    buf.len = nread;
-    uv_write(req, client, &buf, 1, echo_write);
+    uv_buf_t wrbuf = uv_buf_init(buf->base, nread);
+    uv_write(req, client, &wrbuf, 1, echo_write);
+    free(buf->base);
 }
 
 void on_new_connection(uv_stream_t *server, int status) {
@@ -60,7 +59,7 @@ int main() {
 
     uv_ip4_addr("0.0.0.0", DEFAULT_PORT, &addr);
 
-    uv_tcp_bind(&server, (const struct sockaddr*)&bind_addr, 0);
+    uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
     int r = uv_listen((uv_stream_t*) &server, DEFAULT_BACKLOG, on_new_connection);
     if (r) {
         fprintf(stderr, "Listen error %s\n", uv_strerror(r));

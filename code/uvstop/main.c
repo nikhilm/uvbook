@@ -3,7 +3,7 @@
 
 int64_t counter = 0;
 
-void idle_cb(uv_idle_t *handle, int status) {
+void idle_cb(uv_idle_t *handle) {
     printf("Idle callback\n");
     counter++;
 
@@ -13,7 +13,7 @@ void idle_cb(uv_idle_t *handle, int status) {
     }
 }
 
-void prep_cb(uv_prepare_t *handle, int status) {
+void prep_cb(uv_prepare_t *handle) {
     printf("Prep callback\n");
 }
 

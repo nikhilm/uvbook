@@ -5,14 +5,15 @@
 
 uv_loop_t *loop;
 
-uv_buf_t alloc_buffer(uv_handle_t *handle, size_t suggested_size) {
-    return uv_buf_init((char*) malloc(suggested_size), suggested_size);
+void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+  buf->base = malloc(suggested_size);
+  buf->len = suggested_size;
 }
 
-void on_read(uv_stream_t *client, ssize_t nread, uv_buf_t buf) {
-    if (nread == -1) {
-        if (uv_last_error(loop).code != UV_EOF)
-            fprintf(stderr, "Read error %s\n", uv_err_name(uv_last_error(loop)));
+void on_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
+    if (nread < 0) {
+        if (nread != UV_EOF)
+            fprintf(stderr, "Read error %s\n", uv_err_name(nread));
         uv_close((uv_handle_t*) client, NULL);
         free(client);
         return;
@@ -20,16 +21,16 @@ void on_read(uv_stream_t *client, ssize_t nread, uv_buf_t buf) {
 
     char *data = (char*) malloc(sizeof(char) * (nread+1));
     data[nread] = '\0';
-    strncpy(data, buf.base, nread);
+    strncpy(data, buf->base, nread);
 
     fprintf(stderr, "%s", data);
     free(data);
-    free(buf.base);
+    free(buf->base);
 }
 
 void on_connect(uv_connect_t *req, int status) {
-    if (status == -1) {
-        fprintf(stderr, "connect failed error %s\n", uv_err_name(uv_last_error(loop)));
+    if (status < 0) {
+        fprintf(stderr, "connect failed error %s\n", uv_err_name(status));
         free(req);
         return;
     }
@@ -39,8 +40,8 @@ void on_connect(uv_connect_t *req, int status) {
 }
 
 void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
-    if (status == -1) {
-        fprintf(stderr, "getaddrinfo callback error %s\n", uv_err_name(uv_last_error(loop)));
+    if (status < 0) {
+        fprintf(stderr, "getaddrinfo callback error %s\n", uv_err_name(status));
         return;
     }
 
@@ -53,7 +54,7 @@ void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
     uv_tcp_init(loop, socket);
 
     connect_req->data = (void*) socket;
-    uv_tcp_connect(connect_req, socket, *(struct sockaddr_in*) res->ai_addr, on_connect);
+    uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
 
     uv_freeaddrinfo(res);
 }
@@ -72,7 +73,7 @@ int main() {
     int r = uv_getaddrinfo(loop, &resolver, on_resolved, "irc.freenode.net", "6667", &hints);
 
     if (r) {
-        fprintf(stderr, "getaddrinfo call error %s\n", uv_err_name(uv_last_error(loop)));
+        fprintf(stderr, "getaddrinfo call error %s\n", uv_err_name(r));
         return 1;
     }
     return uv_run(loop, UV_RUN_DEFAULT);

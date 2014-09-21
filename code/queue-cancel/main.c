@@ -26,7 +26,7 @@ void fib(uv_work_t *req) {
 }
 
 void after_fib(uv_work_t *req, int status) {
-    if (status == -1 && uv_last_error(loop).code == UV_ECANCELED)
+    if (status == UV_ECANCELED)
         fprintf(stderr, "Calculation of %d cancelled.\n", *(int *) req->data);
 }
 

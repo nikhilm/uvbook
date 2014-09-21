@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,13 +18,14 @@ int child_worker_count;
 uv_buf_t dummy_buf;
 char worker_path[500];
 
-void close_process_handle(uv_process_t *req, int exit_status, int term_signal) {
-    fprintf(stderr, "Process exited with status %d, signal %d\n", exit_status, term_signal);
+void close_process_handle(uv_process_t *req, int64_t exit_status, int term_signal) {
+    fprintf(stderr, "Process exited with status %" PRId64 ", signal %d\n", exit_status, term_signal);
     uv_close((uv_handle_t*) req, NULL);
 }
 
-uv_buf_t alloc_buffer(uv_handle_t *handle, size_t suggested_size) {
-    return uv_buf_init((char*) calloc(suggested_size, 1), suggested_size);
+void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
+  buf->base = malloc(suggested_size);
+  buf->len = suggested_size;
 }
 
 void on_new_connection(uv_stream_t *server, int status) {
@@ -87,7 +89,7 @@ void setup_workers() {
         worker->options.file = args[0];
         worker->options.args = args;
 
-        uv_spawn(loop, &worker->req, worker->options); 
+        uv_spawn(loop, &worker->req, &worker->options); 
         fprintf(stderr, "Started worker %d\n", worker->req.pid);
     }
 }
@@ -100,10 +102,12 @@ int main() {
     uv_tcp_t server;
     uv_tcp_init(loop, &server);
 
-    struct sockaddr_in bind_addr = uv_ip4_addr("0.0.0.0", 7000);
-    uv_tcp_bind(&server, bind_addr);
-    if (uv_listen((uv_stream_t*) &server, 128, on_new_connection)) {
-        fprintf(stderr, "Listen error %s\n", uv_err_name(uv_last_error(loop)));
+    struct sockaddr_in bind_addr;
+    uv_ip4_addr("0.0.0.0", 7000, &bind_addr);
+    uv_tcp_bind(&server, (const struct sockaddr *)&bind_addr, 0);
+    int r;
+    if ((r = uv_listen((uv_stream_t*) &server, 128, on_new_connection))) {
+        fprintf(stderr, "Listen error %s\n", uv_err_name(r));
         return 2;
     }
     return uv_run(loop, UV_RUN_DEFAULT);

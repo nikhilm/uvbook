@@ -19,8 +19,9 @@ int main() {
     options.args = args;
     options.flags = UV_PROCESS_DETACHED;
 
-    if (uv_spawn(loop, &child_req, options)) {
-        fprintf(stderr, "%s\n", uv_strerror(uv_last_error(loop)));
+    int r;
+    if ((r = uv_spawn(loop, &child_req, &options))) {
+        fprintf(stderr, "%s\n", uv_strerror(r));
         return 1;
     }
     fprintf(stderr, "Launched sleep with PID %d\n", child_req.pid);

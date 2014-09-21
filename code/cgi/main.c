@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,8 +8,8 @@ uv_loop_t *loop;
 uv_process_t child_req;
 uv_process_options_t options;
 
-void cleanup_handles(uv_process_t *req, int exit_status, int term_signal) {
-    fprintf(stderr, "Process exited with status %d, signal %d\n", exit_status, term_signal);
+void cleanup_handles(uv_process_t *req, int64_t exit_status, int term_signal) {
+    fprintf(stderr, "Process exited with status %" PRId64 ", signal %d\n", exit_status, term_signal);
     uv_close((uv_handle_t*) req->data, NULL);
     uv_close((uv_handle_t*) req, NULL);
 }
@@ -38,8 +39,9 @@ void invoke_cgi_script(uv_tcp_t *client) {
     options.args = args;
 
     child_req.data = (void*) client;
-    if (uv_spawn(loop, &child_req, options)) {
-        fprintf(stderr, "%s\n", uv_strerror(uv_last_error(loop)));
+    int r;
+    if ((r = uv_spawn(loop, &child_req, &options))) {
+        fprintf(stderr, "%s\n", uv_strerror(r));
         return;
     }
 }
@@ -66,11 +68,12 @@ int main() {
     uv_tcp_t server;
     uv_tcp_init(loop, &server);
 
-    struct sockaddr_in bind_addr = uv_ip4_addr("0.0.0.0", 7000);
-    uv_tcp_bind(&server, bind_addr);
+    struct sockaddr_in bind_addr;
+    uv_ip4_addr("0.0.0.0", 7000, &bind_addr);
+    uv_tcp_bind(&server, (const struct sockaddr *)&bind_addr, 0);
     int r = uv_listen((uv_stream_t*) &server, 128, on_new_connection);
     if (r) {
-        fprintf(stderr, "Listen error %s\n", uv_err_name(uv_last_error(loop)));
+        fprintf(stderr, "Listen error %s\n", uv_err_name(r));
         return 1;
     }
     return uv_run(loop, UV_RUN_DEFAULT);

@@ -11,7 +11,7 @@ int width, height;
 int pos = 0;
 char *message = "  Hello TTY  ";
 
-void update(uv_timer_t *req, int status) {
+void update(uv_timer_t *req) {
     char data[500];
 
     uv_buf_t buf;
