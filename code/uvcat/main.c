@@ -19,14 +19,12 @@ void on_write(uv_fs_t *req) {
         fprintf(stderr, "Write error: %s\n", uv_strerror((int)req->result));
     }
     else {
-        printf("Write done\n");
         uv_fs_read(uv_default_loop(), &read_req, open_req.result, &iov, 1, -1, on_read);
     }
 }
 
 void on_read(uv_fs_t *req) {
     uv_fs_req_cleanup(req);
-    printf("read content: %s\n", iov.base);
     if (req->result < 0) {
         fprintf(stderr, "Read error: %s\n", uv_strerror((int)req->result));
     }
@@ -36,7 +34,8 @@ void on_read(uv_fs_t *req) {
         uv_fs_close(uv_default_loop(), &close_req, open_req.result, NULL);
     }
     else {
-        uv_fs_write(uv_default_loop(), &write_req, req->result, &iov, 1, -1, on_write);
+        iov.len = req->result;
+        uv_fs_write(uv_default_loop(), &write_req, 1, &iov, 1, -1, on_write);
     }
 }
 
