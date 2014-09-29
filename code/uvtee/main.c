@@ -49,8 +49,7 @@ void read_stdin(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
             uv_close((uv_handle_t *)&stdout_pipe, NULL);
             uv_close((uv_handle_t *)&file_pipe, NULL);
         }
-    } else if(nread == 0){
-    } else {
+    } else if (nread > 0) {
         write_data((uv_stream_t *)&stdout_pipe, nread, *buf, on_stdout_write);
         write_data((uv_stream_t *)&file_pipe, nread, *buf, on_file_write);
     }
