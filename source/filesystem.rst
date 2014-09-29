@@ -53,28 +53,25 @@ a callback for when the file is opened:
 .. rubric:: uvcat/main.c - opening a file
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 39-48
-    :emphasize-lines: 2
+    :lines: 42-53
+    :emphasize-lines: 2, 4
 
 The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
 ``uv_fs_open`` callback. If the file is successfully opened, we start reading it.
 
 .. warning::
 
-    The ``uv_fs_req_cleanup()`` function must be called to free internal memory
-    allocations in libuv.
+    The ``uv_fs_req_cleanup()`` function must always be called on filesystem
+    requests to free internal memory allocations in libuv.
 
 .. rubric:: uvcat/main.c - read callback
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 24-37
-    :emphasize-lines: 6,9,12
+    :lines: 26-41
+    :emphasize-lines: 4,7,14
 
 In the case of a read call, you should pass an *initialized* buffer which will
 be filled with data before the read callback is triggered.
-
-In the read callback the ``result`` field is 0 for EOF, -1 for error and the
-number of bytes read on success.
 
 Here you see a common pattern when writing asynchronous programs. The
 ``uv_fs_close()`` call is performed synchronously. *Usually tasks which are
@@ -82,9 +79,6 @@ one-off, or are done as part of the startup or shutdown stage are performed
 synchronously, since we are interested in fast I/O when the program is going
 about its primary task and dealing with multiple I/O sources*. For solo tasks
 the performance difference usually is negligible and may lead to simpler code.
-
-We can generalize the pattern that the actual return value of the original
-system call is stored in ``uv_fs_t.result``.
 
 Filesystem writing is similarly simple using ``uv_fs_write()``.  *Your callback
 will be triggered after the write is complete*.  In our case the callback
@@ -94,29 +88,20 @@ callbacks.
 .. rubric:: uvcat/main.c - write callback
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 14-22
+    :lines: 16-24
     :emphasize-lines: 7
-
-.. note::
-
-    The error usually stored in `errno
-    <http://man7.org/linux/man-pages/man3/errno.3.html>`_ can be accessed from
-    ``uv_fs_t.errorno``, but converted to a standard ``UV_*`` error code.  There is
-    currently no way to directly extract a string error message from the
-    ``errorno`` field.
 
 .. warning::
 
     Due to the way filesystems and disk drives are configured for performance,
-    a write that 'succeeds' may not be committed to disk yet. See
-    ``uv_fs_fsync`` for stronger guarantees.
+    a write that 'succeeds' may not be committed to disk yet.
 
 We set the dominos rolling in ``main()``:
 
 .. rubric:: uvcat/main.c
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 50-54
+    :lines: 55-59
     :emphasize-lines: 2
 
 Filesystem operations
@@ -129,9 +114,7 @@ same patterns as the read/write/open calls, returning the result in the
 
 .. rubric:: Filesystem operations
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1523-1581
-
-Callbacks should free the ``uv_fs_t`` argument using ``uv_fs_req_cleanup()``.
+    :lines: 1918-1994
 
 .. _buffers-and-streams:
 
@@ -149,7 +132,7 @@ upon using
     int uv_read_start(uv_stream_t*, uv_alloc_cb alloc_cb, uv_read_cb read_cb);
     int uv_read_stop(uv_stream_t*);
     int uv_write(uv_write_t* req, uv_stream_t* handle,
-                uv_buf_t bufs[], int bufcnt, uv_write_cb cb);
+                const uv_buf_t bufs[], unsigned int nbufs, uv_write_cb cb);
 
 The stream based functions are simpler to use than the filesystem ones and
 libuv will automatically keep reading from a stream when ``uv_read_start()`` is
@@ -177,7 +160,7 @@ opened as bidirectional by default.
 .. rubric:: uvtee/main.c - read on pipes
 .. literalinclude:: ../code/uvtee/main.c
     :linenos:
-    :lines: 62-81
+    :lines: 61-79
     :emphasize-lines: 4,5,15
 
 The third argument of ``uv_pipe_init()`` should be set to 1 for IPC using named
@@ -197,9 +180,9 @@ The standard ``malloc`` is sufficient here, but you can use any memory allocatio
 scheme. For example, node.js uses its own slab allocator which associates
 buffers with V8 objects.
 
-The read callback ``nread`` parameter is -1 on any error. This error might be
-EOF, in which case we close all the streams, using the generic close function
-``uv_close()`` which deals with the handle based on its internal type.
+The read callback ``nread`` parameter is less than 0 on any error. This error
+might be EOF, in which case we close all the streams, using the generic close
+function ``uv_close()`` which deals with the handle based on its internal type.
 Otherwise ``nread`` is a non-negative number and we can attempt to write that
 many bytes to the output streams. Finally remember that buffer allocation and
 deallocation is application responsibility, so we free the data.
@@ -244,14 +227,14 @@ The file change notification is started using ``uv_fs_event_init()``:
 .. rubric:: onchange/main.c - The setup
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
-    :lines: 29-32
-    :emphasize-lines: 3
+    :lines: 29-35
+    :emphasize-lines: 6
 
 The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1728,1737,1744
+    :lines: 2156, 2165, 2172
 
 ``UV_FS_EVENT_WATCH_ENTRY`` and ``UV_FS_EVENT_STAT`` don't do anything (yet).
 ``UV_FS_EVENT_RECURSIVE`` will start watching subdirectories as well on
@@ -259,7 +242,7 @@ supported platforms.
 
 The callback will receive the following arguments:
 
-  #. ``uv_fs_event_t *handle`` - The watcher. The ``filename`` field of the watcher
+  #. ``uv_fs_event_t *handle`` - The watcher. The ``path`` field of the watcher
      is the file on which the watch was set.
   #. ``const char *filename`` - If a directory is being monitored, this is the
      file which was changed. Only non-``null`` on Linux and Windows. May be ``null``

@@ -112,13 +112,15 @@ enumeration of ``UV_*`` as defined here:
 
 .. rubric:: libuv error codes
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 69-127
+    :lines: 66-140
 
 You can use the ``uv_strerror(uv_err_t)`` and ``uv_err_name(uv_err_t)`` functions
 to get a ``const char *`` describing the error or the error name respectively.
 
-Async callbacks have a ``status`` argument as the last argument. Use this instead
-of the return value.
+Some async callbacks have a ``status`` argument as the last argument. Use this instead
+of the return value. ``status`` is 0 for no error.
+
+I/O read callbacks (such as for files and sockets) are passed a parameter ``nread``. If ``nread`` is less than 0, there was an error (UV_EOF is the end of file error, which you may want to handle differently).
 
 Watchers
 --------
@@ -129,12 +131,20 @@ is used for. A full list of watchers supported by libuv is:
 
 .. rubric:: libuv watchers
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 190-207
+    :lines: 197-230
 
-.. note::
 
-    All watcher structs are subclasses of ``uv_handle_t`` and often referred to
-    as **handles** in libuv and in this text.
+Handles are for actions that usually support a ``open/start, act, close/stop`` sort of
+cycle, like dealing with streams or timers or polling. Properties on the handle
+can be read/written to affect the action.
+
+Requests are used to preserve context between the initiation and the callback
+of individual actions. For example, an UDP socket is represented by
+a ``uv_udp_t``, while individual writes to the socket use a ``uv_udp_send_t``
+structure.
+
+Finally the last 3 structs aren't related to the event loop mechanism, but
+store system information.
 
 Watchers are setup by a corresponding::
 
@@ -174,9 +184,14 @@ exits since no event watchers are active.
 .. literalinclude:: ../code/idle-basic/main.c
     :emphasize-lines: 6,10,14-17
 
-void \*data pattern
+Storing context
++++++++++++++++
 
-note about not necessarily creating type structs on the stack
+In callback based programming style you'll often want to pass some 'context' --
+application specific information -- between the call site and the callback. All
+handles and requests have a ``void* data`` member which you can set to the
+context and cast back in the callback. This is a common pattern used throughout
+the C library ecosystem.
 
 ----
 

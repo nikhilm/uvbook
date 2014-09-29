@@ -55,12 +55,12 @@ Code
 All the code from this book is included as part of the source of the book on
 Github. `Clone`_/`Download`_ the book and run ``make`` in the ``code/``
 folder to compile all the examples. This book and the code is based on libuv
-version `v0.11.1`_ and a version is included in the ``libuv/`` folder
+version `v0.11.29`_ and a version is included in the ``libuv/`` folder
 which will be compiled automatically.
 
 .. _Clone: https://github.com/nikhilm/uvbook
 .. _Download: https://github.com/nikhilm/uvbook/downloads
-.. _v0.11.1: https://github.com/joyent/libuv/tags
+.. _v0.11.29: https://github.com/joyent/libuv/tags
 .. _V8: http://code.google.com/p/v8/
 .. _libev: http://software.schmorp.de/pkg/libev.html
 .. _libuv: https://github.com/joyent/libuv
