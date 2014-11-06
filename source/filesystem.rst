@@ -121,7 +121,7 @@ same patterns as the read/write/open calls, returning the result in the
 Buffers and Streams
 -------------------
 
-The basic I/O tool in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
+The basic I/O primitive in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
 sockets, and pipes for file I/O and IPC are all treated as stream subclasses.
 
 Streams are initialized using custom functions for each subclass, then operated
@@ -132,7 +132,7 @@ upon using
     int uv_read_start(uv_stream_t*, uv_alloc_cb alloc_cb, uv_read_cb read_cb);
     int uv_read_stop(uv_stream_t*);
     int uv_write(uv_write_t* req, uv_stream_t* handle,
-                const uv_buf_t bufs[], unsigned int nbufs, uv_write_cb cb);
+                 const uv_buf_t bufs[], unsigned int nbufs, uv_write_cb cb);
 
 The stream based functions are simpler to use than the filesystem ones and
 libuv will automatically keep reading from a stream when ``uv_read_start()`` is
@@ -165,7 +165,8 @@ opened as bidirectional by default.
 
 The third argument of ``uv_pipe_init()`` should be set to 1 for IPC using named
 pipes. This is covered in :doc:`processes`. The ``uv_pipe_open()`` call
-associates the file descriptor with the file.
+associates the pipe with the file descriptor, in this case ``0`` (standard
+input).
 
 We start monitoring ``stdin``. The ``alloc_buffer`` callback is invoked as new
 buffers are required to hold incoming data. ``read_stdin`` will be called with
@@ -187,15 +188,26 @@ Otherwise ``nread`` is a non-negative number and we can attempt to write that
 many bytes to the output streams. Finally remember that buffer allocation and
 deallocation is application responsibility, so we free the data.
 
+The allocation callback may return a buffer with length zero if it fails to
+allocate memory. In this case, the read callback is invoked with error
+UV_ENOBUFS. libuv will continue to attempt to read the stream though, so you
+must explicitly call ``uv_close()`` if you want to stop when allocation fails.
+
+The read callback may be called with ``nread = 0``, indicating that at this
+point there is nothing to be read. Most applications will just ignore this.
+
 .. rubric:: uvtee/main.c - Write to pipe
 .. literalinclude:: ../code/uvtee/main.c
     :linenos:
     :lines: 9-13,23-42
 
-``write_data()`` makes a copy of the buffer obtained from read. Again, this
-buffer does not get passed through to the callback trigged on write completion.
-To get around this we wrap a write request and a buffer in ``write_req_t`` and
-unwrap it in the callbacks.
+``write_data()`` makes a copy of the buffer obtained from read. This buffer
+does not get passed through to the write callback trigged on write completion. To
+get around this we wrap a write request and a buffer in ``write_req_t`` and
+unwrap it in the callbacks. We make a copy so we can free the two buffers from
+the two calls to ``write_data`` independently of each other. While acceptable
+for a demo program like this, you'll probably want smarter memory management,
+like reference counted buffers or a pool of buffers in any major application.
 
 .. WARNING::
 
