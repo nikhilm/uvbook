@@ -33,7 +33,7 @@ Here is a simple echo server
 .. rubric:: tcp-echo-server/main.c - The listen socket
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 50-
+    :lines: 54-
     :emphasize-lines: 4-5,7-9
 
 You can see the utility function ``uv_ip4_addr`` being used to convert from
@@ -42,10 +42,9 @@ the BSD socket APIs. The reverse can be obtained using ``uv_ip4_name``.
 
 .. NOTE::
 
-    In case it wasn't obvious there are ``uv_ip6_*`` analogues for the ip4
-    functions.
+    There are ``uv_ip6_*`` analogues for the ip4 functions.
 
-Most of the setup functions are normal functions since its all CPU-bound.
+Most of the setup functions are synchronous since they are CPU-bound.
 ``uv_listen`` is where we return to libuv's callback style. The second
 arguments is the backlog queue -- the maximum length of queued connections.
 
@@ -56,7 +55,7 @@ In this case we also establish interest in reading from this stream.
 .. rubric:: tcp-echo-server/main.c - Accepting the client
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 34-48
+    :lines: 38-52
     :emphasize-lines: 9-10
 
 The remaining set of functions is very similar to the streams example and can
@@ -67,9 +66,9 @@ interested in accepting the connection.
 Client
 ++++++
 
-Where you do bind/listen/accept, on the client side its simply a matter of
-calling ``uv_tcp_connect``. The same ``uv_connect_cb`` style callback of
-``uv_listen`` is used by ``uv_tcp_connect``. Try::
+Where you do bind/listen/accept on the server, on the client side it's simply
+a matter of calling ``uv_tcp_connect``. The same ``uv_connect_cb`` style
+callback of ``uv_listen`` is used by ``uv_tcp_connect``. Try::
 
     uv_tcp_t* socket = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
     uv_tcp_init(loop, socket);
@@ -101,8 +100,8 @@ a `DHCP`_ server -- DHCP Discover.
 .. rubric:: udp-dhcp/main.c - Setup and send UDP packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
-    :lines: 7-10,104-
-    :emphasize-lines: 8,10-11,14,15,21
+    :lines: 7-11,107-
+    :emphasize-lines: 8,10-11,17-18,21
 
 .. note::
 
@@ -121,7 +120,11 @@ and you can study the code if you are interested. As usual the read and write
 callbacks will receive a status code of -1 if something went wrong.
 
 Since UDP sockets are not connected to a particular peer, the read callback
-receives an extra parameter about the sender of the packet. The ``flags``
+receives an extra parameter about the sender of the packet.
+
+``nread`` may be zero if there is no more data to be read. If ``addr`` is not
+NULL, it indicates that an empty datagram was received from the host at
+``addr``. The ``flags``
 parameter may be ``UV_UDP_PARTIAL`` if the buffer provided by your allocator
 was not large enough to hold the data. *In this case the OS will discard the
 data that could not fit* (That's UDP for you!).
@@ -129,8 +132,8 @@ data that could not fit* (That's UDP for you!).
 .. rubric:: udp-dhcp/main.c - Reading packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
-    :lines: 15-27,38-41
-    :emphasize-lines: 1,16
+    :lines: 17-40
+    :emphasize-lines: 1,23
 
 UDP Options
 +++++++++++
@@ -145,7 +148,7 @@ IPv6 stack only
 
 IPv6 sockets can be used for both IPv4 and IPv6 communication. If you want to
 restrict the socket to IPv6 only, pass the ``UV_UDP_IPV6ONLY`` flag to
-``uv_udp_bind6`` [#]_.
+``uv_udp_bind`` [#]_.
 
 Multicast
 ~~~~~~~~~
@@ -153,7 +156,7 @@ Multicast
 A socket can (un)subscribe to a multicast group using:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 796-798
+    :lines: 1021-1024
 
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
 
@@ -189,7 +192,7 @@ call ``uv_freeaddrinfo`` in the callback.
 .. rubric:: dns/main.c
 .. literalinclude:: ../code/dns/main.c
     :linenos:
-    :lines: 41-59
+    :lines: 42-60
     :emphasize-lines: 8,16
 
 Network interfaces

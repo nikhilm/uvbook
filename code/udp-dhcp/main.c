@@ -27,9 +27,6 @@ void on_read(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, const struct soc
     fprintf(stderr, "Recv from %s\n", sender);
 
     // ... DHCP specific code
-
-    // above comment is only for book code snippet purposes
-
     unsigned int *as_integer = (unsigned int*)buf->base;
     unsigned int ipbin = ntohl(as_integer[4]);
     unsigned char ip[4] = {0};
@@ -42,9 +39,9 @@ void on_read(uv_udp_t *req, ssize_t nread, const uv_buf_t *buf, const struct soc
     uv_udp_recv_stop(req);
 }
 
-uv_buf_t make_discover_msg(uv_udp_send_t *req) {
+uv_buf_t make_discover_msg() {
     uv_buf_t buffer;
-    alloc_buffer((uv_handle_t*)req, 256, &buffer);
+    alloc_buffer(NULL, 256, &buffer);
     memset(buffer.base, 0, buffer.len);
 
     // BOOTREQUEST
@@ -120,7 +117,7 @@ int main() {
     uv_udp_set_broadcast(&send_socket, 1);
 
     uv_udp_send_t send_req;
-    uv_buf_t discover_msg = make_discover_msg(&send_req);
+    uv_buf_t discover_msg = make_discover_msg();
 
     struct sockaddr_in send_addr;
     assert(uv_ip4_addr("255.255.255.255", 67, &send_addr) == 0);
