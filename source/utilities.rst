@@ -300,7 +300,7 @@ This can be used to implement your own plugin/extension/module system and is
 used by node.js to implement ``require()`` support for bindings. The usage is
 quite simple as long as your library exports the right symbols. Be careful with
 sanity and security checks when loading third party code, otherwise your
-program will behave unpredicatably. This example implements a very simple
+program will behave unpredictably. This example implements a very simple
 plugin system which does nothing except print the name of the plugin.
 
 Let us first look at the interface provided to plugin authors.
