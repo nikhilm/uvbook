@@ -95,20 +95,19 @@ We initialize the garbage collector timer, then immediately ``unref`` it.
 Observe how after 9 seconds, when the fake job is done, the program
 automatically exits, even though the garbage collector is still running.
 
-Idle watcher pattern
---------------------
+Idler pattern
+-------------
 
-The callbacks of idle watchers are only invoked when the event loop has no
-other pending events. In such a situation they are invoked once every iteration
-of the loop. The idle callback can be used to perform some very low priority
-activity. For example, you could dispatch a summary of the daily application
-performance to the developers for analysis during periods of idleness, or use
-the application's CPU time to perform SETI calculations :) An idle watcher is
-also useful in a GUI application. Say you are using an event loop for a file
-download. If the TCP socket is still being established and no other events are
-present your event loop will pause (**block**), which means your progress bar
-will freeze and the user will think the application crashed. In such a case
-queue up and idle watcher to keep the UI operational.
+The callbacks of idle watchers are invoked once per event loop. The idle
+callback can be used to perform some very low priority activity. For example,
+you could dispatch a summary of the daily application performance to the
+developers for analysis during periods of idleness, or use the application's
+CPU time to perform SETI calculations :) An idle watcher is also useful in
+a GUI application. Say you are using an event loop for a file download. If the
+TCP socket is still being established and no other events are present your
+event loop will pause (**block**), which means your progress bar will freeze
+and the user will think the application crashed. In such a case queue up and
+idle watcher to keep the UI operational.
 
 .. rubric:: idle-compute/main.c
 .. literalinclude:: ../code/idle-compute/main.c
