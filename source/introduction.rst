@@ -47,14 +47,21 @@ Since then libuv has continued to mature and become a high quality standalone
 library for system programming. Users outside of node.js include Mozilla's
 Rust_ programming language, and a variety_ of language bindings.
 
+This book and the code is based on libuv version `v1.3.0`_.
+
 Code
 ----
 
 All the code from this book is included as part of the source of the book on
-Github. `Clone`_/`Download`_ the book and run ``make`` in the ``code/``
-folder to compile all the examples. This book and the code is based on libuv
-version `v1.3.0`_ and a version is included in the ``libuv/`` folder
-which will be compiled automatically.
+Github. `Clone`_/`Download`_ the book, then build libuv::
+
+    cd libuv
+    ./autogen.sh
+    ./configure
+    make
+
+There is no need to ``make install``. To build the examples run ``make`` in the
+``code/`` directory.
 
 .. _Clone: https://github.com/nikhilm/uvbook
 .. _Download: https://github.com/nikhilm/uvbook/downloads
