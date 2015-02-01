@@ -113,6 +113,8 @@ loop.
     node.js uses the default loop as its main loop. If you are writing bindings
     you should be aware of this.
 
+.. _libuv-error-handling:
+
 Error handling
 --------------
 
