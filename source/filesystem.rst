@@ -241,14 +241,14 @@ The file change notification is started using ``uv_fs_event_init()``:
 .. rubric:: onchange/main.c - The setup
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
-    :lines: 29-35
-    :emphasize-lines: 6
+    :lines: 26-
+    :emphasize-lines: 15
 
 The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 2156, 2165, 2172
+    :lines: 1299, 1308, 1315
 
 ``UV_FS_EVENT_WATCH_ENTRY`` and ``UV_FS_EVENT_STAT`` don't do anything (yet).
 ``UV_FS_EVENT_RECURSIVE`` will start watching subdirectories as well on
@@ -256,12 +256,13 @@ supported platforms.
 
 The callback will receive the following arguments:
 
-  #. ``uv_fs_event_t *handle`` - The watcher. The ``path`` field of the watcher
+  #. ``uv_fs_event_t *handle`` - The handle. The ``path`` field of the handle
      is the file on which the watch was set.
   #. ``const char *filename`` - If a directory is being monitored, this is the
      file which was changed. Only non-``null`` on Linux and Windows. May be ``null``
      even on those platforms.
-  #. ``int flags`` - one of ``UV_RENAME`` or ``UV_CHANGE``.
+  #. ``int flags`` - one of ``UV_RENAME`` or ``UV_CHANGE``, or a bitwise OR of
+       both.
   #. ``int status`` - Currently 0.
 
 In our example we simply print the arguments and run the command using
@@ -270,7 +271,7 @@ In our example we simply print the arguments and run the command using
 .. rubric:: onchange/main.c - file change notification callback
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
-    :lines: 9-18
+    :lines: 9-24
 
 ----
 
