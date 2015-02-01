@@ -18,6 +18,13 @@
  * IN THE SOFTWARE.
  */
 
+/* Expose glibc-specific EAI_* error codes. Needs to be defined before we
+ * include any headers.
+ */
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
+
 #include "uv.h"
 #include "internal.h"
 
@@ -25,6 +32,9 @@
 #include <stddef.h> /* NULL */
 #include <stdlib.h>
 #include <string.h>
+
+/* EAI_* constants. */
+#include <netdb.h>
 
 
 int uv__getaddrinfo_translate_error(int sys_err) {
@@ -89,20 +99,16 @@ static void uv__getaddrinfo_work(struct uv__work* w) {
   int err;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
-  err = getaddrinfo(req->hostname, req->service, req->hints, &req->res);
+  err = getaddrinfo(req->hostname, req->service, req->hints, &req->addrinfo);
   req->retcode = uv__getaddrinfo_translate_error(err);
 }
 
 
 static void uv__getaddrinfo_done(struct uv__work* w, int status) {
   uv_getaddrinfo_t* req;
-  struct addrinfo *res;
 
   req = container_of(w, uv_getaddrinfo_t, work_req);
   uv__req_unregister(req->loop, req);
-
-  res = req->res;
-  req->res = NULL;
 
   /* See initialization in uv_getaddrinfo(). */
   if (req->hints)
@@ -123,7 +129,8 @@ static void uv__getaddrinfo_done(struct uv__work* w, int status) {
     req->retcode = UV_EAI_CANCELED;
   }
 
-  req->cb(req, req->retcode, res);
+  if (req->cb)
+    req->cb(req, req->retcode, req->addrinfo);
 }
 
 
@@ -139,7 +146,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   size_t len;
   char* buf;
 
-  if (req == NULL || cb == NULL || (hostname == NULL && service == NULL))
+  if (req == NULL || (hostname == NULL && service == NULL))
     return -EINVAL;
 
   hostname_len = hostname ? strlen(hostname) + 1 : 0;
@@ -153,7 +160,7 @@ int uv_getaddrinfo(uv_loop_t* loop,
   uv__req_init(loop, req, UV_GETADDRINFO);
   req->loop = loop;
   req->cb = cb;
-  req->res = NULL;
+  req->addrinfo = NULL;
   req->hints = NULL;
   req->service = NULL;
   req->hostname = NULL;
@@ -172,17 +179,20 @@ int uv_getaddrinfo(uv_loop_t* loop,
     len += service_len;
   }
 
-  if (hostname) {
+  if (hostname)
     req->hostname = memcpy(buf + len, hostname, hostname_len);
-    len += hostname_len;
+
+  if (cb) {
+    uv__work_submit(loop,
+                    &req->work_req,
+                    uv__getaddrinfo_work,
+                    uv__getaddrinfo_done);
+    return 0;
+  } else {
+    uv__getaddrinfo_work(&req->work_req);
+    uv__getaddrinfo_done(&req->work_req, 0);
+    return req->retcode;
   }
-
-  uv__work_submit(loop,
-                  &req->work_req,
-                  uv__getaddrinfo_work,
-                  uv__getaddrinfo_done);
-
-  return 0;
 }
 
 

@@ -125,6 +125,7 @@ typedef struct uv_buf_t {
 
 typedef int uv_file;
 typedef int uv_os_sock_t;
+typedef int uv_os_fd_t;
 
 #define UV_ONCE_INIT PTHREAD_ONCE_INIT
 
@@ -218,7 +219,7 @@ typedef struct {
   uv_async_t wq_async;                                                        \
   uv_rwlock_t cloexec_lock;                                                   \
   uv_handle_t* closing_handles;                                               \
-  void* process_handles[1][2];                                                \
+  void* process_handles[2];                                                   \
   void* prepare_handles[2];                                                   \
   void* check_handles[2];                                                     \
   void* idle_handles[2];                                                      \
@@ -325,7 +326,7 @@ typedef struct {
   struct addrinfo* hints;                                                     \
   char* hostname;                                                             \
   char* service;                                                              \
-  struct addrinfo* res;                                                       \
+  struct addrinfo* addrinfo;                                                  \
   int retcode;
 
 #define UV_GETNAMEINFO_PRIVATE_FIELDS                                         \
