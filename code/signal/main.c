@@ -1,6 +1,16 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <uv.h>
+
+uv_loop_t* create_loop()
+{
+    uv_loop_t *loop = malloc(sizeof(uv_loop_t));
+    if (loop) {
+      uv_loop_init(loop);
+    }
+    return loop;
+}
 
 void signal_handler(uv_signal_t *handle, int signum)
 {
@@ -11,7 +21,7 @@ void signal_handler(uv_signal_t *handle, int signum)
 // two signal handlers in one loop
 void thread1_worker(void *userp)
 {
-    uv_loop_t *loop1 = uv_loop_new();
+    uv_loop_t *loop1 = create_loop();
 
     uv_signal_t sig1a, sig1b;
     uv_signal_init(loop1, &sig1a);
@@ -26,8 +36,8 @@ void thread1_worker(void *userp)
 // two signal handlers, each in its own loop
 void thread2_worker(void *userp)
 {
-    uv_loop_t *loop2 = uv_loop_new();
-    uv_loop_t *loop3 = uv_loop_new();
+    uv_loop_t *loop2 = create_loop();
+    uv_loop_t *loop3 = create_loop();
 
     uv_signal_t sig2;
     uv_signal_init(loop2, &sig2);
