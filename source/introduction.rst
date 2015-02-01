@@ -6,9 +6,9 @@ a high performance evented I/O library which offers the same API on Windows and 
 
 It is meant to cover the main areas of libuv, but is not a comprehensive
 reference discussing every function and data structure. The `official libuv
-documentation`_ is included directly in the libuv header file.
+documentation`_ may be consulted for full details.
 
-.. _official libuv documentation: https://github.com/joyent/libuv/blob/master/include/uv.h
+.. _official libuv documentation: http://docs.libuv.org/en/v1.x/
 
 This book is still a work in progress, so sections may be incomplete, but
 I hope you will enjoy it as it grows.
@@ -47,24 +47,22 @@ Since then libuv has continued to mature and become a high quality standalone
 library for system programming. Users outside of node.js include Mozilla's
 Rust_ programming language, and a variety_ of language bindings.
 
-The first independently release version of libuv was 0.10.2.
-
 Code
 ----
 
 All the code from this book is included as part of the source of the book on
 Github. `Clone`_/`Download`_ the book and run ``make`` in the ``code/``
 folder to compile all the examples. This book and the code is based on libuv
-version `v0.11.29`_ and a version is included in the ``libuv/`` folder
+version `v1.3.0`_ and a version is included in the ``libuv/`` folder
 which will be compiled automatically.
 
 .. _Clone: https://github.com/nikhilm/uvbook
 .. _Download: https://github.com/nikhilm/uvbook/downloads
-.. _v0.11.29: https://github.com/joyent/libuv/tags
+.. _v1.3.0: https://github.com/libuv/libuv/tags
 .. _V8: http://code.google.com/p/v8/
 .. _libev: http://software.schmorp.de/pkg/libev.html
-.. _libuv: https://github.com/joyent/libuv
+.. _libuv: https://github.com/libuv/libuv
 .. _node.js: http://www.nodejs.org
 .. _libev was removed: https://github.com/joyent/libuv/issues/485
 .. _Rust: http://rust-lang.org
-.. _variety: https://github.com/joyent/libuv/wiki/Projects-that-use-libuv
+.. _variety: https://github.com/libuv/libuv/wiki/Projects-that-use-libuv
