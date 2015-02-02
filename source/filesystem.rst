@@ -65,10 +65,13 @@ The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 26-40
-    :emphasize-lines: 2,6,13
+    :emphasize-lines: 2,8,12
 
 In the case of a read call, you should pass an *initialized* buffer which will
-be filled with data before the read callback is triggered.
+be filled with data before the read callback is triggered. The ``uv_fs_*``
+operations map almost directly to certain POSIX functions, so EOF is indicated
+in this case by ``result`` being 0. In the case of streams or pipes, the
+``UV_EOF`` constant would have been passed as a status instead.
 
 Here you see a common pattern when writing asynchronous programs. The
 ``uv_fs_close()`` call is performed synchronously. *Usually tasks which are

@@ -25,13 +25,12 @@ void on_write(uv_fs_t *req) {
 
 void on_read(uv_fs_t *req) {
     if (req->result < 0) {
-        if (req->result == UV_EOF) {
-            uv_fs_t close_req;
-            // synchronous
-            uv_fs_close(uv_default_loop(), &close_req, open_req.result, NULL);
-        } else {
-            fprintf(stderr, "Read error: %s\n", uv_strerror(req->result));
-        }
+        fprintf(stderr, "Read error: %s\n", uv_strerror(req->result));
+    }
+    else if (req->result == 0) {
+        uv_fs_t close_req;
+        // synchronous
+        uv_fs_close(uv_default_loop(), &close_req, open_req.result, NULL);
     }
     else if (req->result > 0) {
         iov.len = req->result;
