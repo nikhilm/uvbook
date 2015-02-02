@@ -27,8 +27,7 @@ threads are different on all platforms, with different levels of completeness.
 
 This chapter makes the following assumption: **There is only one event loop,
 running in one thread (the main thread)**. No other thread interacts
-with the event loop (except using ``uv_async_send``). :doc:`multiple` covers
-running event loops in different threads and managing them.
+with the event loop (except using ``uv_async_send``).
 
 Core thread operations
 ----------------------
