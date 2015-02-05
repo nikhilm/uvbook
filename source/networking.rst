@@ -20,9 +20,9 @@ Server
 
 Server sockets proceed by:
 
-1. ``uv_tcp_init`` the TCP watcher.
+1. ``uv_tcp_init`` the TCP handle.
 2. ``uv_tcp_bind`` it.
-3. Call ``uv_listen`` on the watcher to have a callback invoked whenever a new
+3. Call ``uv_listen`` on the handle to have a callback invoked whenever a new
    connection is established by a client.
 4. Use ``uv_accept`` to accept the connection.
 5. Use :ref:`stream operations <buffers-and-streams>` to communicate with the
@@ -33,8 +33,8 @@ Here is a simple echo server
 .. rubric:: tcp-echo-server/main.c - The listen socket
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 54-
-    :emphasize-lines: 4-5,7-9
+    :lines: 56-
+    :emphasize-lines: 4-5,7-10
 
 You can see the utility function ``uv_ip4_addr`` being used to convert from
 a human readable IP address, port pair to the sockaddr_in structure required by
@@ -49,13 +49,13 @@ Most of the setup functions are synchronous since they are CPU-bound.
 arguments is the backlog queue -- the maximum length of queued connections.
 
 When a connection is initiated by clients, the callback is required to set up
-a watcher for the client socket and associate the watcher using ``uv_accept``.
+a handle for the client socket and associate the handle using ``uv_accept``.
 In this case we also establish interest in reading from this stream.
 
 .. rubric:: tcp-echo-server/main.c - Accepting the client
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 38-52
+    :lines: 38-54
     :emphasize-lines: 9-10
 
 The remaining set of functions is very similar to the streams example and can
@@ -75,22 +75,25 @@ callback of ``uv_listen`` is used by ``uv_tcp_connect``. Try::
 
     uv_connect_t* connect = (uv_connect_t*)malloc(sizeof(uv_connect_t));
 
-    struct sockaddr_in dest = uv_ip4_addr("127.0.0.1", 80);
+    struct sockaddr_in dest;
+    uv_ip4_addr("127.0.0.1", 80, &dest);
 
     uv_tcp_connect(connect, socket, dest, on_connect);
 
-where ``on_connect`` will be called after the connection is established.
+where ``on_connect`` will be called after the connection is established. The
+callback receives the ``uv_connect_t`` struct, which has a member ``.handle``
+pointing to the socket.
 
 UDP
 ---
 
 The `User Datagram Protocol`_ offers connectionless, unreliable network
 communication. Hence libuv doesn't offer a stream. Instead libuv provides
-non-blocking UDP support via the `uv_udp_t` (for receiving) and `uv_udp_send_t`
-(for sending) structures and related functions.  That said, the actual API for
-reading/writing is very similar to normal stream reads. To look at how UDP can
-be used, the example shows the first stage of obtaining an IP address from
-a `DHCP`_ server -- DHCP Discover.
+non-blocking UDP support via the `uv_udp_t` handle (for receiving) and
+`uv_udp_send_t` request (for sending) and related functions. That said, the
+actual API for reading/writing is very similar to normal stream reads. To look
+at how UDP can be used, the example shows the first stage of obtaining an IP
+address from a `DHCP`_ server -- DHCP Discover.
 
 .. note::
 
@@ -100,7 +103,7 @@ a `DHCP`_ server -- DHCP Discover.
 .. rubric:: udp-dhcp/main.c - Setup and send UDP packets
 .. literalinclude:: ../code/udp-dhcp/main.c
     :linenos:
-    :lines: 7-11,107-
+    :lines: 7-11,104-
     :emphasize-lines: 8,10-11,17-18,21
 
 .. note::
@@ -111,23 +114,26 @@ a `DHCP`_ server -- DHCP Discover.
     randomly assigns a port.
 
 First we setup the receiving socket to bind on all interfaces on port 68 (DHCP
-client) and start a read watcher on it. Then we setup a similar send socket and
-use ``uv_udp_send`` to send a *broadcast message* on port 67 (DHCP server).
+client) and start a read on it. This will read back responses from any DHCP
+server that replies. We use the UV_UDP_REUSEADDR flag to play nice with any
+other system DHCP clients that are running on this computer on the same port.
+Then we setup a similar send socket and use ``uv_udp_send`` to send
+a *broadcast message* on port 67 (DHCP server).
 
 It is **necessary** to set the broadcast flag, otherwise you will get an
-``EACCES`` error [#]_. The exact message being sent is irrelevant to this book
-and you can study the code if you are interested. As usual the read and write
-callbacks will receive a status code of -1 if something went wrong.
+``EACCES`` error [#]_. The exact message being sent is not relevant to this
+book and you can study the code if you are interested. As usual the read and
+write callbacks will receive a status code of < 0 if something went wrong.
 
 Since UDP sockets are not connected to a particular peer, the read callback
 receives an extra parameter about the sender of the packet.
 
-``nread`` may be zero if there is no more data to be read. If ``addr`` is not
-NULL, it indicates that an empty datagram was received from the host at
-``addr``. The ``flags``
-parameter may be ``UV_UDP_PARTIAL`` if the buffer provided by your allocator
-was not large enough to hold the data. *In this case the OS will discard the
-data that could not fit* (That's UDP for you!).
+``nread`` may be zero if there is no more data to be read. If ``addr`` is NULL,
+it indicates there is nothing to read (the callback shouldn't do anything), if
+not NULL, it indicates that an empty datagram was received from the host at
+``addr``. The ``flags`` parameter may be ``UV_UDP_PARTIAL`` if the buffer
+provided by your allocator was not large enough to hold the data. *In this case
+the OS will discard the data that could not fit* (That's UDP for you!).
 
 .. rubric:: udp-dhcp/main.c - Reading packets
 .. literalinclude:: ../code/udp-dhcp/main.c
@@ -156,9 +162,13 @@ Multicast
 A socket can (un)subscribe to a multicast group using:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1021-1024
+    :lines: 594-597
 
 where ``membership`` is ``UV_JOIN_GROUP`` or ``UV_LEAVE_GROUP``.
+
+The concepts of multicasting are nicely explained in `this guide`_.
+
+.. _this guide: http://www.tldp.org/HOWTO/Multicast-HOWTO-2.html
 
 Local loopback of multicast packets is enabled by default [#]_, use
 ``uv_udp_set_multicast_loop`` to switch it off.
@@ -183,7 +193,8 @@ Freenode to see an example of DNS resolution.
 If ``uv_getaddrinfo`` returns non-zero, something went wrong in the setup and
 your callback won't be invoked at all. All arguments can be freed immediately
 after ``uv_getaddrinfo`` returns. The `hostname`, `servname` and `hints`
-structures are documented in `the getaddrinfo man page <getaddrinfo>`_.
+structures are documented in `the getaddrinfo man page <getaddrinfo>`_. The
+callback can be ``NULL`` in which case the function will run synchronously.
 
 In the resolver callback, you can pick any IP from the linked list of ``struct
 addrinfo(s)``. This also demonstrates ``uv_tcp_connect``. It is necessary to
@@ -194,6 +205,10 @@ call ``uv_freeaddrinfo`` in the callback.
     :linenos:
     :lines: 42-60
     :emphasize-lines: 8,16
+
+libuv also provides the inverse `uv_getnameinfo`_.
+
+.. _uv_getnameinfo: http://docs.libuv.org/en/v1.x/dns.html#c.uv_getnameinfo
 
 Network interfaces
 ------------------

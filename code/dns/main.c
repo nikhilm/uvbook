@@ -35,7 +35,7 @@ void on_connect(uv_connect_t *req, int status) {
         return;
     }
 
-    uv_read_start((uv_stream_t*) req->data, alloc_buffer, on_read);
+    uv_read_start((uv_stream_t*) req->handle, alloc_buffer, on_read);
     free(req);
 }
 
@@ -53,7 +53,6 @@ void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
     uv_tcp_t *socket = (uv_tcp_t*) malloc(sizeof(uv_tcp_t));
     uv_tcp_init(loop, socket);
 
-    connect_req->data = (void*) socket;
     uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
 
     uv_freeaddrinfo(res);

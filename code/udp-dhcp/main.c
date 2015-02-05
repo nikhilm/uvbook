@@ -96,7 +96,7 @@ uv_buf_t make_discover_msg() {
 
 void on_send(uv_udp_send_t *req, int status) {
     if (status) {
-        fprintf(stderr, "Send error %s\n", uv_err_name(status));
+        fprintf(stderr, "Send error %s\n", uv_strerror(status));
         return;
     }
 }
@@ -106,21 +106,21 @@ int main() {
 
     uv_udp_init(loop, &recv_socket);
     struct sockaddr_in recv_addr;
-    assert(uv_ip4_addr("0.0.0.0", 68, &recv_addr) == 0);
-    uv_udp_bind(&recv_socket, (const struct sockaddr *)&recv_addr, 0);
+    uv_ip4_addr("0.0.0.0", 68, &recv_addr);
+    uv_udp_bind(&recv_socket, (const struct sockaddr *)&recv_addr, UV_UDP_REUSEADDR);
     uv_udp_recv_start(&recv_socket, alloc_buffer, on_read);
 
     uv_udp_init(loop, &send_socket);
-    struct sockaddr_in bind_addr;
-    assert(uv_ip4_addr("0.0.0.0", 0, &bind_addr) == 0);
-    uv_udp_bind(&send_socket, (const struct sockaddr *)&bind_addr, 0);
+    struct sockaddr_in broadcast_addr;
+    uv_ip4_addr("0.0.0.0", 0, &broadcast_addr);
+    uv_udp_bind(&send_socket, (const struct sockaddr *)&broadcast_addr, 0);
     uv_udp_set_broadcast(&send_socket, 1);
 
     uv_udp_send_t send_req;
     uv_buf_t discover_msg = make_discover_msg();
 
     struct sockaddr_in send_addr;
-    assert(uv_ip4_addr("255.255.255.255", 67, &send_addr) == 0);
+    uv_ip4_addr("255.255.255.255", 67, &send_addr);
     uv_udp_send(&send_req, &send_socket, &discover_msg, 1, (const struct sockaddr *)&send_addr, on_send);
 
     return uv_run(loop, UV_RUN_DEFAULT);
