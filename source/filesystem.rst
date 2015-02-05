@@ -149,6 +149,10 @@ a collection of a pointer to bytes (``uv_buf_t.base``) and the length
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.
 
+.. ERROR::
+
+    THIS PROGRAM DOES NOT ALWAYS WORK, NEED SOMETHING BETTER**
+
 To demonstrate streams we will need to use ``uv_pipe_t``. This allows streaming
 local files [#]_. Here is a simple tee utility using libuv.  Doing all operations
 asynchronously shows the power of evented I/O. The two writes won't block each
