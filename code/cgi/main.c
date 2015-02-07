@@ -38,6 +38,7 @@ void invoke_cgi_script(uv_tcp_t *client) {
     options.file = args[0];
     options.args = args;
 
+    // Set this so we can close the socket after the child process exits.
     child_req.data = (void*) client;
     int r;
     if ((r = uv_spawn(loop, &child_req, &options))) {
