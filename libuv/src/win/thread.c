@@ -100,7 +100,7 @@ static NOINLINE void uv__once_inner(uv_once_t* guard,
 
   } else {
     /* We lost the race. Destroy the event we created and wait for the */
-    /* existing one todv become signaled. */
+    /* existing one to become signaled. */
     CloseHandle(created_event);
     result = WaitForSingleObject(existing_event, INFINITE);
     assert(result == WAIT_OBJECT_0);
@@ -118,6 +118,82 @@ void uv_once(uv_once_t* guard, void (*callback)(void)) {
 }
 
 
+/* Verify that uv_thread_t can be stored in a TLS slot. */
+STATIC_ASSERT(sizeof(uv_thread_t) <= sizeof(void*));
+
+static uv_key_t uv__current_thread_key;
+static uv_once_t uv__current_thread_init_guard = UV_ONCE_INIT;
+
+
+static void uv__init_current_thread_key(void) {
+  if (uv_key_create(&uv__current_thread_key))
+    abort();
+}
+
+
+struct thread_ctx {
+  void (*entry)(void* arg);
+  void* arg;
+  uv_thread_t self;
+};
+
+
+static UINT __stdcall uv__thread_start(void* arg) {
+  struct thread_ctx *ctx_p;
+  struct thread_ctx ctx;
+
+  ctx_p = arg;
+  ctx = *ctx_p;
+  free(ctx_p);
+
+  uv_once(&uv__current_thread_init_guard, uv__init_current_thread_key);
+  uv_key_set(&uv__current_thread_key, (void*) ctx.self);
+
+  ctx.entry(ctx.arg);
+
+  return 0;
+}
+
+
+int uv_thread_create(uv_thread_t *tid, void (*entry)(void *arg), void *arg) {
+  struct thread_ctx* ctx;
+  int err;
+  HANDLE thread;
+
+  ctx = malloc(sizeof(*ctx));
+  if (ctx == NULL)
+    return UV_ENOMEM;
+
+  ctx->entry = entry;
+  ctx->arg = arg;
+
+  /* Create the thread in suspended state so we have a chance to pass
+   * its own creation handle to it */   
+  thread = (HANDLE) _beginthreadex(NULL,
+                                   0,
+                                   uv__thread_start,
+                                   ctx,
+                                   CREATE_SUSPENDED,
+                                   NULL);
+  if (thread == NULL) {
+    err = errno;
+    free(ctx);
+  } else {
+    err = 0;
+    *tid = thread;
+    ctx->self = thread;
+    ResumeThread(thread);
+  }
+
+  return err;
+}
+
+
+uv_thread_t uv_thread_self(void) {
+  return (uv_thread_t) uv_key_get(&uv__current_thread_key);
+}
+
+
 int uv_thread_join(uv_thread_t *tid) {
   if (WaitForSingleObject(*tid, INFINITE))
     return uv_translate_sys_error(GetLastError());
@@ -126,6 +202,11 @@ int uv_thread_join(uv_thread_t *tid) {
     *tid = 0;
     return 0;
   }
+}
+
+
+int uv_thread_equal(const uv_thread_t* t1, const uv_thread_t* t2) {
+  return *t1 == *t2;
 }
 
 

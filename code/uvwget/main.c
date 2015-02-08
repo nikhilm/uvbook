@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <uv.h>
@@ -13,14 +14,14 @@ typedef struct curl_context_s {
 } curl_context_t;
 
 curl_context_t *create_curl_context(curl_socket_t sockfd) {
-    int r;
     curl_context_t *context;
 
     context = (curl_context_t*) malloc(sizeof *context);
 
     context->sockfd = sockfd;
 
-    r = uv_poll_init_socket(loop, &context->poll_handle, sockfd);
+    int r = uv_poll_init_socket(loop, &context->poll_handle, sockfd);
+    assert(r == 0);
     context->poll_handle.data = context;
 
     return context;
@@ -81,8 +82,9 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     uv_timer_stop(&timeout);
     int running_handles;
     int flags = 0;
-    if (events & UV_READABLE) flags |= CURL_CSELECT_IN;
-    if (events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
+    if (status < 0)                      flags = CURL_CSELECT_ERR;
+    if (!status && events & UV_READABLE) flags |= CURL_CSELECT_IN;
+    if (!status && events & UV_WRITABLE) flags |= CURL_CSELECT_OUT;
 
     curl_context_t *context;
 
@@ -92,7 +94,7 @@ void curl_perform(uv_poll_t *req, int status, int events) {
     check_multi_info();   
 }
 
-void on_timeout(uv_timer_t *req, int status) {
+void on_timeout(uv_timer_t *req) {
     int running_handles;
     curl_multi_socket_action(curl_handle, CURL_SOCKET_TIMEOUT, 0, &running_handles);
     check_multi_info();
@@ -112,8 +114,8 @@ int handle_socket(CURL *easy, curl_socket_t s, int action, void *userp, void *so
         }
         else {
             curl_context = create_curl_context(s);
+            curl_multi_assign(curl_handle, s, (void *) curl_context);
         }
-        curl_multi_assign(curl_handle, s, (void *) curl_context);
     }
 
     switch (action) {

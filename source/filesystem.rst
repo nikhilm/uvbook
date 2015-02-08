@@ -9,15 +9,17 @@ Simple filesystem read/write is achieved using the ``uv_fs_*`` functions and the
     The libuv filesystem operations are different from :doc:`socket operations
     <networking>`. Socket operations use the non-blocking operations provided
     by the operating system. Filesystem operations use blocking functions
-    internally, but invoke these functions in a thread pool and notify watchers
-    registered with the event loop when application interaction is required.
+    internally, but invoke these functions in a `thread pool`_ and notify
+    watchers registered with the event loop when application interaction is
+    required.
+
+.. _thread pool: http://docs.libuv.org/en/v1.x/threadpool.html#thread-pool-work-scheduling
 
 All filesystem functions have two forms - *synchronous* and *asynchronous*.
 
-The *synchronous* forms automatically get called (and **block**) if no callback
-is specified. The return value of functions is the equivalent Unix return value
-(usually 0 on success, -1 on error).
-
+The *synchronous* forms automatically get called (and **block**) if the
+callback is null. The return value of functions is a :ref:`libuv error code
+<libuv-error-handling>`. This is usually only useful for synchronous calls.
 The *asynchronous* form is called when a callback is passed and the return
 value is 0.
 
@@ -53,25 +55,23 @@ a callback for when the file is opened:
 .. rubric:: uvcat/main.c - opening a file
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 42-53
-    :emphasize-lines: 2, 4
+    :lines: 42-54
+    :emphasize-lines: 4, 6-7
 
 The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
 ``uv_fs_open`` callback. If the file is successfully opened, we start reading it.
 
-.. warning::
-
-    The ``uv_fs_req_cleanup()`` function must always be called on filesystem
-    requests to free internal memory allocations in libuv.
-
 .. rubric:: uvcat/main.c - read callback
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 26-41
-    :emphasize-lines: 4,7,14
+    :lines: 26-40
+    :emphasize-lines: 2,8,12
 
 In the case of a read call, you should pass an *initialized* buffer which will
-be filled with data before the read callback is triggered.
+be filled with data before the read callback is triggered. The ``uv_fs_*``
+operations map almost directly to certain POSIX functions, so EOF is indicated
+in this case by ``result`` being 0. In the case of streams or pipes, the
+``UV_EOF`` constant would have been passed as a status instead.
 
 Here you see a common pattern when writing asynchronous programs. The
 ``uv_fs_close()`` call is performed synchronously. *Usually tasks which are
@@ -89,7 +89,7 @@ callbacks.
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
     :lines: 16-24
-    :emphasize-lines: 7
+    :emphasize-lines: 6
 
 .. warning::
 
@@ -101,8 +101,13 @@ We set the dominos rolling in ``main()``:
 .. rubric:: uvcat/main.c
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 55-59
+    :lines: 55-
     :emphasize-lines: 2
+
+.. warning::
+
+    The ``uv_fs_req_cleanup()`` function must always be called on filesystem
+    requests to free internal memory allocations in libuv.
 
 Filesystem operations
 ---------------------
@@ -114,14 +119,14 @@ same patterns as the read/write/open calls, returning the result in the
 
 .. rubric:: Filesystem operations
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1918-1994
+    :lines: 1084-1195
 
 .. _buffers-and-streams:
 
 Buffers and Streams
 -------------------
 
-The basic I/O primitive in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
+The basic I/O handle in libuv is the stream (``uv_stream_t``). TCP sockets, UDP
 sockets, and pipes for file I/O and IPC are all treated as stream subclasses.
 
 Streams are initialized using custom functions for each subclass, then operated
@@ -143,6 +148,10 @@ a collection of a pointer to bytes (``uv_buf_t.base``) and the length
 (``uv_buf_t.len``). The ``uv_buf_t`` is lightweight and passed around by value.
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.
+
+.. ERROR::
+
+    THIS PROGRAM DOES NOT ALWAYS WORK, NEED SOMETHING BETTER**
 
 To demonstrate streams we will need to use ``uv_pipe_t``. This allows streaming
 local files [#]_. Here is a simple tee utility using libuv.  Doing all operations
@@ -239,14 +248,14 @@ The file change notification is started using ``uv_fs_event_init()``:
 .. rubric:: onchange/main.c - The setup
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
-    :lines: 29-35
-    :emphasize-lines: 6
+    :lines: 26-
+    :emphasize-lines: 15
 
 The third argument is the actual file or directory to monitor. The last
 argument, ``flags``, can be:
 
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 2156, 2165, 2172
+    :lines: 1299, 1308, 1315
 
 ``UV_FS_EVENT_WATCH_ENTRY`` and ``UV_FS_EVENT_STAT`` don't do anything (yet).
 ``UV_FS_EVENT_RECURSIVE`` will start watching subdirectories as well on
@@ -254,12 +263,13 @@ supported platforms.
 
 The callback will receive the following arguments:
 
-  #. ``uv_fs_event_t *handle`` - The watcher. The ``path`` field of the watcher
+  #. ``uv_fs_event_t *handle`` - The handle. The ``path`` field of the handle
      is the file on which the watch was set.
   #. ``const char *filename`` - If a directory is being monitored, this is the
      file which was changed. Only non-``null`` on Linux and Windows. May be ``null``
      even on those platforms.
-  #. ``int flags`` - one of ``UV_RENAME`` or ``UV_CHANGE``.
+  #. ``int flags`` - one of ``UV_RENAME`` or ``UV_CHANGE``, or a bitwise OR of
+       both.
   #. ``int status`` - Currently 0.
 
 In our example we simply print the arguments and run the command using
@@ -268,7 +278,7 @@ In our example we simply print the arguments and run the command using
 .. rubric:: onchange/main.c - file change notification callback
 .. literalinclude:: ../code/onchange/main.c
     :linenos:
-    :lines: 9-18
+    :lines: 9-24
 
 ----
 

@@ -7,10 +7,16 @@ uv_loop_t *loop;
 const char *command;
 
 void run_command(uv_fs_event_t *handle, const char *filename, int events, int status) {
-    fprintf(stderr, "Change detected in %s: ", handle->path);
-    if (events == UV_RENAME)
+    char path[1024];
+    size_t size = 1023;
+    // Does not handle error if path is longer than 1023.
+    uv_fs_event_getpath(handle, path, &size);
+    path[++size] = '\0';
+
+    fprintf(stderr, "Change detected in %s: ", path);
+    if (events & UV_RENAME)
         fprintf(stderr, "renamed");
-    if (events == UV_CHANGE)
+    if (events & UV_CHANGE)
         fprintf(stderr, "changed");
 
     fprintf(stderr, " %s\n", filename ? filename : "");

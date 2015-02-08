@@ -52,9 +52,6 @@
 # include <CoreServices/CoreServices.h>
 #endif
 
-#define STATIC_ASSERT(expr)                                                   \
-  void uv__static_assert(int static_assert_failed[1 - 2 * !(expr)])
-
 #define ACCESS_ONCE(type, var)                                                \
   (*(volatile type*) &(var))
 
@@ -146,6 +143,11 @@ enum {
   UV_HANDLE_IPV6          = 0x10000 /* Handle is bound to a IPv6 socket. */
 };
 
+/* loop flags */
+enum {
+  UV_LOOP_BLOCK_SIGPROF = 1
+};
+
 typedef enum {
   UV_CLOCK_PRECISE = 0,  /* Use the highest resolution clock available. */
   UV_CLOCK_FAST = 1      /* Use the fastest clock with <= 1ms granularity. */
@@ -219,7 +221,7 @@ void uv__signal_loop_cleanup(uv_loop_t* loop);
 /* platform specific */
 uint64_t uv__hrtime(uv_clocktype_t type);
 int uv__kqueue_init(uv_loop_t* loop);
-int uv__platform_loop_init(uv_loop_t* loop, int default_loop);
+int uv__platform_loop_init(uv_loop_t* loop);
 void uv__platform_loop_delete(uv_loop_t* loop);
 void uv__platform_invalidate_fd(uv_loop_t* loop, int fd);
 
@@ -305,13 +307,5 @@ UV_UNUSED(static char* uv__basename_r(const char* path)) {
 
   return s + 1;
 }
-
-
-#ifdef HAVE_DTRACE
-#include "uv-dtrace.h"
-#else
-#define UV_TICK_START(arg0, arg1)
-#define UV_TICK_STOP(arg0, arg1)
-#endif
 
 #endif /* UV_UNIX_INTERNAL_H_ */

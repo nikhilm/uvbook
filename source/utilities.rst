@@ -62,8 +62,8 @@ An actual timer example is in the :ref:`reference count section
 Event loop reference count
 --------------------------
 
-The event loop only runs as long as there are active watchers. This system
-works by having every watcher increase the reference count of the event loop
+The event loop only runs as long as there are active handles. This system
+works by having every handle increase the reference count of the event loop
 when it is started and decreasing the reference count when stopped. It is also
 possible to manually change the reference count of handles using::
 
@@ -73,7 +73,7 @@ possible to manually change the reference count of handles using::
 These functions can be used to allow a loop to exit even when a watcher is
 active or to use custom objects to keep the loop alive.
 
-The former can be used with interval timers. You might have a garbage collector
+The latter can be used with interval timers. You might have a garbage collector
 which runs every X seconds, or your network service might send a heartbeat to
 others periodically, but you don't want to have to stop them along all clean
 exit paths or error scenarios. Or you want the program to exit when all your
@@ -81,7 +81,7 @@ other watchers are done. In that case just unref the timer immediately after
 creation so that if it is the only watcher running then ``uv_run`` will still
 exit.
 
-The later is used in node.js where some libuv methods are being bubbled up to
+This is also used in node.js where some libuv methods are being bubbled up to
 the JS API. A ``uv_handle_t`` (the superclass of all watchers) is created per
 JS object and can be ref/unrefed.
 
@@ -95,26 +95,25 @@ We initialize the garbage collector timer, then immediately ``unref`` it.
 Observe how after 9 seconds, when the fake job is done, the program
 automatically exits, even though the garbage collector is still running.
 
-Idle watcher pattern
---------------------
+Idler pattern
+-------------
 
-The callbacks of idle watchers are only invoked when the event loop has no
-other pending events. In such a situation they are invoked once every iteration
-of the loop. The idle callback can be used to perform some very low priority
-activity. For example, you could dispatch a summary of the daily application
-performance to the developers for analysis during periods of idleness, or use
-the application's CPU time to perform SETI calculations :) An idle watcher is
-also useful in a GUI application. Say you are using an event loop for a file
-download. If the TCP socket is still being established and no other events are
-present your event loop will pause (**block**), which means your progress bar
-will freeze and the user will think the application crashed. In such a case
-queue up and idle watcher to keep the UI operational.
+The callbacks of idle handles are invoked once per event loop. The idle
+callback can be used to perform some very low priority activity. For example,
+you could dispatch a summary of the daily application performance to the
+developers for analysis during periods of idleness, or use the application's
+CPU time to perform SETI calculations :) An idle watcher is also useful in
+a GUI application. Say you are using an event loop for a file download. If the
+TCP socket is still being established and no other events are present your
+event loop will pause (**block**), which means your progress bar will freeze
+and the user will face an unresponsive application. In such a case queue up and
+idle watcher to keep the UI operational.
 
 .. rubric:: idle-compute/main.c
 .. literalinclude:: ../code/idle-compute/main.c
     :linenos:
-    :lines: 5-9, 32-
-    :emphasize-lines: 38
+    :lines: 5-9, 34-
+    :emphasize-lines: 13
 
 Here we initialize the idle watcher and queue it up along with the actual
 events we are interested in. ``crunch_away`` will now be called repeatedly
@@ -198,7 +197,7 @@ tasks in small increments as decided by your application. Some libraries though
 will not allow such access, providing only a standard blocking function which
 will perform the entire I/O transaction and only then return. It is unwise to
 use these in the event loop thread, use the :ref:`libuv-work-queue` instead. Of
-course this will also mean losing granular control on the library.
+course, this will also mean losing granular control on the library.
 
 The ``uv_poll`` section of libuv simply watches file descriptors using the
 operating system notification mechanism. In some sense, all the I/O operations
@@ -217,7 +216,7 @@ progress with the download whenever libuv notifies of I/O readiness.
 .. rubric:: uvwget/main.c - The setup
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 1-9,135-
+    :lines: 1-9,140-
     :emphasize-lines: 7,21,24-25
 
 The way each library is integrated with libuv will vary. In the case of
@@ -237,8 +236,8 @@ So we add each argument as an URL
 .. rubric:: uvwget/main.c - Adding urls
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 10-27
-    :emphasize-lines: 14
+    :lines: 39-56
+    :emphasize-lines: 13-14
 
 We let libcurl directly write the data to a file, but much more is possible if
 you so desire.
@@ -253,8 +252,8 @@ on sockets whenever ``handle_socket`` is called.
 .. rubric:: uvwget/main.c - Setting up polling
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 102-133
-    :emphasize-lines: 8,10,15,18,22
+    :lines: 102-140
+    :emphasize-lines: 9,11,15,21,24
 
 We are interested in the socket fd ``s``, and the ``action``. For every socket
 we create a ``uv_poll_t`` handle if it doesn't exist, and associate it with the
@@ -270,15 +269,15 @@ whenever the socket is ready for reading or writing. Calling ``uv_poll_start``
 multiple times on the same handle is acceptable, it will just update the events
 mask with the new value. ``curl_perform`` is the crux of this program.
 
-.. rubric:: uvwget/main.c - Setting up polling
+.. rubric:: uvwget/main.c - Driving libcurl.
 .. literalinclude:: ../code/uvwget/main.c
     :linenos:
-    :lines: 57-89
-    :emphasize-lines: 2,5-6,12,18,20
+    :lines: 81-95
+    :emphasize-lines: 2,6-7,12,18,20
 
 The first thing we do is to stop the timer, since there has been some progress
-in the interval. Then depending on what event triggered the callback, we inform
-libcurl of the same. Then we call ``curl_multi_socket_action`` with the socket
+in the interval. Then depending on what event triggered the callback, we set
+the correct flags. Then we call ``curl_multi_socket_action`` with the socket
 that progressed and the flags informing about what events happened. At this
 point libcurl does all of its internal tasks in small increments, and will
 attempt to return as fast as possible, which is exactly what an evented program
@@ -286,6 +285,12 @@ wants in its main thread. libcurl keeps queueing messages into its own queue
 about transfer progress. In our case we are only interested in transfers that
 are completed. So we extract these messages, and clean up handles whose
 transfers are done.
+
+.. rubric:: uvwget/main.c - Reading transfer status.
+.. literalinclude:: ../code/uvwget/main.c
+    :linenos:
+    :lines: 58-79
+    :emphasize-lines: 6,9-10,13-14
 
 Check & Prepare watchers
 ------------------------
@@ -309,10 +314,6 @@ Let us first look at the interface provided to plugin authors.
 .. literalinclude:: ../code/plugin/plugin.h
     :linenos:
 
-.. rubric:: plugin/plugin.c
-.. literalinclude:: ../code/plugin/plugin.c
-    :linenos:
-
 You can similarly add more functions that plugin authors can use to do useful
 things in your application [#]_. A sample plugin using this API is:
 
@@ -328,6 +329,11 @@ library and can be loaded by running our application::
     Loading libhello.dylib
     Registered plugin "Hello World!"
 
+.. NOTE::
+
+    The shared library filename will be different depending on platforms. On
+    Linux it is ``libhello.so``.
+
 This is done by using ``uv_dlopen`` to first load the shared library
 ``libhello.dylib``. Then we get access to the ``initialize`` function using
 ``uv_dlsym`` and invoke it.
@@ -336,7 +342,7 @@ This is done by using ``uv_dlopen`` to first load the shared library
 .. literalinclude:: ../code/plugin/main.c
     :linenos:
     :lines: 7-
-    :emphasize-lines: 14, 20, 25
+    :emphasize-lines: 15, 18, 24
 
 ``uv_dlopen`` expects a path to the shared library and sets the opaque
 ``uv_lib_t`` pointer. It returns 0 on success, -1 on error. Use ``uv_dlerror``
@@ -366,12 +372,13 @@ it reads/writes from. This is achieved with::
 
     int uv_tty_init(uv_loop_t*, uv_tty_t*, uv_file fd, int readable)
 
-If ``readable`` is false, ``uv_write`` calls to this stream will be
-**blocking**.
+Set ``readable`` to true if you plan to use ``uv_read_start()`` on the stream.
 
-It is then best to use ``uv_tty_set_mode`` to set the mode to *normal* (0)
-which enables most TTY formatting, flow-control and other settings. *raw* mode
-(1) is also supported.
+It is then best to use ``uv_tty_set_mode`` to set the mode to *normal*
+which enables most TTY formatting, flow-control and other settings. Other_ modes
+are also available.
+
+.. _Other: http://docs.libuv.org/en/v1.x/tty.html#c.uv_tty_mode_t
 
 Remember to call ``uv_tty_reset_mode`` when your program exits to restore the
 state of the terminal. Just good manners. Another set of good manners is to be
@@ -418,9 +425,9 @@ can try `ncurses`_.
 
 ----
 
-.. [#] mfp is My Fancy Plugin
 .. [#] I was first introduced to the term baton in this context, in Konstantin
        Käfer's excellent slides on writing node.js bindings --
        http://kkaefer.github.com/node-cpp-modules/#baton
+.. [#] mfp is My Fancy Plugin
 
 .. _libev man page: http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#COMMON_OR_USEFUL_IDIOMS_OR_BOTH

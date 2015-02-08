@@ -19,31 +19,18 @@
  * IN THE SOFTWARE.
  */
 
-/* Expose glibc-specific EAI_* error codes. Needs to be defined before we
- * include any headers.
- */
-#ifndef _GNU_SOURCE
-# define _GNU_SOURCE
-#endif
-
 #include "uv.h"
 #include "uv-common.h"
 
 #include <stdio.h>
 #include <assert.h>
+#include <stdarg.h>
 #include <stddef.h> /* NULL */
 #include <stdlib.h> /* malloc */
 #include <string.h> /* memset */
 
 #if !defined(_WIN32)
 # include <net/if.h> /* if_nametoindex */
-#endif
-
-/* EAI_* constants. */
-#if !defined(_WIN32)
-# include <sys/types.h>
-# include <sys/socket.h>
-# include <netdb.h>
 #endif
 
 #define XX(uc, lc) case UV_##uc: return sizeof(uv_##lc##_t);
@@ -271,64 +258,6 @@ int uv_udp_recv_stop(uv_udp_t* handle) {
 }
 
 
-struct thread_ctx {
-  void (*entry)(void* arg);
-  void* arg;
-};
-
-
-#ifdef _WIN32
-static UINT __stdcall uv__thread_start(void* arg)
-#else
-static void* uv__thread_start(void *arg)
-#endif
-{
-  struct thread_ctx *ctx_p;
-  struct thread_ctx ctx;
-
-  ctx_p = arg;
-  ctx = *ctx_p;
-  free(ctx_p);
-  ctx.entry(ctx.arg);
-
-  return 0;
-}
-
-
-int uv_thread_create(uv_thread_t *tid, void (*entry)(void *arg), void *arg) {
-  struct thread_ctx* ctx;
-  int err;
-
-  ctx = malloc(sizeof(*ctx));
-  if (ctx == NULL)
-    return UV_ENOMEM;
-
-  ctx->entry = entry;
-  ctx->arg = arg;
-
-#ifdef _WIN32
-  *tid = (HANDLE) _beginthreadex(NULL, 0, uv__thread_start, ctx, 0, NULL);
-  err = *tid ? 0 : errno;
-#else
-  err = pthread_create(tid, NULL, uv__thread_start, ctx);
-#endif
-
-  if (err)
-    free(ctx);
-
-  return err ? -1 : 0;
-}
-
-
-unsigned long uv_thread_self(void) {
-#ifdef _WIN32
-  return (unsigned long) GetCurrentThreadId();
-#else
-  return (unsigned long) pthread_self();
-#endif
-}
-
-
 void uv_walk(uv_loop_t* loop, uv_walk_cb walk_cb, void* arg) {
   QUEUE* q;
   uv_handle_t* h;
@@ -430,28 +359,28 @@ int uv_send_buffer_size(uv_handle_t* handle, int *value) {
   return uv__socket_sockopt(handle, SO_SNDBUF, value);
 }
 
-int uv_fs_event_getpath(uv_fs_event_t* handle, char* buf, size_t* len) {
+int uv_fs_event_getpath(uv_fs_event_t* handle, char* buffer, size_t* size) {
   size_t required_len;
 
   if (!uv__is_active(handle)) {
-    *len = 0;
+    *size = 0;
     return UV_EINVAL;
   }
 
-  required_len = strlen(handle->path) + 1;
-  if (required_len > *len) {
-    *len = required_len;
+  required_len = strlen(handle->path);
+  if (required_len > *size) {
+    *size = required_len;
     return UV_ENOBUFS;
   }
 
-  memcpy(buf, handle->path, required_len);
-  *len = required_len;
+  memcpy(buffer, handle->path, required_len);
+  *size = required_len;
 
   return 0;
 }
 
 
-void uv__fs_readdir_cleanup(uv_fs_t* req) {
+void uv__fs_scandir_cleanup(uv_fs_t* req) {
   uv__dirent_t** dents;
 
   dents = req->ptr;
@@ -462,7 +391,7 @@ void uv__fs_readdir_cleanup(uv_fs_t* req) {
 }
 
 
-int uv_fs_readdir_next(uv_fs_t* req, uv_dirent_t* ent) {
+int uv_fs_scandir_next(uv_fs_t* req, uv_dirent_t* ent) {
   uv__dirent_t** dents;
   uv__dirent_t* dent;
 
@@ -513,4 +442,87 @@ int uv_fs_readdir_next(uv_fs_t* req, uv_dirent_t* ent) {
 #endif
 
   return 0;
+}
+
+
+int uv_loop_configure(uv_loop_t* loop, uv_loop_option option, ...) {
+  va_list ap;
+  int err;
+
+  va_start(ap, option);
+  /* Any platform-agnostic options should be handled here. */
+  err = uv__loop_configure(loop, option, ap);
+  va_end(ap);
+
+  return err;
+}
+
+
+static uv_loop_t default_loop_struct;
+static uv_loop_t* default_loop_ptr;
+
+
+uv_loop_t* uv_default_loop(void) {
+  if (default_loop_ptr != NULL)
+    return default_loop_ptr;
+
+  if (uv_loop_init(&default_loop_struct))
+    return NULL;
+
+  default_loop_ptr = &default_loop_struct;
+  return default_loop_ptr;
+}
+
+
+uv_loop_t* uv_loop_new(void) {
+  uv_loop_t* loop;
+
+  loop = malloc(sizeof(*loop));
+  if (loop == NULL)
+    return NULL;
+
+  if (uv_loop_init(loop)) {
+    free(loop);
+    return NULL;
+  }
+
+  return loop;
+}
+
+
+int uv_loop_close(uv_loop_t* loop) {
+  QUEUE* q;
+  uv_handle_t* h;
+
+  if (!QUEUE_EMPTY(&(loop)->active_reqs))
+    return UV_EBUSY;
+
+  QUEUE_FOREACH(q, &loop->handle_queue) {
+    h = QUEUE_DATA(q, uv_handle_t, handle_queue);
+    if (!(h->flags & UV__HANDLE_INTERNAL))
+      return UV_EBUSY;
+  }
+
+  uv__loop_close(loop);
+
+#ifndef NDEBUG
+  memset(loop, -1, sizeof(*loop));
+#endif
+  if (loop == default_loop_ptr)
+    default_loop_ptr = NULL;
+
+  return 0;
+}
+
+
+void uv_loop_delete(uv_loop_t* loop) {
+  uv_loop_t* default_loop;
+  int err;
+
+  default_loop = default_loop_ptr;
+
+  err = uv_loop_close(loop);
+  assert(err == 0);
+  if (loop != default_loop)
+    free(loop);
 }

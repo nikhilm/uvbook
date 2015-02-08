@@ -27,8 +27,7 @@ threads are different on all platforms, with different levels of completeness.
 
 This chapter makes the following assumption: **There is only one event loop,
 running in one thread (the main thread)**. No other thread interacts
-with the event loop (except using ``uv_async_send``). :doc:`multiple` covers
-running event loops in different threads and managing them.
+with the event loop (except using ``uv_async_send``).
 
 Core thread operations
 ----------------------
@@ -78,15 +77,15 @@ The mutex functions are a **direct** map to the pthread equivalents.
 
 .. rubric:: libuv mutex functions
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 1834-1838
+    :lines: 1355-1360
 
 The ``uv_mutex_init()`` and ``uv_mutex_trylock()`` functions will return 0 on
-success, -1 on error instead of error codes.
+success, and an error code otherwise.
 
 If `libuv` has been compiled with debugging enabled, ``uv_mutex_destroy()``,
 ``uv_mutex_lock()`` and ``uv_mutex_unlock()`` will ``abort()`` on error.
 Similarly ``uv_mutex_trylock()`` will abort if the error is anything *other
-than* ``EAGAIN``.
+than* ``EAGAIN`` or ``EBUSY``.
 
 Recursive mutexes are supported by some platforms, but you should not rely on
 them. The BSD mutex implementation will raise an error if a thread which has
@@ -125,14 +124,14 @@ multiple writers, schedulers will usually give them higher priority, so if you
 add two writers, you'll see that both writers tend to finish first before the
 readers get a chance again.
 
+We also use barriers in the above example so that the main thread can wait for
+all readers and writers to indicate they have ended.
+
 Others
 ~~~~~~
 
 libuv also supports semaphores_, `condition variables`_ and barriers_ with APIs
 very similar to their pthread counterparts.
-
-In the case of condition variables, libuv also has a timeout on a wait, with
-platform specific quirks [#]_.
 
 .. _semaphores: http://en.wikipedia.org/wiki/Semaphore_(programming)
 .. _condition variables: http://en.wikipedia.org/wiki/Condition_variable#Waiting_and_signaling
@@ -169,6 +168,11 @@ only once**::
 After all threads are done, ``i == 1``.
 
 .. _libuv-work-queue:
+
+libuv v0.11.11 onwards also added a ``uv_key_t`` struct and api_ for
+thread-local storage.
+
+.. _api: http://docs.libuv.org/en/v1.x/threading.html#thread-local-storage
 
 libuv work queue
 ----------------
@@ -225,10 +229,6 @@ available. This allows you to cancel tasks on the libuv work queue. Only tasks
 that *are yet to be started* can be cancelled. If a task has *already started
 executing, or it has finished executing*, ``uv_cancel()`` **will fail**.
 
-.. WARNING::
-
-    ``uv_cancel()`` is only available on Unix!
-
 ``uv_cancel()`` is useful to cleanup pending tasks if the user requests
 termination. For example, a music player may queue up multiple directories to
 be scanned for audio files. If the user terminates the program, it should quit
@@ -243,7 +243,7 @@ up a signal handler for termination.
     :lines: 43-
 
 When the user triggers the signal by pressing ``Ctrl+C`` we send
-``uv_cancel()`` to all the workers. ``uv_cancel()`` will return ``-1`` for those that are already executing or finished.
+``uv_cancel()`` to all the workers. ``uv_cancel()`` will return ``0`` for those that are already executing or finished.
 
 .. rubric:: queue-cancel/main.c
 .. literalinclude:: ../code/queue-cancel/main.c
@@ -252,8 +252,7 @@ When the user triggers the signal by pressing ``Ctrl+C`` we send
     :emphasize-lines: 6
 
 For tasks that do get cancelled successfully, the *after* function is called
-with ``status`` set to ``-1`` and the loop error code is set to
-``UV_ECANCELED``.
+with ``status`` set to ``UV_ECANCELED``.
 
 .. rubric:: queue-cancel/main.c
 .. literalinclude:: ../code/queue-cancel/main.c
@@ -337,7 +336,7 @@ pointed out that using the ``data`` field is not thread safe, and
 ``uv_async_send()`` is actually only meant to wake up the event loop. Use
 a mutex or rwlock to ensure accesses are performed in the right order.
 
-.. warning::
+.. note::
 
     mutexes and rwlocks **DO NOT** work inside a signal handler, whereas
     ``uv_async_send`` does.
@@ -377,5 +376,3 @@ which binds a third party library. It may go something like this:
 
 .. _node.js is cancer: http://teddziuba.github.io/2011/10/node-js-is-cancer.html
 .. _bnoordhuis: https://github.com/bnoordhuis
-
-.. [#] https://github.com/joyent/libuv/blob/master/include/uv.h#L1853

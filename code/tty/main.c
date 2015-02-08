@@ -9,7 +9,7 @@ int main() {
     loop = uv_default_loop();
 
     uv_tty_init(loop, &tty, 1, 0);
-    uv_tty_set_mode(&tty, 0);
+    uv_tty_set_mode(&tty, UV_TTY_MODE_NORMAL);
     
     if (uv_guess_handle(1) == UV_TTY) {
         uv_write_t req;

@@ -38,7 +38,7 @@ void on_new_connection(uv_stream_t *server, int status) {
     uv_tcp_init(loop, client);
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
         uv_write_t *write_req = (uv_write_t*) malloc(sizeof(uv_write_t));
-        dummy_buf = uv_buf_init("", 0);
+        dummy_buf = uv_buf_init("a", 1);
         struct child_worker *worker = &workers[round_robin_counter];
         uv_write2(write_req, (uv_stream_t*) &worker->pipe, &dummy_buf, 1, (uv_stream_t*) client, NULL);
         round_robin_counter = (round_robin_counter + 1) % child_worker_count;

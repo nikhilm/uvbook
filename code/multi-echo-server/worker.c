@@ -54,7 +54,9 @@ void on_new_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
     uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof(uv_tcp_t));
     uv_tcp_init(loop, client);
     if (uv_accept(q, (uv_stream_t*) client) == 0) {
-        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), client->io_watcher.fd);
+        uv_os_fd_t fd;
+        uv_fileno((const uv_handle_t*) client, &fd);
+        fprintf(stderr, "Worker %d: Accepted fd %d\n", getpid(), fd);
         uv_read_start((uv_stream_t*) client, alloc_buffer, echo_read);
     }
     else {
@@ -65,7 +67,7 @@ void on_new_connection(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
 int main() {
     loop = uv_default_loop();
 
-    uv_pipe_init(loop, &queue, 1);
+    uv_pipe_init(loop, &queue, 1 /* ipc */);
     uv_pipe_open(&queue, 0);
     uv_read_start((uv_stream_t*)&queue, alloc_buffer, on_new_connection);
     return uv_run(loop, UV_RUN_DEFAULT);

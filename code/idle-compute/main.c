@@ -23,11 +23,11 @@ void on_type(uv_fs_t *req) {
         printf("Typed %s\n", buffer);
 
         uv_buf_t buf = uv_buf_init(buffer, 1024);
-        uv_fs_read(loop, &stdin_watcher, 1, &buf, 1, 0, on_type);
+        uv_fs_read(loop, &stdin_watcher, 0, &buf, 1, -1, on_type);
         uv_idle_start(&idler, crunch_away);
     }
     else if (stdin_watcher.result < 0) {
-        fprintf(stderr, "error opening file: %s\n", uv_err_name(req->result));
+        fprintf(stderr, "error opening file: %s\n", uv_strerror(req->result));
     }
 }
 
@@ -37,7 +37,7 @@ int main() {
     uv_idle_init(loop, &idler);
 
     uv_buf_t buf = uv_buf_init(buffer, 1024);
-    uv_fs_read(loop, &stdin_watcher, 1, &buf, 1, 0, on_type);
+    uv_fs_read(loop, &stdin_watcher, 0, &buf, 1, -1, on_type);
     uv_idle_start(&idler, crunch_away);
     return uv_run(loop, UV_RUN_DEFAULT);
 }

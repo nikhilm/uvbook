@@ -10,18 +10,19 @@ tasks.
 Stopping an event loop
 ~~~~~~~~~~~~~~~~~~~~~~
 
-``uv_stop()`` can be used to stop an event loop. The loop will stop running *on
-the next iteration*. This means that events that are ready to be processed in
-this iteration of the loop will still be processed, so ``uv_stop()`` can't be
-used as a kill switch. When ``uv_stop()`` is called, the loop **won't** block
-for i/o on this iteration. The semantics of these things can be a bit difficult
-to understand, so let's look at ``uv_run()`` where all the control flow occurs.
+``uv_stop()`` can be used to stop an event loop. The earliest the loop will
+stop running is *on the next iteration*, possibly later. This means that events
+that are ready to be processed in this iteration of the loop will still be
+processed, so ``uv_stop()`` can't be used as a kill switch. When ``uv_stop()``
+is called, the loop **won't** block for i/o on this iteration. The semantics of
+these things can be a bit difficult to understand, so let's look at
+``uv_run()`` where all the control flow occurs.
 
 .. rubric:: src/unix/core.c - uv_run
 .. literalinclude:: ../libuv/src/unix/core.c
     :linenos:
-    :lines: 301-312
-    :emphasize-lines: 1,10
+    :lines: 304-324
+    :emphasize-lines: 10,19,21
 
 ``stop_flag`` is set by ``uv_stop()``. Now all libuv callbacks are invoked
 within the event loop, which is why invoking ``uv_stop()`` in them will still
@@ -43,10 +44,5 @@ iteration of the loop still takes places.
 .. rubric:: uvstop/main.c
 .. literalinclude:: ../code/uvstop/main.c
     :linenos:
+    :emphasize-lines: 11
 
-Embedding libuv's event loop in other libraries
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. TODO::
-
-    Needs content
