@@ -162,7 +162,7 @@ gh-pages:
 	rm -rf build _sources _static
 	git checkout master $(GH_PAGES_SOURCES)
 	git reset HEAD
-	make html latexpdf epub
+	make SPHINXBUILD=sphinx-build2 html latexpdf epub
 	mv -fv build/html/* ./
 	mv -fv build/latex/AnIntroductiontolibuv.pdf "./An Introduction to libuv.pdf"
 	mv -fv build/epub/AnIntroductiontolibuv.epub "./An Introduction to libuv.epub"
