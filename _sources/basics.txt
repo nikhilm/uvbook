@@ -57,7 +57,7 @@ point, then used the data at another point (in time and space). It is
 **non-blocking** because the application process was free to do other tasks.
 This fits in well with libuv's event-loop approach, since the operating system
 events can be treated as just another libuv event. The non-blocking ensures
-that other events can continue to be handled as fast they come in [#]_.
+that other events can continue to be handled as fast as they come in [#]_.
 
 .. NOTE::
 
@@ -69,6 +69,9 @@ that other events can continue to be handled as fast they come in [#]_.
 Bert Belder, one of the libuv core developers has a small video explaining the
 architecture of libuv and its background. If you have no prior experience with
 either libuv or libev, it is a quick, useful watch.
+
+libuv's event loop is explained in more detail in the `documentation
+<http://docs.libuv.org/en/v1.x/design.html#the-i-o-loop>`_.
 
 .. raw:: html
 
@@ -90,6 +93,14 @@ This program quits immediately because it has no events to process. A libuv
 event loop has to be told to watch out for events using the various API
 functions.
 
+Starting with libuv v1.0, users should allocate the memory for the loops before
+initializing it with ``uv_loop_init(uv_loop_t *)``. This allows you to plug in
+custom memory management. Remember to de-initialize the loop using
+``uv_loop_close(uv_loop_t *)`` and then delete the storage. The examples never
+close loops since the program quits after the loop ends and the system will
+reclaim memory. Production grade projects, especially long running systems
+programs, should take care to release correctly.
+
 Default loop
 ++++++++++++
 
@@ -102,57 +113,45 @@ loop.
     node.js uses the default loop as its main loop. If you are writing bindings
     you should be aware of this.
 
+.. _libuv-error-handling:
+
 Error handling
 --------------
 
-libuv functions which may fail return ``-1`` on error. The error code itself is
-set on the event loop as ``last_err``. Use ``uv_last_error(loop)`` to get
-a ``uv_err_t`` which has a ``code`` member with the error code. ``code`` is an
-enumeration of ``UV_*`` as defined here:
+Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as ``UV_E*`` `constants`_. 
 
-.. rubric:: libuv error codes
-.. literalinclude:: ../libuv/include/uv.h
-    :lines: 69-127
+.. _constants: http://docs.libuv.org/en/v1.x/errors.html#error-constants
 
-You can use the ``uv_strerror(uv_err_t)`` and ``uv_err_name(uv_err_t)`` functions
+You can use the ``uv_strerror(int)`` and ``uv_err_name(int)`` functions
 to get a ``const char *`` describing the error or the error name respectively.
 
-Async callbacks have a ``status`` argument as the last argument. Use this instead
-of the return value.
+I/O read callbacks (such as for files and sockets) are passed a parameter ``nread``. If ``nread`` is less than 0, there was an error (UV_EOF is the end of file error, which you may want to handle differently).
 
-Watchers
---------
+Handles and Requests
+--------------------
 
-Watchers are how users of libuv express interest in particular events. Watchers
-are opaque structs named as ``uv_TYPE_t`` where type signifies what the watcher
-is used for. A full list of watchers supported by libuv is:
+libuv works by the user expressing interest in particular events. This is
+usually done by creating a **handle** to an I/O device, timer or process.
+Handles are opaque structs named as ``uv_TYPE_t`` where type signifies what the
+handle is used for. 
 
 .. rubric:: libuv watchers
 .. literalinclude:: ../libuv/include/uv.h
-    :lines: 190-207
+    :lines: 197-230
 
-.. note::
+Handles represent long-lived objects. Async operations on such handles are
+identified using **requests**. A request is short-lived (usually used across
+only one callback) and usually indicates one I/O operation on a handle.
+Requests are used to preserve context between the initiation and the callback
+of individual actions. For example, an UDP socket is represented by
+a ``uv_udp_t``, while individual writes to the socket use a ``uv_udp_send_t``
+structure that is passed to the callback after the write is done.
 
-    All watcher structs are subclasses of ``uv_handle_t`` and often referred to
-    as **handles** in libuv and in this text.
+Handles are setup by a corresponding::
 
-Watchers are setup by a corresponding::
-
-    uv_TYPE_init(uv_TYPE_t*)
+    uv_TYPE_init(uv_loop_t *, uv_TYPE_t *)
 
 function.
-
-.. note::
-
-    Some watcher initialization functions require the loop as a first argument.
-
-A watcher is set to actually listen for events by invoking::
-
-    uv_TYPE_start(uv_TYPE_t*, callback)
-
-and stopped by calling the corresponding::
-
-    uv_TYPE_stop(uv_TYPE_t*)
 
 Callbacks are functions which are called by libuv whenever an event the watcher
 is interested in has taken place. Application specific logic will usually be
@@ -163,20 +162,26 @@ on.
 Idling
 ++++++
 
-Here is an example of using a watcher. An idle watcher's callback is repeatedly
-called. There are some deeper semantics, discussed in :doc:`utilities`, but
-we'll ignore them for now. Let's just use an idle watcher to look at the
-watcher life cycle and see how ``uv_run()`` will now block because a watcher is
-present. The idle watcher is stopped when the count is reached and ``uv_run()``
-exits since no event watchers are active.
+Here is an example of using an idle handle. The callback is called once on
+every turn of the event loop. A use case for idle handles is discussed in
+:doc:`utilities`. Let us use an idle watcher to look at the watcher life cycle
+and see how ``uv_run()`` will now block because a watcher is present. The idle
+watcher is stopped when the count is reached and ``uv_run()`` exits since no
+event watchers are active.
 
 .. rubric:: idle-basic/main.c
 .. literalinclude:: ../code/idle-basic/main.c
     :emphasize-lines: 6,10,14-17
 
-void \*data pattern
+Storing context
++++++++++++++++
 
-note about not necessarily creating type structs on the stack
+In callback based programming style you'll often want to pass some 'context' --
+application specific information -- between the call site and the callback. All
+handles and requests have a ``void* data`` member which you can set to the
+context and cast back in the callback. This is a common pattern used throughout
+the C library ecosystem. In addition ``uv_loop_t`` also has a similar data
+member.
 
 ----
 

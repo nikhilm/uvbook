@@ -113,7 +113,7 @@ point, then used the data at another point (in time and space). It is
 <strong>non-blocking</strong> because the application process was free to do other tasks.
 This fits in well with libuv&#8217;s event-loop approach, since the operating system
 events can be treated as just another libuv event. The non-blocking ensures
-that other events can continue to be handled as fast they come in <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
+that other events can continue to be handled as fast as they come in <a class="footnote-reference" href="#id2" id="id1">[1]</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">How the I/O is run in the background is not of our concern, but due to the
@@ -124,6 +124,7 @@ polling to perform tasks in a non-blocking manner.</p>
 <p>Bert Belder, one of the libuv core developers has a small video explaining the
 architecture of libuv and its background. If you have no prior experience with
 either libuv or libev, it is a quick, useful watch.</p>
+<p>libuv&#8217;s event loop is explained in more detail in the <a class="reference external" href="http://docs.libuv.org/en/v1.x/design.html#the-i-o-loop">documentation</a>.</p>
 <iframe width="560" height="315"
 src="https://www.youtube-nocookie.com/embed/nGn60vDSxQ4" frameborder="0"
 allowfullscreen></iframe></div>
@@ -142,15 +143,23 @@ nothing, except start a loop which will exit immediately.</p>
  8
  9
 10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+11
+12
+13
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;stdlib.h&gt;</span>
 <span class="cp">#include &lt;uv.h&gt;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="p">));</span>
+    <span class="n">uv_loop_init</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
 
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Now quitting.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
     <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 
+    <span class="n">uv_loop_close</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -158,6 +167,13 @@ nothing, except start a loop which will exit immediately.</p>
 <p>This program quits immediately because it has no events to process. A libuv
 event loop has to be told to watch out for events using the various API
 functions.</p>
+<p>Starting with libuv v1.0, users should allocate the memory for the loops before
+initializing it with <tt class="docutils literal"><span class="pre">uv_loop_init(uv_loop_t</span> <span class="pre">*)</span></tt>. This allows you to plug in
+custom memory management. Remember to de-initialize the loop using
+<tt class="docutils literal"><span class="pre">uv_loop_close(uv_loop_t</span> <span class="pre">*)</span></tt> and then delete the storage. The examples never
+close loops since the program quits after the loop ends and the system will
+reclaim memory. Production grade projects, especially long running systems
+programs, should take care to release correctly.</p>
 <div class="section" id="default-loop">
 <h3>Default loop<a class="headerlink" href="#default-loop" title="Permalink to this headline">¶</a></h3>
 <p>A default loop is provided by libuv and can be accessed using
@@ -171,85 +187,25 @@ you should be aware of this.</p>
 </div>
 </div>
 <div class="section" id="error-handling">
-<h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
-<p>libuv functions which may fail return <tt class="docutils literal"><span class="pre">-1</span></tt> on error. The error code itself is
-set on the event loop as <tt class="docutils literal"><span class="pre">last_err</span></tt>. Use <tt class="docutils literal"><span class="pre">uv_last_error(loop)</span></tt> to get
-a <tt class="docutils literal"><span class="pre">uv_err_t</span></tt> which has a <tt class="docutils literal"><span class="pre">code</span></tt> member with the error code. <tt class="docutils literal"><span class="pre">code</span></tt> is an
-enumeration of <tt class="docutils literal"><span class="pre">UV_*</span></tt> as defined here:</p>
-<p class="rubric">libuv error codes</p>
-<div class="highlight-c"><div class="highlight"><pre>  <span class="n">XX</span><span class="p">(</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">UNKNOWN</span><span class="p">,</span> <span class="s">&quot;unknown error&quot;</span><span class="p">)</span>                                           \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">0</span><span class="p">,</span> <span class="n">OK</span><span class="p">,</span> <span class="s">&quot;success&quot;</span><span class="p">)</span>                                                      \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">1</span><span class="p">,</span> <span class="n">EOF</span><span class="p">,</span> <span class="s">&quot;end of file&quot;</span><span class="p">)</span>                                                 \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">2</span><span class="p">,</span> <span class="n">EADDRINFO</span><span class="p">,</span> <span class="s">&quot;getaddrinfo error&quot;</span><span class="p">)</span>                                     \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">3</span><span class="p">,</span> <span class="n">EACCES</span><span class="p">,</span> <span class="s">&quot;permission denied&quot;</span><span class="p">)</span>                                        \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">4</span><span class="p">,</span> <span class="n">EAGAIN</span><span class="p">,</span> <span class="s">&quot;resource temporarily unavailable&quot;</span><span class="p">)</span>                         \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">5</span><span class="p">,</span> <span class="n">EADDRINUSE</span><span class="p">,</span> <span class="s">&quot;address already in use&quot;</span><span class="p">)</span>                               \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">6</span><span class="p">,</span> <span class="n">EADDRNOTAVAIL</span><span class="p">,</span> <span class="s">&quot;address not available&quot;</span><span class="p">)</span>                             \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">7</span><span class="p">,</span> <span class="n">EAFNOSUPPORT</span><span class="p">,</span> <span class="s">&quot;address family not supported&quot;</span><span class="p">)</span>                       \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">8</span><span class="p">,</span> <span class="n">EALREADY</span><span class="p">,</span> <span class="s">&quot;connection already in progress&quot;</span><span class="p">)</span>                         \
-  <span class="n">XX</span><span class="p">(</span>  <span class="mi">9</span><span class="p">,</span> <span class="n">EBADF</span><span class="p">,</span> <span class="s">&quot;bad file descriptor&quot;</span><span class="p">)</span>                                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="n">EBUSY</span><span class="p">,</span> <span class="s">&quot;resource busy or locked&quot;</span><span class="p">)</span>                                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">11</span><span class="p">,</span> <span class="n">ECONNABORTED</span><span class="p">,</span> <span class="s">&quot;software caused connection abort&quot;</span><span class="p">)</span>                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">12</span><span class="p">,</span> <span class="n">ECONNREFUSED</span><span class="p">,</span> <span class="s">&quot;connection refused&quot;</span><span class="p">)</span>                                 \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">13</span><span class="p">,</span> <span class="n">ECONNRESET</span><span class="p">,</span> <span class="s">&quot;connection reset by peer&quot;</span><span class="p">)</span>                             \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">14</span><span class="p">,</span> <span class="n">EDESTADDRREQ</span><span class="p">,</span> <span class="s">&quot;destination address required&quot;</span><span class="p">)</span>                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">15</span><span class="p">,</span> <span class="n">EFAULT</span><span class="p">,</span> <span class="s">&quot;bad address in system call argument&quot;</span><span class="p">)</span>                      \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">16</span><span class="p">,</span> <span class="n">EHOSTUNREACH</span><span class="p">,</span> <span class="s">&quot;host is unreachable&quot;</span><span class="p">)</span>                                \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">17</span><span class="p">,</span> <span class="n">EINTR</span><span class="p">,</span> <span class="s">&quot;interrupted system call&quot;</span><span class="p">)</span>                                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">18</span><span class="p">,</span> <span class="n">EINVAL</span><span class="p">,</span> <span class="s">&quot;invalid argument&quot;</span><span class="p">)</span>                                         \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">19</span><span class="p">,</span> <span class="n">EISCONN</span><span class="p">,</span> <span class="s">&quot;socket is already connected&quot;</span><span class="p">)</span>                             \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">20</span><span class="p">,</span> <span class="n">EMFILE</span><span class="p">,</span> <span class="s">&quot;too many open files&quot;</span><span class="p">)</span>                                      \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">21</span><span class="p">,</span> <span class="n">EMSGSIZE</span><span class="p">,</span> <span class="s">&quot;message too long&quot;</span><span class="p">)</span>                                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">22</span><span class="p">,</span> <span class="n">ENETDOWN</span><span class="p">,</span> <span class="s">&quot;network is down&quot;</span><span class="p">)</span>                                        \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">23</span><span class="p">,</span> <span class="n">ENETUNREACH</span><span class="p">,</span> <span class="s">&quot;network is unreachable&quot;</span><span class="p">)</span>                              \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">24</span><span class="p">,</span> <span class="n">ENFILE</span><span class="p">,</span> <span class="s">&quot;file table overflow&quot;</span><span class="p">)</span>                                      \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">25</span><span class="p">,</span> <span class="n">ENOBUFS</span><span class="p">,</span> <span class="s">&quot;no buffer space available&quot;</span><span class="p">)</span>                               \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">26</span><span class="p">,</span> <span class="n">ENOMEM</span><span class="p">,</span> <span class="s">&quot;not enough memory&quot;</span><span class="p">)</span>                                        \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">27</span><span class="p">,</span> <span class="n">ENOTDIR</span><span class="p">,</span> <span class="s">&quot;not a directory&quot;</span><span class="p">)</span>                                         \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">28</span><span class="p">,</span> <span class="n">EISDIR</span><span class="p">,</span> <span class="s">&quot;illegal operation on a directory&quot;</span><span class="p">)</span>                         \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">29</span><span class="p">,</span> <span class="n">ENONET</span><span class="p">,</span> <span class="s">&quot;machine is not on the network&quot;</span><span class="p">)</span>                            \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">31</span><span class="p">,</span> <span class="n">ENOTCONN</span><span class="p">,</span> <span class="s">&quot;socket is not connected&quot;</span><span class="p">)</span>                                \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">32</span><span class="p">,</span> <span class="n">ENOTSOCK</span><span class="p">,</span> <span class="s">&quot;socket operation on non-socket&quot;</span><span class="p">)</span>                         \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">33</span><span class="p">,</span> <span class="n">ENOTSUP</span><span class="p">,</span> <span class="s">&quot;operation not supported on socket&quot;</span><span class="p">)</span>                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">34</span><span class="p">,</span> <span class="n">ENOENT</span><span class="p">,</span> <span class="s">&quot;no such file or directory&quot;</span><span class="p">)</span>                                \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">35</span><span class="p">,</span> <span class="n">ENOSYS</span><span class="p">,</span> <span class="s">&quot;function not implemented&quot;</span><span class="p">)</span>                                 \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">36</span><span class="p">,</span> <span class="n">EPIPE</span><span class="p">,</span> <span class="s">&quot;broken pipe&quot;</span><span class="p">)</span>                                               \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">37</span><span class="p">,</span> <span class="n">EPROTO</span><span class="p">,</span> <span class="s">&quot;protocol error&quot;</span><span class="p">)</span>                                           \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">38</span><span class="p">,</span> <span class="n">EPROTONOSUPPORT</span><span class="p">,</span> <span class="s">&quot;protocol not supported&quot;</span><span class="p">)</span>                          \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">39</span><span class="p">,</span> <span class="n">EPROTOTYPE</span><span class="p">,</span> <span class="s">&quot;protocol wrong type for socket&quot;</span><span class="p">)</span>                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">40</span><span class="p">,</span> <span class="n">ETIMEDOUT</span><span class="p">,</span> <span class="s">&quot;connection timed out&quot;</span><span class="p">)</span>                                  \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">41</span><span class="p">,</span> <span class="n">ECHARSET</span><span class="p">,</span> <span class="s">&quot;invalid Unicode character&quot;</span><span class="p">)</span>                              \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">42</span><span class="p">,</span> <span class="n">EAIFAMNOSUPPORT</span><span class="p">,</span> <span class="s">&quot;address family for hostname not supported&quot;</span><span class="p">)</span>       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">44</span><span class="p">,</span> <span class="n">EAISERVICE</span><span class="p">,</span> <span class="s">&quot;servname not supported for ai_socktype&quot;</span><span class="p">)</span>               \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">45</span><span class="p">,</span> <span class="n">EAISOCKTYPE</span><span class="p">,</span> <span class="s">&quot;ai_socktype not supported&quot;</span><span class="p">)</span>                           \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">46</span><span class="p">,</span> <span class="n">ESHUTDOWN</span><span class="p">,</span> <span class="s">&quot;cannot send after transport endpoint shutdown&quot;</span><span class="p">)</span>         \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">47</span><span class="p">,</span> <span class="n">EEXIST</span><span class="p">,</span> <span class="s">&quot;file already exists&quot;</span><span class="p">)</span>                                      \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">48</span><span class="p">,</span> <span class="n">ESRCH</span><span class="p">,</span> <span class="s">&quot;no such process&quot;</span><span class="p">)</span>                                           \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">49</span><span class="p">,</span> <span class="n">ENAMETOOLONG</span><span class="p">,</span> <span class="s">&quot;name too long&quot;</span><span class="p">)</span>                                      \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">50</span><span class="p">,</span> <span class="n">EPERM</span><span class="p">,</span> <span class="s">&quot;operation not permitted&quot;</span><span class="p">)</span>                                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">51</span><span class="p">,</span> <span class="n">ELOOP</span><span class="p">,</span> <span class="s">&quot;too many symbolic links encountered&quot;</span><span class="p">)</span>                       \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">52</span><span class="p">,</span> <span class="n">EXDEV</span><span class="p">,</span> <span class="s">&quot;cross-device link not permitted&quot;</span><span class="p">)</span>                           \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">53</span><span class="p">,</span> <span class="n">ENOTEMPTY</span><span class="p">,</span> <span class="s">&quot;directory not empty&quot;</span><span class="p">)</span>                                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">54</span><span class="p">,</span> <span class="n">ENOSPC</span><span class="p">,</span> <span class="s">&quot;no space left on device&quot;</span><span class="p">)</span>                                  \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">55</span><span class="p">,</span> <span class="n">EIO</span><span class="p">,</span> <span class="s">&quot;i/o error&quot;</span><span class="p">)</span>                                                   \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">56</span><span class="p">,</span> <span class="n">EROFS</span><span class="p">,</span> <span class="s">&quot;read-only file system&quot;</span><span class="p">)</span>                                     \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">57</span><span class="p">,</span> <span class="n">ENODEV</span><span class="p">,</span> <span class="s">&quot;no such device&quot;</span><span class="p">)</span>                                           \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">58</span><span class="p">,</span> <span class="n">ESPIPE</span><span class="p">,</span> <span class="s">&quot;invalid seek&quot;</span><span class="p">)</span>                                             \
-  <span class="n">XX</span><span class="p">(</span> <span class="mi">59</span><span class="p">,</span> <span class="n">ECANCELED</span><span class="p">,</span> <span class="s">&quot;operation canceled&quot;</span><span class="p">)</span>                                    \
-</pre></div>
-</div>
-<p>You can use the <tt class="docutils literal"><span class="pre">uv_strerror(uv_err_t)</span></tt> and <tt class="docutils literal"><span class="pre">uv_err_name(uv_err_t)</span></tt> functions
+<span id="libuv-error-handling"></span><h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
+<p>Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as <tt class="docutils literal"><span class="pre">UV_E*</span></tt> <a class="reference external" href="http://docs.libuv.org/en/v1.x/errors.html#error-constants">constants</a>.</p>
+<p>You can use the <tt class="docutils literal"><span class="pre">uv_strerror(int)</span></tt> and <tt class="docutils literal"><span class="pre">uv_err_name(int)</span></tt> functions
 to get a <tt class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></tt> describing the error or the error name respectively.</p>
-<p>Async callbacks have a <tt class="docutils literal"><span class="pre">status</span></tt> argument as the last argument. Use this instead
-of the return value.</p>
+<p>I/O read callbacks (such as for files and sockets) are passed a parameter <tt class="docutils literal"><span class="pre">nread</span></tt>. If <tt class="docutils literal"><span class="pre">nread</span></tt> is less than 0, there was an error (UV_EOF is the end of file error, which you may want to handle differently).</p>
 </div>
-<div class="section" id="watchers">
-<h2>Watchers<a class="headerlink" href="#watchers" title="Permalink to this headline">¶</a></h2>
-<p>Watchers are how users of libuv express interest in particular events. Watchers
-are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the watcher
-is used for. A full list of watchers supported by libuv is:</p>
+<div class="section" id="handles-and-requests">
+<h2>Handles and Requests<a class="headerlink" href="#handles-and-requests" title="Permalink to this headline">¶</a></h2>
+<p>libuv works by the user expressing interest in particular events. This is
+usually done by creating a <strong>handle</strong> to an I/O device, timer or process.
+Handles are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the
+handle is used for.</p>
 <p class="rubric">libuv watchers</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Handle types. */</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="kt">uv_loop_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="kt">uv_handle_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="kt">uv_stream_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="kt">uv_tcp_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="kt">uv_pipe_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="kt">uv_tty_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="kt">uv_poll_t</span><span class="p">;</span>
@@ -266,31 +222,32 @@ is used for. A full list of watchers supported by libuv is:</p>
 <span class="cm">/* Request types. */</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_req_s</span> <span class="kt">uv_req_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getaddrinfo_s</span> <span class="kt">uv_getaddrinfo_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getnameinfo_s</span> <span class="kt">uv_getnameinfo_t</span><span class="p">;</span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_shutdown_s</span> <span class="kt">uv_shutdown_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_write_s</span> <span class="kt">uv_write_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_connect_s</span> <span class="kt">uv_connect_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_send_s</span> <span class="kt">uv_udp_send_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_s</span> <span class="kt">uv_fs_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_work_s</span> <span class="kt">uv_work_t</span><span class="p">;</span>
+
+<span class="cm">/* None of the above. */</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_cpu_info_s</span> <span class="kt">uv_cpu_info_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_interface_address_s</span> <span class="kt">uv_interface_address_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_dirent_s</span> <span class="kt">uv_dirent_t</span><span class="p">;</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">All watcher structs are subclasses of <tt class="docutils literal"><span class="pre">uv_handle_t</span></tt> and often referred to
-as <strong>handles</strong> in libuv and in this text.</p>
-</div>
-<p>Watchers are setup by a corresponding:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
+<p>Handles represent long-lived objects. Async operations on such handles are
+identified using <strong>requests</strong>. A request is short-lived (usually used across
+only one callback) and usually indicates one I/O operation on a handle.
+Requests are used to preserve context between the initiation and the callback
+of individual actions. For example, an UDP socket is represented by
+a <tt class="docutils literal"><span class="pre">uv_udp_t</span></tt>, while individual writes to the socket use a <tt class="docutils literal"><span class="pre">uv_udp_send_t</span></tt>
+structure that is passed to the callback after the write is done.</p>
+<p>Handles are setup by a corresponding:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="p">,</span> <span class="n">uv_TYPE_t</span> <span class="o">*</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>function.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Some watcher initialization functions require the loop as a first argument.</p>
-</div>
-<p>A watcher is set to actually listen for events by invoking:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_start</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>and stopped by calling the corresponding:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_stop</span><span class="p">(</span><span class="n">uv_TYPE_t</span><span class="o">*</span><span class="p">)</span>
-</pre></div>
-</div>
 <p>Callbacks are functions which are called by libuv whenever an event the watcher
 is interested in has taken place. Application specific logic will usually be
 implemented in the callback. For example, an IO watcher&#8217;s callback will receive
@@ -298,19 +255,19 @@ the data read from a file, a timer callback will be triggered on timeout and so
 on.</p>
 <div class="section" id="idling">
 <h3>Idling<a class="headerlink" href="#idling" title="Permalink to this headline">¶</a></h3>
-<p>Here is an example of using a watcher. An idle watcher&#8217;s callback is repeatedly
-called. There are some deeper semantics, discussed in <a class="reference internal" href="utilities.html"><em>Utilities</em></a>, but
-we&#8217;ll ignore them for now. Let&#8217;s just use an idle watcher to look at the
-watcher life cycle and see how <tt class="docutils literal"><span class="pre">uv_run()</span></tt> will now block because a watcher is
-present. The idle watcher is stopped when the count is reached and <tt class="docutils literal"><span class="pre">uv_run()</span></tt>
-exits since no event watchers are active.</p>
+<p>Here is an example of using an idle handle. The callback is called once on
+every turn of the event loop. A use case for idle handles is discussed in
+<a class="reference internal" href="utilities.html"><em>Utilities</em></a>. Let us use an idle watcher to look at the watcher life cycle
+and see how <tt class="docutils literal"><span class="pre">uv_run()</span></tt> will now block because a watcher is present. The idle
+watcher is stopped when the count is reached and <tt class="docutils literal"><span class="pre">uv_run()</span></tt> exits since no
+event watchers are active.</p>
 <p class="rubric">idle-basic/main.c</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;uv.h&gt;</span>
 
 <span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="kt">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="kt">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
 </span>    <span class="n">counter</span><span class="o">++</span><span class="p">;</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;=</span> <span class="mf">10e6</span><span class="p">)</span>
@@ -326,12 +283,20 @@ exits since no event watchers are active.</p>
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Idling...</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
     <span class="n">uv_run</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 
+    <span class="n">uv_loop_close</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">());</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>void *data pattern</p>
-<p>note about not necessarily creating type structs on the stack</p>
+</div>
+<div class="section" id="storing-context">
+<h3>Storing context<a class="headerlink" href="#storing-context" title="Permalink to this headline">¶</a></h3>
+<p>In callback based programming style you&#8217;ll often want to pass some &#8216;context&#8217; &#8211;
+application specific information &#8211; between the call site and the callback. All
+handles and requests have a <tt class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></tt> member which you can set to the
+context and cast back in the callback. This is a common pattern used throughout
+the C library ecosystem. In addition <tt class="docutils literal"><span class="pre">uv_loop_t</span></tt> also has a similar data
+member.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -359,7 +324,7 @@ exits since no event watchers are active.</p>
 
     <div class="footer">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

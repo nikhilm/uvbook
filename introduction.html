@@ -64,11 +64,11 @@
         
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>This &#8216;book&#8217; is a small set of tutorials about using <a class="reference external" href="https://github.com/joyent/libuv">libuv</a> as
+<p>This &#8216;book&#8217; is a small set of tutorials about using <a class="reference external" href="https://github.com/libuv/libuv">libuv</a> as
 a high performance evented I/O library which offers the same API on Windows and Unix.</p>
 <p>It is meant to cover the main areas of libuv, but is not a comprehensive
-reference discussing every function and data structure. The <a class="reference external" href="https://github.com/joyent/libuv/blob/master/include/uv.h">official libuv
-documentation</a> is included directly in the libuv header file.</p>
+reference discussing every function and data structure. The <a class="reference external" href="http://docs.libuv.org/en/v1.x/">official libuv
+documentation</a> may be consulted for full details.</p>
 <p>This book is still a work in progress, so sections may be incomplete, but
 I hope you will enjoy it as it grows.</p>
 <div class="section" id="who-this-book-is-for">
@@ -99,16 +99,21 @@ or IOCP depending on the platform, providing users an API based on libev.
 In the node-v0.9.0 version of libuv <a class="reference external" href="https://github.com/joyent/libuv/issues/485">libev was removed</a>.</p>
 <p>Since then libuv has continued to mature and become a high quality standalone
 library for system programming. Users outside of node.js include Mozilla&#8217;s
-<a class="reference external" href="http://rust-lang.org">Rust</a> programming language, and a <a class="reference external" href="https://github.com/joyent/libuv/wiki/Projects-that-use-libuv">variety</a> of language bindings.</p>
-<p>The first independently release version of libuv was 0.10.2.</p>
+<a class="reference external" href="http://rust-lang.org">Rust</a> programming language, and a <a class="reference external" href="https://github.com/libuv/libuv/wiki/Projects-that-use-libuv">variety</a> of language bindings.</p>
+<p>This book and the code is based on libuv version <a class="reference external" href="https://github.com/libuv/libuv/tags">v1.3.0</a>.</p>
 </div>
 <div class="section" id="code">
 <h2>Code<a class="headerlink" href="#code" title="Permalink to this headline">¶</a></h2>
 <p>All the code from this book is included as part of the source of the book on
-Github. <a class="reference external" href="https://github.com/nikhilm/uvbook">Clone</a>/<a class="reference external" href="https://github.com/nikhilm/uvbook/downloads">Download</a> the book and run <tt class="docutils literal"><span class="pre">make</span></tt> in the <tt class="docutils literal"><span class="pre">code/</span></tt>
-folder to compile all the examples. This book and the code is based on libuv
-version <a class="reference external" href="https://github.com/joyent/libuv/tags">v0.11.1</a> and a version is included in the <tt class="docutils literal"><span class="pre">libuv/</span></tt> folder
-which will be compiled automatically.</p>
+Github. <a class="reference external" href="https://github.com/nikhilm/uvbook">Clone</a>/<a class="reference external" href="https://github.com/nikhilm/uvbook/downloads">Download</a> the book, then build libuv:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">cd</span> <span class="n">libuv</span>
+<span class="p">.</span><span class="o">/</span><span class="n">autogen</span><span class="p">.</span><span class="n">sh</span>
+<span class="p">.</span><span class="o">/</span><span class="n">configure</span>
+<span class="n">make</span>
+</pre></div>
+</div>
+<p>There is no need to <tt class="docutils literal"><span class="pre">make</span> <span class="pre">install</span></tt>. To build the examples run <tt class="docutils literal"><span class="pre">make</span></tt> in the
+<tt class="docutils literal"><span class="pre">code/</span></tt> directory.</p>
 </div>
 </div>
 
@@ -128,7 +133,7 @@ which will be compiled automatically.</p>
 
     <div class="footer">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -71,12 +71,13 @@ Qt&#8217;s event loop driving a libuv backend which does intensive system level
 tasks.</p>
 <div class="section" id="stopping-an-event-loop">
 <h2>Stopping an event loop<a class="headerlink" href="#stopping-an-event-loop" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can be used to stop an event loop. The loop will stop running <em>on
-the next iteration</em>. This means that events that are ready to be processed in
-this iteration of the loop will still be processed, so <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can&#8217;t be
-used as a kill switch. When <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> is called, the loop <strong>won&#8217;t</strong> block
-for i/o on this iteration. The semantics of these things can be a bit difficult
-to understand, so let&#8217;s look at <tt class="docutils literal"><span class="pre">uv_run()</span></tt> where all the control flow occurs.</p>
+<p><tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can be used to stop an event loop. The earliest the loop will
+stop running is <em>on the next iteration</em>, possibly later. This means that events
+that are ready to be processed in this iteration of the loop will still be
+processed, so <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can&#8217;t be used as a kill switch. When <tt class="docutils literal"><span class="pre">uv_stop()</span></tt>
+is called, the loop <strong>won&#8217;t</strong> block for i/o on this iteration. The semantics of
+these things can be a bit difficult to understand, so let&#8217;s look at
+<tt class="docutils literal"><span class="pre">uv_run()</span></tt> where all the control flow occurs.</p>
 <p class="rubric">src/unix/core.c - uv_run</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -89,19 +90,37 @@ to understand, so let&#8217;s look at <tt class="docutils literal"><span class="
  9
 10
 11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span class="hll">  <span class="k">while</span> <span class="p">(</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span>    <span class="n">UV_TICK_START</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">mode</span><span class="p">);</span>
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">uv_run</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_run_mode</span> <span class="n">mode</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">timeout</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">ran_pending</span><span class="p">;</span>
 
+  <span class="n">r</span> <span class="o">=</span> <span class="n">uv__loop_alive</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">r</span><span class="p">)</span>
     <span class="n">uv__update_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+
+<span class="hll">  <span class="k">while</span> <span class="p">(</span><span class="n">r</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">loop</span><span class="o">-&gt;</span><span class="n">stop_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span>    <span class="n">uv__update_time</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
     <span class="n">uv__run_timers</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="n">ran_pending</span> <span class="o">=</span> <span class="n">uv__run_pending</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
     <span class="n">uv__run_idle</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
     <span class="n">uv__run_prepare</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
-    <span class="n">uv__run_pending</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
 
-<span class="hll">    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span>    <span class="k">if</span> <span class="p">((</span><span class="n">mode</span> <span class="o">&amp;</span> <span class="n">UV_RUN_NOWAIT</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
-      <span class="n">timeout</span> <span class="o">=</span> <span class="n">uv_backend_timeout</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
-</pre></div>
+    <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_ONCE</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">ran_pending</span><span class="p">)</span> <span class="o">||</span> <span class="n">mode</span> <span class="o">==</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">)</span>
+<span class="hll">      <span class="n">timeout</span> <span class="o">=</span> <span class="n">uv_backend_timeout</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+</span>
+<span class="hll">    <span class="n">uv__io_poll</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">timeout</span><span class="p">);</span>
+</span></pre></div>
 </td></tr></table></div>
 <p><tt class="docutils literal"><span class="pre">stop_flag</span></tt> is set by <tt class="docutils literal"><span class="pre">uv_stop()</span></tt>. Now all libuv callbacks are invoked
 within the event loop, which is why invoking <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> in them will still
@@ -155,17 +174,17 @@ iteration of the loop still takes places.</p>
 
 <span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">idle_cb</span><span class="p">(</span><span class="kt">uv_idle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">idle_cb</span><span class="p">(</span><span class="kt">uv_idle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Idle callback</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
     <span class="n">counter</span><span class="o">++</span><span class="p">;</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;=</span> <span class="mi">5</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">uv_stop</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">());</span>
-        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;uv_stop() called</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="hll">        <span class="n">uv_stop</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">());</span>
+</span>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;uv_stop() called</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">prep_cb</span><span class="p">(</span><span class="kt">uv_prepare_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">prep_cb</span><span class="p">(</span><span class="kt">uv_prepare_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Prep callback</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 <span class="p">}</span>
 
@@ -186,9 +205,6 @@ iteration of the loop still takes places.</p>
 </pre></div>
 </td></tr></table></div>
 </div>
-<div class="section" id="embedding-libuv-s-event-loop-in-other-libraries">
-<h2>Embedding libuv&#8217;s event loop in other libraries<a class="headerlink" href="#embedding-libuv-s-event-loop-in-other-libraries" title="Permalink to this headline">¶</a></h2>
-</div>
 </div>
 
 
@@ -207,7 +223,7 @@ iteration of the loop still takes places.</p>
 
     <div class="footer">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

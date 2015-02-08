@@ -106,25 +106,29 @@ exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_
 20
 21
 22
-23</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+23
+24
+25</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="kt">uv_process_t</span> <span class="n">child_req</span><span class="p">;</span>
 <span class="kt">uv_process_options_t</span> <span class="n">options</span><span class="p">;</span>
-
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
     <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;mkdir&quot;</span><span class="p">;</span>
     <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;test-dir&quot;</span><span class="p">;</span>
-<span class="hll">    <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
-</span>
-<span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
-</span><span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="s">&quot;mkdir&quot;</span><span class="p">;</span>
+    <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+<span class="hll">
+</span>    <span class="n">options</span><span class="p">.</span><span class="n">exit_cb</span> <span class="o">=</span> <span class="n">on_exit</span><span class="p">;</span>
+<span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="s">&quot;mkdir&quot;</span><span class="p">;</span>
 </span><span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 </span><span class="hll">
-</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+</span><span class="hll">    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+</span><span class="hll">    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Launched process with ID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">child_req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
@@ -140,7 +144,7 @@ initialize it to null out all unused fields:</p>
 </pre></div>
 </div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the watcher, all options are set via
+<p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the handle, all options are set via
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. To simply launch a process, you need to set only the
 <tt class="docutils literal"><span class="pre">file</span></tt> and <tt class="docutils literal"><span class="pre">args</span></tt> fields. <tt class="docutils literal"><span class="pre">file</span></tt> is the program to execute. Since
 <tt class="docutils literal"><span class="pre">uv_spawn</span></tt> uses <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man3/exec.3.html">execvp</a> internally, there is no need to supply the full
@@ -153,12 +157,10 @@ which caused the exit.</p>
 <p class="rubric">spawn/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
-3
-4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_exit</span><span class="p">(</span><span class="kt">uv_process_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">exit_status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">term_signal</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Process exited with status %d, signal %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">term_signal</span><span class="p">);</span>
+3</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_exit</span><span class="p">(</span><span class="kt">uv_process_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">exit_status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">term_signal</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Process exited with status %&quot;</span> <span class="n">PRId64</span> <span class="s">&quot;, signal %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">term_signal</span><span class="p">);</span>
 <span class="hll">    <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="p">}</span>
-</pre></div>
+</span></pre></div>
 </td></tr></table></div>
 <p>It is <strong>required</strong> to close the process watcher after the process exits.</p>
 </div>
@@ -234,18 +236,18 @@ does not affect it.</p>
     <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 <span class="hll">    <span class="n">options</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">UV_PROCESS_DETACHED</span><span class="p">;</span>
 </span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
-        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Launched sleep with PID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">child_req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
-<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">);</span>
-</span>
+<span class="hll">    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Launched sleep with PID %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">child_req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
+</span>    <span class="n">uv_unref</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">);</span>
+
     <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
-<span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>Just remember that the watcher is still monitoring the child, so your program
+<p>Just remember that the handle is still monitoring the child, so your program
 won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
 </div>
 <div class="section" id="sending-signals-to-processes">
@@ -263,11 +265,9 @@ the pid. In this case, <strong>remember to call</strong> <tt class="docutils lit
 </div>
 <div class="section" id="signals">
 <h2>Signals<a class="headerlink" href="#signals" title="Permalink to this headline">¶</a></h2>
-<p>TODO: update based on <a class="reference external" href="https://github.com/joyent/libuv/issues/668">https://github.com/joyent/libuv/issues/668</a></p>
-<p>libuv provides wrappers around Unix signals with <a class="reference external" href="https://github.com/joyent/libuv/blob/node-v0.9.4/include/uv.h#L1659">some Windows support</a> as well.</p>
-<p>To make signals &#8216;play nice&#8217; with libuv, the API will deliver signals to <em>all
-handlers on all running event loops</em>! Use <tt class="docutils literal"><span class="pre">uv_signal_init()</span></tt> to initialize
-a handler and associate it with a loop. To listen for particular signals on
+<p>libuv provides wrappers around Unix signals with <a class="reference external" href="http://docs.libuv.org/en/v1.x/signal.html#signal">some Windows support</a> as well.</p>
+<p>Use <tt class="docutils literal"><span class="pre">uv_signal_init()</span></tt> to initialize
+a handle and associate it with a loop. To listen for particular signals on
 that handler, use <tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> with the handler function. Each handler
 can only be associated with one signal number, with subsequent calls to
 <tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> overwriting earlier associations. Use <tt class="docutils literal"><span class="pre">uv_signal_stop()</span></tt> to
@@ -328,20 +328,40 @@ stop watching. Here is a small example demonstrating the various possibilities:<
 53
 54
 55
-56</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;stdlib.h&gt;</span>
 <span class="cp">#include &lt;unistd.h&gt;</span>
 <span class="cp">#include &lt;uv.h&gt;</span>
 
+<span class="kt">uv_loop_t</span><span class="o">*</span> <span class="nf">create_loop</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">loop</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">uv_loop_init</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">loop</span><span class="p">;</span>
+<span class="p">}</span>
+
 <span class="kt">void</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="kt">uv_signal_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Signal received: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">signum</span><span class="p">);</span>
-<span class="hll">    <span class="n">uv_signal_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+<span class="hll">    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Signal received: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">signum</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_signal_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
 </span><span class="p">}</span>
 
 <span class="c1">// two signal handlers in one loop</span>
 <span class="kt">void</span> <span class="nf">thread1_worker</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop1</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop1</span> <span class="o">=</span> <span class="n">create_loop</span><span class="p">();</span>
 
     <span class="kt">uv_signal_t</span> <span class="n">sig1a</span><span class="p">,</span> <span class="n">sig1b</span><span class="p">;</span>
 <span class="hll">    <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig1a</span><span class="p">);</span>
@@ -356,8 +376,8 @@ stop watching. Here is a small example demonstrating the various possibilities:<
 <span class="c1">// two signal handlers, each in its own loop</span>
 <span class="kt">void</span> <span class="nf">thread2_worker</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span>
 <span class="p">{</span>
-    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop2</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
-    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop3</span> <span class="o">=</span> <span class="n">uv_loop_new</span><span class="p">();</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop2</span> <span class="o">=</span> <span class="n">create_loop</span><span class="p">();</span>
+    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop3</span> <span class="o">=</span> <span class="n">create_loop</span><span class="p">();</span>
 
     <span class="kt">uv_signal_t</span> <span class="n">sig2</span><span class="p">;</span>
     <span class="n">uv_signal_init</span><span class="p">(</span><span class="n">loop2</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">sig2</span><span class="p">);</span>
@@ -408,8 +428,9 @@ safely saved before termination, simply by every loop adding a watcher for
 may want to share file descriptors with the child. For example, perhaps your
 applications launches a sub-command and you want any errors to go in the log
 file, but ignore <tt class="docutils literal"><span class="pre">stdout</span></tt>. For this you&#8217;d like to have <tt class="docutils literal"><span class="pre">stderr</span></tt> of the
-child to be displayed. In this case, libuv supports <em>inheriting</em> file
-descriptors. In this sample, we invoke the test program, which is:</p>
+child be the same as the stderr of the parent. In this case, libuv supports
+<em>inheriting</em> file descriptors. In this sample, we invoke the test program,
+which is:</p>
 <p class="rubric">proc-streams/test.c</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 
@@ -421,19 +442,19 @@ descriptors. In this sample, we invoke the test program, which is:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The actual program <tt class="docutils literal"><span class="pre">proc-streams</span></tt> runs this while inheriting only <tt class="docutils literal"><span class="pre">stderr</span></tt>.
+<p>The actual program <tt class="docutils literal"><span class="pre">proc-streams</span></tt> runs this while sharing only <tt class="docutils literal"><span class="pre">stderr</span></tt>.
 The file descriptors of the child process are set using the <tt class="docutils literal"><span class="pre">stdio</span></tt> field in
 <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
 file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
 <tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
-<div class="highlight-c"><div class="highlight"><pre> * hints is a pointer to a struct addrinfo with additional address type
- * constraints, or NULL. Consult `man -s 3 getaddrinfo` for details.
- *
- * Returns 0 on success, -1 on error. Call uv_last_error() to get the error.
- *
- * If successful, your callback gets called sometime in the future with the
- * lookup result, which is either:
- *
+<div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
+  <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
+
+  <span class="k">union</span> <span class="p">{</span>
+    <span class="kt">uv_stream_t</span><span class="o">*</span> <span class="n">stream</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">fd</span><span class="p">;</span>
+  <span class="p">}</span> <span class="n">data</span><span class="p">;</span>
+<span class="p">}</span> <span class="kt">uv_stdio_container_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
@@ -483,9 +504,9 @@ Then we set the <tt class="docutils literal"><span class="pre">fd</span></tt> to
     <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
     <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 
-
-    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
-        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
 
@@ -528,7 +549,16 @@ that every client is sent ten ticks after which that connection is closed.</p>
  7
  8
  9
-10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+10
+11
+12
+13
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// error!</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
     <span class="kt">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_tcp_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_tcp_t</span><span class="p">));</span>
     <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
@@ -537,7 +567,6 @@ that every client is sent ten ticks after which that connection is closed.</p>
     <span class="k">else</span> <span class="p">{</span>
         <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
     <span class="p">}</span>
-<span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <p>Here we simply accept the TCP connection and pass on the socket (<em>stream</em>) to
@@ -563,8 +592,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 18
 19
 20
-21
-22</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">invoke_cgi_script</span><span class="p">(</span><span class="kt">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span><span class="p">)</span> <span class="p">{</span>
+21</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
 
     <span class="cm">/* ... finding the executable path and setting up arguments ... */</span>
 
@@ -580,12 +608,11 @@ that every client is sent ten ticks after which that connection is closed.</p>
     <span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
     <span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 
+    <span class="c1">// Set this so we can close the socket after the child process exits.</span>
 <span class="hll">    <span class="n">child_req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">;</span>
-</span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="n">options</span><span class="p">))</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
-        <span class="k">return</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+</span>    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">child_req</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">options</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
 </pre></div>
 </td></tr></table></div>
 <p>The <tt class="docutils literal"><span class="pre">stdout</span></tt> of the CGI script is set to the socket so that whatever our tick
@@ -597,17 +624,9 @@ is great. Just be warned that creating processes is a costly task.</p>
 <span id="id1"></span><h2>Pipes<a class="headerlink" href="#pipes" title="Permalink to this headline">¶</a></h2>
 <p>libuv&#8217;s <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> structure is slightly confusing to Unix programmers,
 because it immediately conjures up <tt class="docutils literal"><span class="pre">|</span></tt> and <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/pipe.7.html">pipe(7)</a>. But <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> is
-not related to anonymous pipes, rather it has two uses:</p>
-<ol class="arabic simple">
-<li>Stream API - It acts as the concrete implementation of the <tt class="docutils literal"><span class="pre">uv_stream_t</span></tt>
-API for providing a FIFO, streaming interface to local file I/O. This is
-performed using <tt class="docutils literal"><span class="pre">uv_pipe_open</span></tt> as covered in <a class="reference internal" href="filesystem.html#buffers-and-streams"><em>Buffers and Streams</em></a>.
-You could also use it for TCP/UDP, but there are already convenience functions
-and structures for them.</li>
-<li>IPC mechanism - <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> can be backed by a <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/unix.7.html">Unix Domain Socket</a> or
-<a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365590(v=vs.85).aspx">Windows Named Pipe</a> to allow multiple processes to communicate. This is
-discussed below.</li>
-</ol>
+not related to anonymous pipes, rather it is an IPC mechanism. <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt>
+can be backed by a <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/unix.7.html">Unix Domain Socket</a> or <a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365590(v=vs.85).aspx">Windows Named Pipe</a> to allow
+multiple processes to communicate. This is discussed below.</p>
 <div class="section" id="parent-child-ipc">
 <h3>Parent-child IPC<a class="headerlink" href="#parent-child-ipc" title="Permalink to this headline">¶</a></h3>
 <p>A parent and child can have one or two way communication over a pipe created by
@@ -644,7 +663,8 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 15
 16
 17
-18</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+18
+19</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="kt">uv_pipe_t</span> <span class="n">server</span><span class="p">;</span>
@@ -652,12 +672,13 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 </span>
     <span class="n">signal</span><span class="p">(</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">remove_sock</span><span class="p">);</span>
 
-<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_pipe_bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">server</span><span class="p">,</span> <span class="s">&quot;echo.sock&quot;</span><span class="p">))</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Bind error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+    <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_pipe_bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">server</span><span class="p">,</span> <span class="s">&quot;echo.sock&quot;</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Bind error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
-<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_listen</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">server</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">))</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Listen error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">uv_last_error</span><span class="p">(</span><span class="n">loop</span><span class="p">)));</span>
+<span class="hll">    <span class="k">if</span> <span class="p">((</span><span class="n">r</span> <span class="o">=</span> <span class="n">uv_listen</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">server</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">)))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Listen error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
         <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
@@ -666,8 +687,8 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 </td></tr></table></div>
 <p>We name the socket <tt class="docutils literal"><span class="pre">echo.sock</span></tt> which means it will be created in the local
 directory. This socket now behaves no different from TCP sockets as far as
-the stream API is concerned. You can test this server using <a class="reference external" href="http://netcat.sf.net">netcat</a>:</p>
-<div class="highlight-c"><div class="highlight"><pre>$ nc -U /path/to/echo.sock
+the stream API is concerned. You can test this server using <a class="reference external" href="http://www.dest-unreach.org/socat/">socat</a>:</p>
+<div class="highlight-c"><div class="highlight"><pre>$ socat - /path/to/socket
 </pre></div>
 </div>
 <p>A client which wants to connect to a domain socket will use:</p>
@@ -681,12 +702,8 @@ the stream API is concerned. You can test this server using <a class="reference 
 <p>The cool thing about domain sockets is that file descriptors can be exchanged
 between processes by sending them over a domain socket. This allows processes
 to hand off their I/O to other processes. Applications include load-balancing
-servers, worker processes and other ways to make optimum use of CPU.</p>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">On Windows, only file descriptors representing TCP sockets can be passed
-around.</p>
-</div>
+servers, worker processes and other ways to make optimum use of CPU. libuv only
+supports sending <strong>TCP sockets or other pipes</strong> over pipes for now.</p>
 <p>To demonstrate, we will look at a echo server implementation that hands of
 clients to worker processes in a round-robin fashion. This program is a bit
 involved, and while only snippets are included in the book, it is recommended
@@ -703,28 +720,24 @@ it by the master.</p>
  7
  8
  9
-10
-11
-12</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="kt">uv_pipe_t</span> <span class="n">queue</span><span class="p">;</span>
-
-
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
-<span class="hll">
-</span><span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+
+<span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">1</span> <span class="cm">/* ipc */</span><span class="p">);</span>
 </span><span class="hll">    <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span>    <span class="n">uv_read2_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
-    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
+</span><span class="hll">    <span class="n">uv_read_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">queue</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">on_new_connection</span><span class="p">);</span>
+</span>    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <p><tt class="docutils literal"><span class="pre">queue</span></tt> is the pipe connected to the master process on the other end, along
-which new file descriptors get sent. We use the <tt class="docutils literal"><span class="pre">read2</span></tt> function to express
-interest in file descriptors. It is important to set the <tt class="docutils literal"><span class="pre">ipc</span></tt> argument of
-<tt class="docutils literal"><span class="pre">uv_pipe_init</span></tt> to 1 to indicate this pipe will be used for inter-process
-communication! Since the master will write the file handle to the standard
-input of the worker, we connect the pipe to <tt class="docutils literal"><span class="pre">stdin</span></tt> using <tt class="docutils literal"><span class="pre">uv_pipe_open</span></tt>.</p>
+which new file descriptors get sent. It is important to set the <tt class="docutils literal"><span class="pre">ipc</span></tt>
+argument of <tt class="docutils literal"><span class="pre">uv_pipe_init</span></tt> to 1 to indicate this pipe will be used for
+inter-process communication! Since the master will write the file handle to the
+standard input of the worker, we connect the pipe to <tt class="docutils literal"><span class="pre">stdin</span></tt> using
+<tt class="docutils literal"><span class="pre">uv_pipe_open</span></tt>.</p>
 <p class="rubric">multi-echo-server/worker.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -741,16 +754,42 @@ input of the worker, we connect the pipe to <tt class="docutils literal"><span c
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_pipe_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">,</span> <span class="n">uv_handle_type</span> <span class="n">pending</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">pending</span> <span class="o">==</span> <span class="n">UV_UNKNOWN_HANDLE</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// error!</span>
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="kt">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">!=</span> <span class="n">UV_EOF</span><span class="p">)</span>
+            <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">nread</span><span class="p">));</span>
+        <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
         <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="kt">uv_pipe_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_pipe_t</span><span class="p">));</span>
-    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Worker %d: Accepted fd %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">(),</span> <span class="n">client</span><span class="o">-&gt;</span><span class="n">io_watcher</span><span class="p">.</span><span class="n">fd</span><span class="p">);</span>
+    <span class="kt">uv_pipe_t</span> <span class="o">*</span><span class="n">pipe</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">uv_pipe_pending_count</span><span class="p">(</span><span class="n">pipe</span><span class="p">))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;No pending count</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="hll">    <span class="n">uv_handle_type</span> <span class="n">pending</span> <span class="o">=</span> <span class="n">uv_pipe_pending_type</span><span class="p">(</span><span class="n">pipe</span><span class="p">);</span>
+</span>    <span class="n">assert</span><span class="p">(</span><span class="n">pending</span> <span class="o">==</span> <span class="n">UV_TCP</span><span class="p">);</span>
+
+    <span class="kt">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_tcp_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_tcp_t</span><span class="p">));</span>
+    <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span>        <span class="kt">uv_os_fd_t</span> <span class="n">fd</span><span class="p">;</span>
+        <span class="n">uv_fileno</span><span class="p">((</span><span class="k">const</span> <span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fd</span><span class="p">);</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Worker %d: Accepted fd %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">(),</span> <span class="n">fd</span><span class="p">);</span>
         <span class="n">uv_read_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">echo_read</span><span class="p">);</span>
     <span class="p">}</span>
     <span class="k">else</span> <span class="p">{</span>
@@ -759,7 +798,10 @@ input of the worker, we connect the pipe to <tt class="docutils literal"><span c
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>Although <tt class="docutils literal"><span class="pre">accept</span></tt> seems odd in this code, it actually makes sense. What
+<p>First we call <tt class="docutils literal"><span class="pre">uv_pipe_pending_count()</span></tt> to ensure that a handle is available
+to read out. If your program could deal with different types of handles,
+<tt class="docutils literal"><span class="pre">uv_pipe_pending_type()</span></tt> can be used to determine the type.
+Although <tt class="docutils literal"><span class="pre">accept</span></tt> seems odd in this code, it actually makes sense. What
 <tt class="docutils literal"><span class="pre">accept</span></tt> traditionally does is get a file descriptor (the client) from
 another file descriptor (The listening socket). Which is exactly what we do
 here. Fetch the file descriptor (<tt class="docutils literal"><span class="pre">client</span></tt>) from <tt class="docutils literal"><span class="pre">queue</span></tt>. From this point
@@ -771,11 +813,7 @@ allow load balancing.</p>
 2
 3
 4
-5
-6
-7</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-
-<span class="k">struct</span> <span class="n">child_worker</span> <span class="p">{</span>
+5</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">struct</span> <span class="n">child_worker</span> <span class="p">{</span>
     <span class="kt">uv_process_t</span> <span class="n">req</span><span class="p">;</span>
     <span class="kt">uv_process_options_t</span> <span class="n">options</span><span class="p">;</span>
     <span class="kt">uv_pipe_t</span> <span class="n">pipe</span><span class="p">;</span>
@@ -818,7 +856,11 @@ master and the individual process.</p>
 31
 32
 33
-34</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">setup_workers</span><span class="p">()</span> <span class="p">{</span>
+34
+35
+36</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">setup_workers</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">round_robin_counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
     <span class="c1">// ...</span>
 
     <span class="c1">// launch same number of workers as number of CPUs</span>
@@ -848,7 +890,7 @@ master and the individual process.</p>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">file</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
         <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span>
 
-        <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">worker</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">,</span> <span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">);</span> 
+        <span class="n">uv_spawn</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">worker</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">worker</span><span class="o">-&gt;</span><span class="n">options</span><span class="p">);</span> 
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Started worker %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">worker</span><span class="o">-&gt;</span><span class="n">req</span><span class="p">.</span><span class="n">pid</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -860,7 +902,7 @@ important to initialize the pipe acting as the IPC channel with the third
 argument as 1. We then indicate that the child process&#8217; <tt class="docutils literal"><span class="pre">stdin</span></tt> is to be
 a readable pipe (from the point of view of the child). Everything is
 straightforward till here. The workers are launched and waiting for file
-descriptors to be written to their pipes.</p>
+descriptors to be written to their standard input.</p>
 <p>It is in <tt class="docutils literal"><span class="pre">on_new_connection</span></tt> (the TCP infrastructure is initialized in
 <tt class="docutils literal"><span class="pre">main()</span></tt>), that we accept the client socket and pass it along to the next
 worker in the round-robin.</p>
@@ -889,11 +931,11 @@ worker in the round-robin.</p>
         <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="kt">uv_pipe_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_pipe_t</span><span class="p">));</span>
-    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="kt">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_tcp_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_tcp_t</span><span class="p">));</span>
+    <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
 </span>        <span class="kt">uv_write_t</span> <span class="o">*</span><span class="n">write_req</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_write_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_write_t</span><span class="p">));</span>
-        <span class="n">dummy_buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+        <span class="n">dummy_buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
 <span class="hll">        <span class="k">struct</span> <span class="n">child_worker</span> <span class="o">*</span><span class="n">worker</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">workers</span><span class="p">[</span><span class="n">round_robin_counter</span><span class="p">];</span>
 </span><span class="hll">        <span class="n">uv_write2</span><span class="p">(</span><span class="n">write_req</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">worker</span><span class="o">-&gt;</span><span class="n">pipe</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dummy_buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 </span>        <span class="n">round_robin_counter</span> <span class="o">=</span> <span class="p">(</span><span class="n">round_robin_counter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">child_worker_count</span><span class="p">;</span>
@@ -904,10 +946,11 @@ worker in the round-robin.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>Again, the <tt class="docutils literal"><span class="pre">uv_write2</span></tt> call handles all the abstraction and it is simply
-a matter of passing in the file descriptor as the right argument. With this our
+<p>The <tt class="docutils literal"><span class="pre">uv_write2</span></tt> call handles all the abstraction and it is simply a matter of
+passing in the handle (<tt class="docutils literal"><span class="pre">client</span></tt>) as the right argument. With this our
 multi-process echo server is operational.</p>
-<p>TODO what do the write2/read2 functions do with the buffers?</p>
+<p>Thanks to Kyle for <a class="reference external" href="https://github.com/nikhilm/uvbook/issues/56">pointing out</a> that <tt class="docutils literal"><span class="pre">uv_write2()</span></tt> requires a non-empty
+buffer even when sending handles.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -936,7 +979,7 @@ well.</td></tr>
 
     <div class="footer">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
