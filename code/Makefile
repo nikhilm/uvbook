@@ -48,7 +48,7 @@ all: plugin/plugin proc-streams/test cgi/tick multi-echo-server/worker uvwget/uv
 	for dir in $(examples); do cd $$dir; echo "--- `pwd`"; gcc $(CFLAGS) -o $$dir main.c $(UV_LIB) $(LIBS); cd ..; done
 
 plugin/plugin: plugin/*.c
-	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c plugin/plugin.c $(UV_LIB) $(LIBS)
+	gcc $(CFLAGS) $(PLUGIN_EXE_FLAGS) -o plugin/plugin plugin/main.c $(UV_LIB) $(LIBS)
 	gcc -g -Wall -c -fPIC -o plugin/hello.o plugin/hello.c
 	gcc $(SHARED_LIB_FLAGS) plugin/hello.o
 
