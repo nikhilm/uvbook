@@ -11,7 +11,7 @@ void run_command(uv_fs_event_t *handle, const char *filename, int events, int st
     size_t size = 1023;
     // Does not handle error if path is longer than 1023.
     uv_fs_event_getpath(handle, path, &size);
-    path[++size] = '\0';
+    path[size] = '\0';
 
     fprintf(stderr, "Change detected in %s: ", path);
     if (events & UV_RENAME)
