@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Utilities" href="utilities.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Advanced event loops</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="processes.html">Processes</a>
@@ -71,13 +71,13 @@ Qt&#8217;s event loop driving a libuv backend which does intensive system level
 tasks.</p>
 <div class="section" id="stopping-an-event-loop">
 <h2>Stopping an event loop<a class="headerlink" href="#stopping-an-event-loop" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can be used to stop an event loop. The earliest the loop will
+<p><code class="docutils literal"><span class="pre">uv_stop()</span></code> can be used to stop an event loop. The earliest the loop will
 stop running is <em>on the next iteration</em>, possibly later. This means that events
 that are ready to be processed in this iteration of the loop will still be
-processed, so <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> can&#8217;t be used as a kill switch. When <tt class="docutils literal"><span class="pre">uv_stop()</span></tt>
+processed, so <code class="docutils literal"><span class="pre">uv_stop()</span></code> can&#8217;t be used as a kill switch. When <code class="docutils literal"><span class="pre">uv_stop()</span></code>
 is called, the loop <strong>won&#8217;t</strong> block for i/o on this iteration. The semantics of
 these things can be a bit difficult to understand, so let&#8217;s look at
-<tt class="docutils literal"><span class="pre">uv_run()</span></tt> where all the control flow occurs.</p>
+<code class="docutils literal"><span class="pre">uv_run()</span></code> where all the control flow occurs.</p>
 <p class="rubric">src/unix/core.c - uv_run</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -122,16 +122,16 @@ these things can be a bit difficult to understand, so let&#8217;s look at
 <span class="hll">    <span class="n">uv__io_poll</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">timeout</span><span class="p">);</span>
 </span></pre></div>
 </td></tr></table></div>
-<p><tt class="docutils literal"><span class="pre">stop_flag</span></tt> is set by <tt class="docutils literal"><span class="pre">uv_stop()</span></tt>. Now all libuv callbacks are invoked
-within the event loop, which is why invoking <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> in them will still
+<p><code class="docutils literal"><span class="pre">stop_flag</span></code> is set by <code class="docutils literal"><span class="pre">uv_stop()</span></code>. Now all libuv callbacks are invoked
+within the event loop, which is why invoking <code class="docutils literal"><span class="pre">uv_stop()</span></code> in them will still
 lead to this iteration of the loop occurring. First libuv updates timers, then
 runs pending timer, idle and prepare callbacks, and invokes any pending I/O
-callbacks. If you were to call <tt class="docutils literal"><span class="pre">uv_stop()</span></tt> in any of them, <tt class="docutils literal"><span class="pre">stop_flag</span></tt>
-would be set. This causes <tt class="docutils literal"><span class="pre">uv_backend_timeout()</span></tt> to return <tt class="docutils literal"><span class="pre">0</span></tt>, which is
+callbacks. If you were to call <code class="docutils literal"><span class="pre">uv_stop()</span></code> in any of them, <code class="docutils literal"><span class="pre">stop_flag</span></code>
+would be set. This causes <code class="docutils literal"><span class="pre">uv_backend_timeout()</span></code> to return <code class="docutils literal"><span class="pre">0</span></code>, which is
 why the loop does not block on I/O. If on the other hand, you called
-<tt class="docutils literal"><span class="pre">uv_stop()</span></tt> in one of the check handlers, I/O has already finished and is not
+<code class="docutils literal"><span class="pre">uv_stop()</span></code> in one of the check handlers, I/O has already finished and is not
 affected.</p>
-<p><tt class="docutils literal"><span class="pre">uv_stop()</span></tt> is useful to shutdown a loop when a result has been computed or
+<p><code class="docutils literal"><span class="pre">uv_stop()</span></code> is useful to shutdown a loop when a result has been computed or
 there is an error, without having to ensure that all handlers are stopped one
 by one.</p>
 <p>Here is a simple example that stops the loop and demonstrates how the current
@@ -209,7 +209,7 @@ iteration of the loop still takes places.</p>
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="processes.html">Processes</a>
@@ -221,9 +221,9 @@ iteration of the loop still takes places.</p>
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

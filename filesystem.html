@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Networking" href="networking.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Filesystem</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="basics.html">Basics of libuv</a>
@@ -64,8 +64,8 @@
         
   <div class="section" id="filesystem">
 <h1>Filesystem<a class="headerlink" href="#filesystem" title="Permalink to this headline">¶</a></h1>
-<p>Simple filesystem read/write is achieved using the <tt class="docutils literal"><span class="pre">uv_fs_*</span></tt> functions and the
-<tt class="docutils literal"><span class="pre">uv_fs_t</span></tt> struct.</p>
+<p>Simple filesystem read/write is achieved using the <code class="docutils literal"><span class="pre">uv_fs_*</span></code> functions and the
+<code class="docutils literal"><span class="pre">uv_fs_t</span></code> struct.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The libuv filesystem operations are different from <a class="reference internal" href="networking.html"><em>socket operations</em></a>. Socket operations use the non-blocking operations provided
@@ -76,7 +76,7 @@ required.</p>
 </div>
 <p>All filesystem functions have two forms - <em>synchronous</em> and <em>asynchronous</em>.</p>
 <p>The <em>synchronous</em> forms automatically get called (and <strong>block</strong>) if the
-callback is null. The return value of functions is a <a class="reference internal" href="basics.html#libuv-error-handling"><em>libuv error code</em></a>. This is usually only useful for synchronous calls.
+callback is null. The return value of functions is a <a class="reference internal" href="basics.html#libuv-error-handling"><span>libuv error code</span></a>. This is usually only useful for synchronous calls.
 The <em>asynchronous</em> form is called when a callback is passed and the return
 value is 0.</p>
 <div class="section" id="reading-writing-files">
@@ -85,7 +85,7 @@ value is 0.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">flags</span></tt> and <tt class="docutils literal"><span class="pre">mode</span></tt> are standard
+<p><code class="docutils literal"><span class="pre">flags</span></code> and <code class="docutils literal"><span class="pre">mode</span></code> are standard
 <a class="reference external" href="http://man7.org/linux/man-pages/man2/open.2.html">Unix flags</a>.
 libuv takes care of converting to the appropriate Windows flags.</p>
 <p>File descriptors are closed using</p>
@@ -96,7 +96,7 @@ libuv takes care of converting to the appropriate Windows flags.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">callback</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>Let&#8217;s see a simple implementation of <tt class="docutils literal"><span class="pre">cat</span></tt>. We start with registering
+<p>Let&#8217;s see a simple implementation of <code class="docutils literal"><span class="pre">cat</span></code>. We start with registering
 a callback for when the file is opened:</p>
 <p class="rubric">uvcat/main.c - opening a file</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -124,8 +124,8 @@ a callback for when the file is opened:</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <tt class="docutils literal"><span class="pre">result</span></tt> field of a <tt class="docutils literal"><span class="pre">uv_fs_t</span></tt> is the file descriptor in case of the
-<tt class="docutils literal"><span class="pre">uv_fs_open</span></tt> callback. If the file is successfully opened, we start reading it.</p>
+<p>The <code class="docutils literal"><span class="pre">result</span></code> field of a <code class="docutils literal"><span class="pre">uv_fs_t</span></code> is the file descriptor in case of the
+<code class="docutils literal"><span class="pre">uv_fs_open</span></code> callback. If the file is successfully opened, we start reading it.</p>
 <p class="rubric">uvcat/main.c - read callback</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -157,17 +157,17 @@ a callback for when the file is opened:</p>
 </pre></div>
 </td></tr></table></div>
 <p>In the case of a read call, you should pass an <em>initialized</em> buffer which will
-be filled with data before the read callback is triggered. The <tt class="docutils literal"><span class="pre">uv_fs_*</span></tt>
+be filled with data before the read callback is triggered. The <code class="docutils literal"><span class="pre">uv_fs_*</span></code>
 operations map almost directly to certain POSIX functions, so EOF is indicated
-in this case by <tt class="docutils literal"><span class="pre">result</span></tt> being 0. In the case of streams or pipes, the
-<tt class="docutils literal"><span class="pre">UV_EOF</span></tt> constant would have been passed as a status instead.</p>
+in this case by <code class="docutils literal"><span class="pre">result</span></code> being 0. In the case of streams or pipes, the
+<code class="docutils literal"><span class="pre">UV_EOF</span></code> constant would have been passed as a status instead.</p>
 <p>Here you see a common pattern when writing asynchronous programs. The
-<tt class="docutils literal"><span class="pre">uv_fs_close()</span></tt> call is performed synchronously. <em>Usually tasks which are
+<code class="docutils literal"><span class="pre">uv_fs_close()</span></code> call is performed synchronously. <em>Usually tasks which are
 one-off, or are done as part of the startup or shutdown stage are performed
 synchronously, since we are interested in fast I/O when the program is going
 about its primary task and dealing with multiple I/O sources</em>. For solo tasks
 the performance difference usually is negligible and may lead to simpler code.</p>
-<p>Filesystem writing is similarly simple using <tt class="docutils literal"><span class="pre">uv_fs_write()</span></tt>.  <em>Your callback
+<p>Filesystem writing is similarly simple using <code class="docutils literal"><span class="pre">uv_fs_write()</span></code>.  <em>Your callback
 will be triggered after the write is complete</em>.  In our case the callback
 simply drives the next read. Thus read and write proceed in lockstep via
 callbacks.</p>
@@ -194,7 +194,7 @@ callbacks.</p>
 <p class="last">Due to the way filesystems and disk drives are configured for performance,
 a write that &#8216;succeeds&#8217; may not be committed to disk yet.</p>
 </div>
-<p>We set the dominos rolling in <tt class="docutils literal"><span class="pre">main()</span></tt>:</p>
+<p>We set the dominos rolling in <code class="docutils literal"><span class="pre">main()</span></code>:</p>
 <p class="rubric">uvcat/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -217,16 +217,16 @@ a write that &#8216;succeeds&#8217; may not be committed to disk yet.</p>
 </td></tr></table></div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">The <tt class="docutils literal"><span class="pre">uv_fs_req_cleanup()</span></tt> function must always be called on filesystem
+<p class="last">The <code class="docutils literal"><span class="pre">uv_fs_req_cleanup()</span></code> function must always be called on filesystem
 requests to free internal memory allocations in libuv.</p>
 </div>
 </div>
 <div class="section" id="filesystem-operations">
 <h2>Filesystem operations<a class="headerlink" href="#filesystem-operations" title="Permalink to this headline">¶</a></h2>
-<p>All the standard filesystem operations like <tt class="docutils literal"><span class="pre">unlink</span></tt>, <tt class="docutils literal"><span class="pre">rmdir</span></tt>, <tt class="docutils literal"><span class="pre">stat</span></tt> are
+<p>All the standard filesystem operations like <code class="docutils literal"><span class="pre">unlink</span></code>, <code class="docutils literal"><span class="pre">rmdir</span></code>, <code class="docutils literal"><span class="pre">stat</span></code> are
 supported asynchronously and have intuitive argument order. They follow the
 same patterns as the read/write/open calls, returning the result in the
-<tt class="docutils literal"><span class="pre">uv_fs_t.result</span></tt> field. The full list:</p>
+<code class="docutils literal"><span class="pre">uv_fs_t.result</span></code> field. The full list:</p>
 <p class="rubric">Filesystem operations</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_close</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
                           <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
@@ -345,7 +345,7 @@ same patterns as the read/write/open calls, returning the result in the
 </div>
 <div class="section" id="buffers-and-streams">
 <span id="id1"></span><h2>Buffers and Streams<a class="headerlink" href="#buffers-and-streams" title="Permalink to this headline">¶</a></h2>
-<p>The basic I/O handle in libuv is the stream (<tt class="docutils literal"><span class="pre">uv_stream_t</span></tt>). TCP sockets, UDP
+<p>The basic I/O handle in libuv is the stream (<code class="docutils literal"><span class="pre">uv_stream_t</span></code>). TCP sockets, UDP
 sockets, and pipes for file I/O and IPC are all treated as stream subclasses.</p>
 <p>Streams are initialized using custom functions for each subclass, then operated
 upon using</p>
@@ -356,18 +356,18 @@ upon using</p>
 </pre></div>
 </div>
 <p>The stream based functions are simpler to use than the filesystem ones and
-libuv will automatically keep reading from a stream when <tt class="docutils literal"><span class="pre">uv_read_start()</span></tt> is
-called once, until <tt class="docutils literal"><span class="pre">uv_read_stop()</span></tt> is called.</p>
-<p>The discrete unit of data is the buffer &#8211; <tt class="docutils literal"><span class="pre">uv_buf_t</span></tt>. This is simply
-a collection of a pointer to bytes (<tt class="docutils literal"><span class="pre">uv_buf_t.base</span></tt>) and the length
-(<tt class="docutils literal"><span class="pre">uv_buf_t.len</span></tt>). The <tt class="docutils literal"><span class="pre">uv_buf_t</span></tt> is lightweight and passed around by value.
+libuv will automatically keep reading from a stream when <code class="docutils literal"><span class="pre">uv_read_start()</span></code> is
+called once, until <code class="docutils literal"><span class="pre">uv_read_stop()</span></code> is called.</p>
+<p>The discrete unit of data is the buffer &#8211; <code class="docutils literal"><span class="pre">uv_buf_t</span></code>. This is simply
+a collection of a pointer to bytes (<code class="docutils literal"><span class="pre">uv_buf_t.base</span></code>) and the length
+(<code class="docutils literal"><span class="pre">uv_buf_t.len</span></code>). The <code class="docutils literal"><span class="pre">uv_buf_t</span></code> is lightweight and passed around by value.
 What does require management is the actual bytes, which have to be allocated
 and freed by the application.</p>
 <div class="admonition error">
 <p class="first admonition-title">Error</p>
 <p class="last">THIS PROGRAM DOES NOT ALWAYS WORK, NEED SOMETHING BETTER**</p>
 </div>
-<p>To demonstrate streams we will need to use <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt>. This allows streaming
+<p>To demonstrate streams we will need to use <code class="docutils literal"><span class="pre">uv_pipe_t</span></code>. This allows streaming
 local files <a class="footnote-reference" href="#id4" id="id2">[2]</a>. Here is a simple tee utility using libuv.  Doing all operations
 asynchronously shows the power of evented I/O. The two writes won&#8217;t block each
 other, but we have to be careful to copy over the buffer data to ensure we don&#8217;t
@@ -418,12 +418,12 @@ opened as bidirectional by default.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>The third argument of <tt class="docutils literal"><span class="pre">uv_pipe_init()</span></tt> should be set to 1 for IPC using named
-pipes. This is covered in <a class="reference internal" href="processes.html"><em>Processes</em></a>. The <tt class="docutils literal"><span class="pre">uv_pipe_open()</span></tt> call
-associates the pipe with the file descriptor, in this case <tt class="docutils literal"><span class="pre">0</span></tt> (standard
+<p>The third argument of <code class="docutils literal"><span class="pre">uv_pipe_init()</span></code> should be set to 1 for IPC using named
+pipes. This is covered in <a class="reference internal" href="processes.html"><em>Processes</em></a>. The <code class="docutils literal"><span class="pre">uv_pipe_open()</span></code> call
+associates the pipe with the file descriptor, in this case <code class="docutils literal"><span class="pre">0</span></code> (standard
 input).</p>
-<p>We start monitoring <tt class="docutils literal"><span class="pre">stdin</span></tt>. The <tt class="docutils literal"><span class="pre">alloc_buffer</span></tt> callback is invoked as new
-buffers are required to hold incoming data. <tt class="docutils literal"><span class="pre">read_stdin</span></tt> will be called with
+<p>We start monitoring <code class="docutils literal"><span class="pre">stdin</span></code>. The <code class="docutils literal"><span class="pre">alloc_buffer</span></code> callback is invoked as new
+buffers are required to hold incoming data. <code class="docutils literal"><span class="pre">read_stdin</span></code> will be called with
 these buffers.</p>
 <p class="rubric">uvtee/main.c - reading buffers</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -467,20 +467,20 @@ these buffers.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>The standard <tt class="docutils literal"><span class="pre">malloc</span></tt> is sufficient here, but you can use any memory allocation
+<p>The standard <code class="docutils literal"><span class="pre">malloc</span></code> is sufficient here, but you can use any memory allocation
 scheme. For example, node.js uses its own slab allocator which associates
 buffers with V8 objects.</p>
-<p>The read callback <tt class="docutils literal"><span class="pre">nread</span></tt> parameter is less than 0 on any error. This error
+<p>The read callback <code class="docutils literal"><span class="pre">nread</span></code> parameter is less than 0 on any error. This error
 might be EOF, in which case we close all the streams, using the generic close
-function <tt class="docutils literal"><span class="pre">uv_close()</span></tt> which deals with the handle based on its internal type.
-Otherwise <tt class="docutils literal"><span class="pre">nread</span></tt> is a non-negative number and we can attempt to write that
+function <code class="docutils literal"><span class="pre">uv_close()</span></code> which deals with the handle based on its internal type.
+Otherwise <code class="docutils literal"><span class="pre">nread</span></code> is a non-negative number and we can attempt to write that
 many bytes to the output streams. Finally remember that buffer allocation and
 deallocation is application responsibility, so we free the data.</p>
 <p>The allocation callback may return a buffer with length zero if it fails to
 allocate memory. In this case, the read callback is invoked with error
 UV_ENOBUFS. libuv will continue to attempt to read the stream though, so you
-must explicitly call <tt class="docutils literal"><span class="pre">uv_close()</span></tt> if you want to stop when allocation fails.</p>
-<p>The read callback may be called with <tt class="docutils literal"><span class="pre">nread</span> <span class="pre">=</span> <span class="pre">0</span></tt>, indicating that at this
+must explicitly call <code class="docutils literal"><span class="pre">uv_close()</span></code> if you want to stop when allocation fails.</p>
+<p>The read callback may be called with <code class="docutils literal"><span class="pre">nread</span> <span class="pre">=</span> <span class="pre">0</span></code>, indicating that at this
 point there is nothing to be read. Most applications will just ignore this.</p>
 <p class="rubric">uvtee/main.c - Write to pipe</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -534,11 +534,11 @@ point there is nothing to be read. Most applications will just ignore this.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p><tt class="docutils literal"><span class="pre">write_data()</span></tt> makes a copy of the buffer obtained from read. This buffer
+<p><code class="docutils literal"><span class="pre">write_data()</span></code> makes a copy of the buffer obtained from read. This buffer
 does not get passed through to the write callback trigged on write completion. To
-get around this we wrap a write request and a buffer in <tt class="docutils literal"><span class="pre">write_req_t</span></tt> and
+get around this we wrap a write request and a buffer in <code class="docutils literal"><span class="pre">write_req_t</span></code> and
 unwrap it in the callbacks. We make a copy so we can free the two buffers from
-the two calls to <tt class="docutils literal"><span class="pre">write_data</span></tt> independently of each other. While acceptable
+the two calls to <code class="docutils literal"><span class="pre">write_data</span></code> independently of each other. While acceptable
 for a demo program like this, you&#8217;ll probably want smarter memory management,
 like reference counted buffers or a pool of buffers in any major application.</p>
 <div class="admonition warning">
@@ -564,7 +564,7 @@ a command whenever any of the watched files change:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">onchange</span> <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">file1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">file2</span><span class="p">]</span> <span class="p">...</span>
 </pre></div>
 </div>
-<p>The file change notification is started using <tt class="docutils literal"><span class="pre">uv_fs_event_init()</span></tt>:</p>
+<p>The file change notification is started using <code class="docutils literal"><span class="pre">uv_fs_event_init()</span></code>:</p>
 <p class="rubric">onchange/main.c - The setup</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -606,37 +606,37 @@ a command whenever any of the watched files change:</p>
 </pre></div>
 </td></tr></table></div>
 <p>The third argument is the actual file or directory to monitor. The last
-argument, <tt class="docutils literal"><span class="pre">flags</span></tt>, can be:</p>
+argument, <code class="docutils literal"><span class="pre">flags</span></code>, can be:</p>
 <div class="highlight-c"><div class="highlight"><pre>  <span class="n">UV_FS_EVENT_WATCH_ENTRY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
   <span class="n">UV_FS_EVENT_STAT</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
   <span class="n">UV_FS_EVENT_RECURSIVE</span> <span class="o">=</span> <span class="mi">4</span>
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">UV_FS_EVENT_WATCH_ENTRY</span></tt> and <tt class="docutils literal"><span class="pre">UV_FS_EVENT_STAT</span></tt> don&#8217;t do anything (yet).
-<tt class="docutils literal"><span class="pre">UV_FS_EVENT_RECURSIVE</span></tt> will start watching subdirectories as well on
+<p><code class="docutils literal"><span class="pre">UV_FS_EVENT_WATCH_ENTRY</span></code> and <code class="docutils literal"><span class="pre">UV_FS_EVENT_STAT</span></code> don&#8217;t do anything (yet).
+<code class="docutils literal"><span class="pre">UV_FS_EVENT_RECURSIVE</span></code> will start watching subdirectories as well on
 supported platforms.</p>
 <p>The callback will receive the following arguments:</p>
 <blockquote>
 <div><ol class="arabic">
-<li><p class="first"><tt class="docutils literal"><span class="pre">uv_fs_event_t</span> <span class="pre">*handle</span></tt> - The handle. The <tt class="docutils literal"><span class="pre">path</span></tt> field of the handle
+<li><p class="first"><code class="docutils literal"><span class="pre">uv_fs_event_t</span> <span class="pre">*handle</span></code> - The handle. The <code class="docutils literal"><span class="pre">path</span></code> field of the handle
 is the file on which the watch was set.</p>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*filename</span></tt> - If a directory is being monitored, this is the
-file which was changed. Only non-<tt class="docutils literal"><span class="pre">null</span></tt> on Linux and Windows. May be <tt class="docutils literal"><span class="pre">null</span></tt>
+<li><p class="first"><code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*filename</span></code> - If a directory is being monitored, this is the
+file which was changed. Only non-<code class="docutils literal"><span class="pre">null</span></code> on Linux and Windows. May be <code class="docutils literal"><span class="pre">null</span></code>
 even on those platforms.</p>
 </li>
 <li><dl class="first docutils">
-<dt><tt class="docutils literal"><span class="pre">int</span> <span class="pre">flags</span></tt> - one of <tt class="docutils literal"><span class="pre">UV_RENAME</span></tt> or <tt class="docutils literal"><span class="pre">UV_CHANGE</span></tt>, or a bitwise OR of</dt>
+<dt><code class="docutils literal"><span class="pre">int</span> <span class="pre">flags</span></code> - one of <code class="docutils literal"><span class="pre">UV_RENAME</span></code> or <code class="docutils literal"><span class="pre">UV_CHANGE</span></code>, or a bitwise OR of</dt>
 <dd><p class="first last">both.</p>
 </dd>
 </dl>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">int</span> <span class="pre">status</span></tt> - Currently 0.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">int</span> <span class="pre">status</span></code> - Currently 0.</p>
 </li>
 </ol>
 </div></blockquote>
 <p>In our example we simply print the arguments and run the command using
-<tt class="docutils literal"><span class="pre">system()</span></tt>.</p>
+<code class="docutils literal"><span class="pre">system()</span></code>.</p>
 <p class="rubric">onchange/main.c - file change notification callback</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -658,7 +658,7 @@ even on those platforms.</p>
     <span class="kt">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">1023</span><span class="p">;</span>
     <span class="c1">// Does not handle error if path is longer than 1023.</span>
     <span class="n">uv_fs_event_getpath</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">);</span>
-    <span class="n">path</span><span class="p">[</span><span class="o">++</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+    <span class="n">path</span><span class="p">[</span><span class="n">size</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>
 
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Change detected in %s: &quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">);</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_RENAME</span><span class="p">)</span>
@@ -682,7 +682,7 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>see <a class="reference internal" href="processes.html#pipes"><em>Pipes</em></a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>see <a class="reference internal" href="processes.html#pipes"><span>Pipes</span></a></td></tr>
 </tbody>
 </table>
 </div>
@@ -690,7 +690,7 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="basics.html">Basics of libuv</a>
@@ -702,9 +702,9 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

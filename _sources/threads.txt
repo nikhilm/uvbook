@@ -219,7 +219,8 @@ The trigger is ``uv_queue_work``:
 
 The thread function will be launched in a separate thread, passed the
 ``uv_work_t`` structure and once the function returns, the *after* function
-will be called, again with the same structure.
+will be called on the thread the event loop is running in. It will be passed
+the same structure.
 
 For writing wrappers to blocking libraries, a common :ref:`pattern <baton>`
 is to use a baton to exchange data.

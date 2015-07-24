@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Filesystem" href="filesystem.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Basics of libuv</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="introduction.html">Introduction</a>
@@ -87,11 +87,11 @@ The event-loop usually keeps running <em>forever</em>. In pseudocode:</p>
 <li>A socket has data ready to be read</li>
 <li>A timer has timed out</li>
 </ul>
-<p>This event loop is encapsulated by <tt class="docutils literal"><span class="pre">uv_run()</span></tt> &#8211; the end-all function when using
+<p>This event loop is encapsulated by <code class="docutils literal"><span class="pre">uv_run()</span></code> &#8211; the end-all function when using
 libuv.</p>
 <p>The most common activity of systems programs is to deal with input and output,
 rather than a lot of number-crunching. The problem with using conventional
-input/output functions (<tt class="docutils literal"><span class="pre">read</span></tt>, <tt class="docutils literal"><span class="pre">fprintf</span></tt>, etc.) is that they are
+input/output functions (<code class="docutils literal"><span class="pre">read</span></code>, <code class="docutils literal"><span class="pre">fprintf</span></code>, etc.) is that they are
 <strong>blocking</strong>. The actual write to a hard disk or reading from a network, takes
 a disproportionately long time compared to the speed of the processor. The
 functions don&#8217;t return until the task is done, so that your program is doing
@@ -103,7 +103,7 @@ gets invoked in the thread, the processor can schedule another thread to run,
 which actually needs the CPU.</p>
 <p>The approach followed by libuv uses another style, which is the <strong>asynchronous,
 non-blocking</strong> style. Most modern operating systems provide event notification
-subsystems. For example, a normal <tt class="docutils literal"><span class="pre">read</span></tt> call on a socket would block until
+subsystems. For example, a normal <code class="docutils literal"><span class="pre">read</span></code> call on a socket would block until
 the sender actually sent something. Instead, the application can request the
 operating system to watch the socket and put an event notification in the
 queue. The application can inspect the events at its convenience (perhaps doing
@@ -168,16 +168,16 @@ nothing, except start a loop which will exit immediately.</p>
 event loop has to be told to watch out for events using the various API
 functions.</p>
 <p>Starting with libuv v1.0, users should allocate the memory for the loops before
-initializing it with <tt class="docutils literal"><span class="pre">uv_loop_init(uv_loop_t</span> <span class="pre">*)</span></tt>. This allows you to plug in
+initializing it with <code class="docutils literal"><span class="pre">uv_loop_init(uv_loop_t</span> <span class="pre">*)</span></code>. This allows you to plug in
 custom memory management. Remember to de-initialize the loop using
-<tt class="docutils literal"><span class="pre">uv_loop_close(uv_loop_t</span> <span class="pre">*)</span></tt> and then delete the storage. The examples never
+<code class="docutils literal"><span class="pre">uv_loop_close(uv_loop_t</span> <span class="pre">*)</span></code> and then delete the storage. The examples never
 close loops since the program quits after the loop ends and the system will
 reclaim memory. Production grade projects, especially long running systems
 programs, should take care to release correctly.</p>
 <div class="section" id="default-loop">
 <h3>Default loop<a class="headerlink" href="#default-loop" title="Permalink to this headline">¶</a></h3>
 <p>A default loop is provided by libuv and can be accessed using
-<tt class="docutils literal"><span class="pre">uv_default_loop()</span></tt>. You should use this loop if you only want a single
+<code class="docutils literal"><span class="pre">uv_default_loop()</span></code>. You should use this loop if you only want a single
 loop.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -188,16 +188,16 @@ you should be aware of this.</p>
 </div>
 <div class="section" id="error-handling">
 <span id="libuv-error-handling"></span><h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this headline">¶</a></h2>
-<p>Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as <tt class="docutils literal"><span class="pre">UV_E*</span></tt> <a class="reference external" href="http://docs.libuv.org/en/v1.x/errors.html#error-constants">constants</a>.</p>
-<p>You can use the <tt class="docutils literal"><span class="pre">uv_strerror(int)</span></tt> and <tt class="docutils literal"><span class="pre">uv_err_name(int)</span></tt> functions
-to get a <tt class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></tt> describing the error or the error name respectively.</p>
-<p>I/O read callbacks (such as for files and sockets) are passed a parameter <tt class="docutils literal"><span class="pre">nread</span></tt>. If <tt class="docutils literal"><span class="pre">nread</span></tt> is less than 0, there was an error (UV_EOF is the end of file error, which you may want to handle differently).</p>
+<p>Initialization functions or synchronous functions which may fail return a negative number on error. Async functions that may fail will pass a status parameter to their callbacks. The error messages are defined as <code class="docutils literal"><span class="pre">UV_E*</span></code> <a class="reference external" href="http://docs.libuv.org/en/v1.x/errors.html#error-constants">constants</a>.</p>
+<p>You can use the <code class="docutils literal"><span class="pre">uv_strerror(int)</span></code> and <code class="docutils literal"><span class="pre">uv_err_name(int)</span></code> functions
+to get a <code class="docutils literal"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code> describing the error or the error name respectively.</p>
+<p>I/O read callbacks (such as for files and sockets) are passed a parameter <code class="docutils literal"><span class="pre">nread</span></code>. If <code class="docutils literal"><span class="pre">nread</span></code> is less than 0, there was an error (UV_EOF is the end of file error, which you may want to handle differently).</p>
 </div>
 <div class="section" id="handles-and-requests">
 <h2>Handles and Requests<a class="headerlink" href="#handles-and-requests" title="Permalink to this headline">¶</a></h2>
 <p>libuv works by the user expressing interest in particular events. This is
 usually done by creating a <strong>handle</strong> to an I/O device, timer or process.
-Handles are opaque structs named as <tt class="docutils literal"><span class="pre">uv_TYPE_t</span></tt> where type signifies what the
+Handles are opaque structs named as <code class="docutils literal"><span class="pre">uv_TYPE_t</span></code> where type signifies what the
 handle is used for.</p>
 <p class="rubric">libuv watchers</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Handle types. */</span>
@@ -241,7 +241,7 @@ identified using <strong>requests</strong>. A request is short-lived (usually us
 only one callback) and usually indicates one I/O operation on a handle.
 Requests are used to preserve context between the initiation and the callback
 of individual actions. For example, an UDP socket is represented by
-a <tt class="docutils literal"><span class="pre">uv_udp_t</span></tt>, while individual writes to the socket use a <tt class="docutils literal"><span class="pre">uv_udp_send_t</span></tt>
+a <code class="docutils literal"><span class="pre">uv_udp_t</span></code>, while individual writes to the socket use a <code class="docutils literal"><span class="pre">uv_udp_send_t</span></code>
 structure that is passed to the callback after the write is done.</p>
 <p>Handles are setup by a corresponding:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="p">,</span> <span class="n">uv_TYPE_t</span> <span class="o">*</span><span class="p">)</span>
@@ -258,8 +258,8 @@ on.</p>
 <p>Here is an example of using an idle handle. The callback is called once on
 every turn of the event loop. A use case for idle handles is discussed in
 <a class="reference internal" href="utilities.html"><em>Utilities</em></a>. Let us use an idle watcher to look at the watcher life cycle
-and see how <tt class="docutils literal"><span class="pre">uv_run()</span></tt> will now block because a watcher is present. The idle
-watcher is stopped when the count is reached and <tt class="docutils literal"><span class="pre">uv_run()</span></tt> exits since no
+and see how <code class="docutils literal"><span class="pre">uv_run()</span></code> will now block because a watcher is present. The idle
+watcher is stopped when the count is reached and <code class="docutils literal"><span class="pre">uv_run()</span></code> exits since no
 event watchers are active.</p>
 <p class="rubric">idle-basic/main.c</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
@@ -293,9 +293,9 @@ event watchers are active.</p>
 <h3>Storing context<a class="headerlink" href="#storing-context" title="Permalink to this headline">¶</a></h3>
 <p>In callback based programming style you&#8217;ll often want to pass some &#8216;context&#8217; &#8211;
 application specific information &#8211; between the call site and the callback. All
-handles and requests have a <tt class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></tt> member which you can set to the
+handles and requests have a <code class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></code> member which you can set to the
 context and cast back in the callback. This is a common pattern used throughout
-the C library ecosystem. In addition <tt class="docutils literal"><span class="pre">uv_loop_t</span></tt> also has a similar data
+the C library ecosystem. In addition <code class="docutils literal"><span class="pre">uv_loop_t</span></code> also has a similar data
 member.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id2" rules="none">
@@ -310,7 +310,7 @@ member.</p>
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="introduction.html">Introduction</a>
@@ -322,9 +322,9 @@ member.</p>
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

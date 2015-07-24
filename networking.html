@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Threads" href="threads.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Networking</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="filesystem.html">Filesystem</a>
@@ -69,7 +69,7 @@ interface, some things are easier, all are non-blocking, but the concepts stay
 the same. In addition libuv offers utility functions to abstract the annoying,
 repetitive and low-level tasks like setting up sockets using the BSD socket
 structures, DNS lookup, and tweaking various socket parameters.</p>
-<p>The <tt class="docutils literal"><span class="pre">uv_tcp_t</span></tt> and <tt class="docutils literal"><span class="pre">uv_udp_t</span></tt> structures are used for network I/O.</p>
+<p>The <code class="docutils literal"><span class="pre">uv_tcp_t</span></code> and <code class="docutils literal"><span class="pre">uv_udp_t</span></code> structures are used for network I/O.</p>
 <div class="section" id="tcp">
 <h2>TCP<a class="headerlink" href="#tcp" title="Permalink to this headline">¶</a></h2>
 <p>TCP is a connection oriented, stream protocol and is therefore based on the
@@ -78,12 +78,12 @@ libuv streams infrastructure.</p>
 <h3>Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h3>
 <p>Server sockets proceed by:</p>
 <ol class="arabic simple">
-<li><tt class="docutils literal"><span class="pre">uv_tcp_init</span></tt> the TCP handle.</li>
-<li><tt class="docutils literal"><span class="pre">uv_tcp_bind</span></tt> it.</li>
-<li>Call <tt class="docutils literal"><span class="pre">uv_listen</span></tt> on the handle to have a callback invoked whenever a new
+<li><code class="docutils literal"><span class="pre">uv_tcp_init</span></code> the TCP handle.</li>
+<li><code class="docutils literal"><span class="pre">uv_tcp_bind</span></code> it.</li>
+<li>Call <code class="docutils literal"><span class="pre">uv_listen</span></code> on the handle to have a callback invoked whenever a new
 connection is established by a client.</li>
-<li>Use <tt class="docutils literal"><span class="pre">uv_accept</span></tt> to accept the connection.</li>
-<li>Use <a class="reference internal" href="filesystem.html#buffers-and-streams"><em>stream operations</em></a> to communicate with the
+<li>Use <code class="docutils literal"><span class="pre">uv_accept</span></code> to accept the connection.</li>
+<li>Use <a class="reference internal" href="filesystem.html#buffers-and-streams"><span>stream operations</span></a> to communicate with the
 client.</li>
 </ol>
 <p>Here is a simple echo server</p>
@@ -121,18 +121,18 @@ client.</li>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>You can see the utility function <tt class="docutils literal"><span class="pre">uv_ip4_addr</span></tt> being used to convert from
+<p>You can see the utility function <code class="docutils literal"><span class="pre">uv_ip4_addr</span></code> being used to convert from
 a human readable IP address, port pair to the sockaddr_in structure required by
-the BSD socket APIs. The reverse can be obtained using <tt class="docutils literal"><span class="pre">uv_ip4_name</span></tt>.</p>
+the BSD socket APIs. The reverse can be obtained using <code class="docutils literal"><span class="pre">uv_ip4_name</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">There are <tt class="docutils literal"><span class="pre">uv_ip6_*</span></tt> analogues for the ip4 functions.</p>
+<p class="last">There are <code class="docutils literal"><span class="pre">uv_ip6_*</span></code> analogues for the ip4 functions.</p>
 </div>
 <p>Most of the setup functions are synchronous since they are CPU-bound.
-<tt class="docutils literal"><span class="pre">uv_listen</span></tt> is where we return to libuv&#8217;s callback style. The second
+<code class="docutils literal"><span class="pre">uv_listen</span></code> is where we return to libuv&#8217;s callback style. The second
 arguments is the backlog queue &#8211; the maximum length of queued connections.</p>
 <p>When a connection is initiated by clients, the callback is required to set up
-a handle for the client socket and associate the handle using <tt class="docutils literal"><span class="pre">uv_accept</span></tt>.
+a handle for the client socket and associate the handle using <code class="docutils literal"><span class="pre">uv_accept</span></code>.
 In this case we also establish interest in reading from this stream.</p>
 <p class="rubric">tcp-echo-server/main.c - Accepting the client</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -169,15 +169,15 @@ In this case we also establish interest in reading from this stream.</p>
 </pre></div>
 </td></tr></table></div>
 <p>The remaining set of functions is very similar to the streams example and can
-be found in the code. Just remember to call <tt class="docutils literal"><span class="pre">uv_close</span></tt> when the socket isn&#8217;t
-required. This can be done even in the <tt class="docutils literal"><span class="pre">uv_listen</span></tt> callback if you are not
+be found in the code. Just remember to call <code class="docutils literal"><span class="pre">uv_close</span></code> when the socket isn&#8217;t
+required. This can be done even in the <code class="docutils literal"><span class="pre">uv_listen</span></code> callback if you are not
 interested in accepting the connection.</p>
 </div>
 <div class="section" id="client">
 <h3>Client<a class="headerlink" href="#client" title="Permalink to this headline">¶</a></h3>
 <p>Where you do bind/listen/accept on the server, on the client side it&#8217;s simply
-a matter of calling <tt class="docutils literal"><span class="pre">uv_tcp_connect</span></tt>. The same <tt class="docutils literal"><span class="pre">uv_connect_cb</span></tt> style
-callback of <tt class="docutils literal"><span class="pre">uv_listen</span></tt> is used by <tt class="docutils literal"><span class="pre">uv_tcp_connect</span></tt>. Try:</p>
+a matter of calling <code class="docutils literal"><span class="pre">uv_tcp_connect</span></code>. The same <code class="docutils literal"><span class="pre">uv_connect_cb</span></code> style
+callback of <code class="docutils literal"><span class="pre">uv_listen</span></code> is used by <code class="docutils literal"><span class="pre">uv_tcp_connect</span></code>. Try:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">uv_tcp_t</span><span class="o">*</span> <span class="n">socket</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_tcp_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_tcp_t</span><span class="p">));</span>
 <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">socket</span><span class="p">);</span>
 
@@ -189,8 +189,8 @@ callback of <tt class="docutils literal"><span class="pre">uv_listen</span></tt>
 <span class="n">uv_tcp_connect</span><span class="p">(</span><span class="n">connect</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">on_connect</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>where <tt class="docutils literal"><span class="pre">on_connect</span></tt> will be called after the connection is established. The
-callback receives the <tt class="docutils literal"><span class="pre">uv_connect_t</span></tt> struct, which has a member <tt class="docutils literal"><span class="pre">.handle</span></tt>
+<p>where <code class="docutils literal"><span class="pre">on_connect</span></code> will be called after the connection is established. The
+callback receives the <code class="docutils literal"><span class="pre">uv_connect_t</span></code> struct, which has a member <code class="docutils literal"><span class="pre">.handle</span></code>
 pointing to the socket.</p>
 </div>
 </div>
@@ -268,27 +268,27 @@ numbers below 1024.</p>
 </td></tr></table></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The IP address <tt class="docutils literal"><span class="pre">0.0.0.0</span></tt> is used to bind to all interfaces. The IP
-address <tt class="docutils literal"><span class="pre">255.255.255.255</span></tt> is a broadcast address meaning that packets
-will be sent to all interfaces on the subnet.  port <tt class="docutils literal"><span class="pre">0</span></tt> means that the OS
+<p class="last">The IP address <code class="docutils literal"><span class="pre">0.0.0.0</span></code> is used to bind to all interfaces. The IP
+address <code class="docutils literal"><span class="pre">255.255.255.255</span></code> is a broadcast address meaning that packets
+will be sent to all interfaces on the subnet.  port <code class="docutils literal"><span class="pre">0</span></code> means that the OS
 randomly assigns a port.</p>
 </div>
 <p>First we setup the receiving socket to bind on all interfaces on port 68 (DHCP
 client) and start a read on it. This will read back responses from any DHCP
 server that replies. We use the UV_UDP_REUSEADDR flag to play nice with any
 other system DHCP clients that are running on this computer on the same port.
-Then we setup a similar send socket and use <tt class="docutils literal"><span class="pre">uv_udp_send</span></tt> to send
+Then we setup a similar send socket and use <code class="docutils literal"><span class="pre">uv_udp_send</span></code> to send
 a <em>broadcast message</em> on port 67 (DHCP server).</p>
 <p>It is <strong>necessary</strong> to set the broadcast flag, otherwise you will get an
-<tt class="docutils literal"><span class="pre">EACCES</span></tt> error <a class="footnote-reference" href="#id5" id="id1">[1]</a>. The exact message being sent is not relevant to this
+<code class="docutils literal"><span class="pre">EACCES</span></code> error <a class="footnote-reference" href="#id5" id="id1">[1]</a>. The exact message being sent is not relevant to this
 book and you can study the code if you are interested. As usual the read and
 write callbacks will receive a status code of &lt; 0 if something went wrong.</p>
 <p>Since UDP sockets are not connected to a particular peer, the read callback
 receives an extra parameter about the sender of the packet.</p>
-<p><tt class="docutils literal"><span class="pre">nread</span></tt> may be zero if there is no more data to be read. If <tt class="docutils literal"><span class="pre">addr</span></tt> is NULL,
+<p><code class="docutils literal"><span class="pre">nread</span></code> may be zero if there is no more data to be read. If <code class="docutils literal"><span class="pre">addr</span></code> is NULL,
 it indicates there is nothing to read (the callback shouldn&#8217;t do anything), if
 not NULL, it indicates that an empty datagram was received from the host at
-<tt class="docutils literal"><span class="pre">addr</span></tt>. The <tt class="docutils literal"><span class="pre">flags</span></tt> parameter may be <tt class="docutils literal"><span class="pre">UV_UDP_PARTIAL</span></tt> if the buffer
+<code class="docutils literal"><span class="pre">addr</span></code>. The <code class="docutils literal"><span class="pre">flags</span></code> parameter may be <code class="docutils literal"><span class="pre">UV_UDP_PARTIAL</span></code> if the buffer
 provided by your allocator was not large enough to hold the data. <em>In this case
 the OS will discard the data that could not fit</em> (That&#8217;s UDP for you!).</p>
 <p class="rubric">udp-dhcp/main.c - Reading packets</p>
@@ -345,13 +345,13 @@ the OS will discard the data that could not fit</em> (That&#8217;s UDP for you!)
 <h3>UDP Options<a class="headerlink" href="#udp-options" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="time-to-live">
 <h4>Time-to-live<a class="headerlink" href="#time-to-live" title="Permalink to this headline">¶</a></h4>
-<p>The TTL of packets sent on the socket can be changed using <tt class="docutils literal"><span class="pre">uv_udp_set_ttl</span></tt>.</p>
+<p>The TTL of packets sent on the socket can be changed using <code class="docutils literal"><span class="pre">uv_udp_set_ttl</span></code>.</p>
 </div>
 <div class="section" id="ipv6-stack-only">
 <h4>IPv6 stack only<a class="headerlink" href="#ipv6-stack-only" title="Permalink to this headline">¶</a></h4>
 <p>IPv6 sockets can be used for both IPv4 and IPv6 communication. If you want to
-restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span class="pre">UV_UDP_IPV6ONLY</span></tt> flag to
-<tt class="docutils literal"><span class="pre">uv_udp_bind</span></tt> <a class="footnote-reference" href="#id6" id="id2">[2]</a>.</p>
+restrict the socket to IPv6 only, pass the <code class="docutils literal"><span class="pre">UV_UDP_IPV6ONLY</span></code> flag to
+<code class="docutils literal"><span class="pre">uv_udp_bind</span></code> <a class="footnote-reference" href="#id6" id="id2">[2]</a>.</p>
 </div>
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
@@ -362,19 +362,19 @@ restrict the socket to IPv6 only, pass the <tt class="docutils literal"><span cl
                                     <span class="n">uv_membership</span> <span class="n">membership</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>where <tt class="docutils literal"><span class="pre">membership</span></tt> is <tt class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></tt> or <tt class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></tt>.</p>
+<p>where <code class="docutils literal"><span class="pre">membership</span></code> is <code class="docutils literal"><span class="pre">UV_JOIN_GROUP</span></code> or <code class="docutils literal"><span class="pre">UV_LEAVE_GROUP</span></code>.</p>
 <p>The concepts of multicasting are nicely explained in <a class="reference external" href="http://www.tldp.org/HOWTO/Multicast-HOWTO-2.html">this guide</a>.</p>
 <p>Local loopback of multicast packets is enabled by default <a class="footnote-reference" href="#id7" id="id3">[3]</a>, use
-<tt class="docutils literal"><span class="pre">uv_udp_set_multicast_loop</span></tt> to switch it off.</p>
+<code class="docutils literal"><span class="pre">uv_udp_set_multicast_loop</span></code> to switch it off.</p>
 <p>The packet time-to-live for multicast packets can be changed using
-<tt class="docutils literal"><span class="pre">uv_udp_set_multicast_ttl</span></tt>.</p>
+<code class="docutils literal"><span class="pre">uv_udp_set_multicast_ttl</span></code>.</p>
 </div>
 </div>
 </div>
 <div class="section" id="querying-dns">
 <h2>Querying DNS<a class="headerlink" href="#querying-dns" title="Permalink to this headline">¶</a></h2>
 <p>libuv provides asynchronous DNS resolution. For this it provides its own
-<tt class="docutils literal"><span class="pre">getaddrinfo</span></tt> replacement <a class="footnote-reference" href="#id8" id="id4">[4]</a>. In the callback you can
+<code class="docutils literal"><span class="pre">getaddrinfo</span></code> replacement <a class="footnote-reference" href="#id8" id="id4">[4]</a>. In the callback you can
 perform normal socket operations on the retrieved addresses. Let&#8217;s connect to
 Freenode to see an example of DNS resolution.</p>
 <p class="rubric">dns/main.c</p>
@@ -417,14 +417,14 @@ Freenode to see an example of DNS resolution.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>If <tt class="docutils literal"><span class="pre">uv_getaddrinfo</span></tt> returns non-zero, something went wrong in the setup and
+<p>If <code class="docutils literal"><span class="pre">uv_getaddrinfo</span></code> returns non-zero, something went wrong in the setup and
 your callback won&#8217;t be invoked at all. All arguments can be freed immediately
-after <tt class="docutils literal"><span class="pre">uv_getaddrinfo</span></tt> returns. The <cite>hostname</cite>, <cite>servname</cite> and <cite>hints</cite>
+after <code class="docutils literal"><span class="pre">uv_getaddrinfo</span></code> returns. The <cite>hostname</cite>, <cite>servname</cite> and <cite>hints</cite>
 structures are documented in <a class="reference external" href="getaddrinfo">the getaddrinfo man page</a>. The
-callback can be <tt class="docutils literal"><span class="pre">NULL</span></tt> in which case the function will run synchronously.</p>
-<p>In the resolver callback, you can pick any IP from the linked list of <tt class="docutils literal"><span class="pre">struct</span>
-<span class="pre">addrinfo(s)</span></tt>. This also demonstrates <tt class="docutils literal"><span class="pre">uv_tcp_connect</span></tt>. It is necessary to
-call <tt class="docutils literal"><span class="pre">uv_freeaddrinfo</span></tt> in the callback.</p>
+callback can be <code class="docutils literal"><span class="pre">NULL</span></code> in which case the function will run synchronously.</p>
+<p>In the resolver callback, you can pick any IP from the linked list of <code class="docutils literal"><span class="pre">struct</span>
+<span class="pre">addrinfo(s)</span></code>. This also demonstrates <code class="docutils literal"><span class="pre">uv_tcp_connect</span></code>. It is necessary to
+call <code class="docutils literal"><span class="pre">uv_freeaddrinfo</span></code> in the callback.</p>
 <p class="rubric">dns/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -468,7 +468,7 @@ call <tt class="docutils literal"><span class="pre">uv_freeaddrinfo</span></tt> 
 <div class="section" id="network-interfaces">
 <h2>Network interfaces<a class="headerlink" href="#network-interfaces" title="Permalink to this headline">¶</a></h2>
 <p>Information about the system&#8217;s network interfaces can be obtained through libuv
-using <tt class="docutils literal"><span class="pre">uv_interface_addresses</span></tt>. This simple program just prints out all the
+using <code class="docutils literal"><span class="pre">uv_interface_addresses</span></code>. This simple program just prints out all the
 interface details so you get an idea of the fields that are available. This is
 useful to allow your service to bind to IP addresses when it starts.</p>
 <p class="rubric">interfaces/main.c</p>
@@ -539,7 +539,7 @@ useful to allow your service to bind to IP addresses when it starts.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p><tt class="docutils literal"><span class="pre">is_internal</span></tt> is true for loopback interfaces. Note that if a physical
+<p><code class="docutils literal"><span class="pre">is_internal</span></code> is true for loopback interfaces. Note that if a physical
 interface has multiple IPv4/IPv6 addresses, the name will be reported multiple
 times, with each address being reported once.</p>
 <hr class="docutils" />
@@ -564,7 +564,7 @@ times, with each address being reported once.</p>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>libuv use the system <tt class="docutils literal"><span class="pre">getaddrinfo</span></tt> in the libuv threadpool. libuv
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>libuv use the system <code class="docutils literal"><span class="pre">getaddrinfo</span></code> in the libuv threadpool. libuv
 v0.8.0 and earlier also included <a class="reference external" href="http://c-ares.haxx.se">c-ares</a> as an alternative, but this has been
 removed in v0.9.0.</td></tr>
 </tbody>
@@ -574,7 +574,7 @@ removed in v0.9.0.</td></tr>
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="filesystem.html">Filesystem</a>
@@ -586,9 +586,9 @@ removed in v0.9.0.</td></tr>
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

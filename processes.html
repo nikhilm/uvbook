@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Advanced event loops" href="eventloops.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Processes</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="threads.html">Threads</a>
@@ -82,7 +82,7 @@ core.</p>
 <div class="section" id="spawning-child-processes">
 <h2>Spawning child processes<a class="headerlink" href="#spawning-child-processes" title="Permalink to this headline">¶</a></h2>
 <p>The simplest case is when you simply want to launch a process and know when it
-exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_spawn</span></tt>.</p>
+exits. This is achieved using <code class="docutils literal"><span class="pre">uv_spawn</span></code>.</p>
 <p class="rubric">spawn/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -137,20 +137,20 @@ exits. This is achieved using <tt class="docutils literal"><span class="pre">uv_
 </td></tr></table></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p><tt class="docutils literal"><span class="pre">options</span></tt> is implicitly initialized with zeros since it is a global
-variable.  If you change <tt class="docutils literal"><span class="pre">options</span></tt> to a local variable, remember to
+<p><code class="docutils literal"><span class="pre">options</span></code> is implicitly initialized with zeros since it is a global
+variable.  If you change <code class="docutils literal"><span class="pre">options</span></code> to a local variable, remember to
 initialize it to null out all unused fields:</p>
 <div class="last highlight-c"><div class="highlight"><pre><span class="kt">uv_process_options_t</span> <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 </pre></div>
 </div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> struct only acts as the handle, all options are set via
-<tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. To simply launch a process, you need to set only the
-<tt class="docutils literal"><span class="pre">file</span></tt> and <tt class="docutils literal"><span class="pre">args</span></tt> fields. <tt class="docutils literal"><span class="pre">file</span></tt> is the program to execute. Since
-<tt class="docutils literal"><span class="pre">uv_spawn</span></tt> uses <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man3/exec.3.html">execvp</a> internally, there is no need to supply the full
+<p>The <code class="docutils literal"><span class="pre">uv_process_t</span></code> struct only acts as the handle, all options are set via
+<code class="docutils literal"><span class="pre">uv_process_options_t</span></code>. To simply launch a process, you need to set only the
+<code class="docutils literal"><span class="pre">file</span></code> and <code class="docutils literal"><span class="pre">args</span></code> fields. <code class="docutils literal"><span class="pre">file</span></code> is the program to execute. Since
+<code class="docutils literal"><span class="pre">uv_spawn</span></code> uses <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man3/exec.3.html">execvp</a> internally, there is no need to supply the full
 path. Finally as per underlying conventions, <strong>the arguments array has to be
 one larger than the number of arguments, with the last element being NULL</strong>.</p>
-<p>After the call to <tt class="docutils literal"><span class="pre">uv_spawn</span></tt>, <tt class="docutils literal"><span class="pre">uv_process_t.pid</span></tt> will contain the process
+<p>After the call to <code class="docutils literal"><span class="pre">uv_spawn</span></code>, <code class="docutils literal"><span class="pre">uv_process_t.pid</span></code> will contain the process
 ID of the child process.</p>
 <p>The exit callback will be invoked with the <em>exit status</em> and the type of <em>signal</em>
 which caused the exit.</p>
@@ -167,38 +167,38 @@ which caused the exit.</p>
 <div class="section" id="changing-process-parameters">
 <h2>Changing process parameters<a class="headerlink" href="#changing-process-parameters" title="Permalink to this headline">¶</a></h2>
 <p>Before the child process is launched you can control the execution environment
-using fields in <tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>.</p>
+using fields in <code class="docutils literal"><span class="pre">uv_process_options_t</span></code>.</p>
 <div class="section" id="change-execution-directory">
 <h3>Change execution directory<a class="headerlink" href="#change-execution-directory" title="Permalink to this headline">¶</a></h3>
-<p>Set <tt class="docutils literal"><span class="pre">uv_process_options_t.cwd</span></tt> to the corresponding directory.</p>
+<p>Set <code class="docutils literal"><span class="pre">uv_process_options_t.cwd</span></code> to the corresponding directory.</p>
 </div>
 <div class="section" id="set-environment-variables">
 <h3>Set environment variables<a class="headerlink" href="#set-environment-variables" title="Permalink to this headline">¶</a></h3>
-<p><tt class="docutils literal"><span class="pre">uv_process_options_t.env</span></tt> is a null-terminated array of strings, each of the
-form <tt class="docutils literal"><span class="pre">VAR=VALUE</span></tt> used to set up the environment variables for the process. Set
-this to <tt class="docutils literal"><span class="pre">NULL</span></tt> to inherit the environment from the parent (this) process.</p>
+<p><code class="docutils literal"><span class="pre">uv_process_options_t.env</span></code> is a null-terminated array of strings, each of the
+form <code class="docutils literal"><span class="pre">VAR=VALUE</span></code> used to set up the environment variables for the process. Set
+this to <code class="docutils literal"><span class="pre">NULL</span></code> to inherit the environment from the parent (this) process.</p>
 </div>
 <div class="section" id="option-flags">
 <h3>Option flags<a class="headerlink" href="#option-flags" title="Permalink to this headline">¶</a></h3>
-<p>Setting <tt class="docutils literal"><span class="pre">uv_process_options_t.flags</span></tt> to a bitwise OR of the following flags,
+<p>Setting <code class="docutils literal"><span class="pre">uv_process_options_t.flags</span></code> to a bitwise OR of the following flags,
 modifies the child process behaviour:</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">UV_PROCESS_SETUID</span></tt> - sets the child&#8217;s execution user ID to <tt class="docutils literal"><span class="pre">uv_process_options_t.uid</span></tt>.</li>
-<li><tt class="docutils literal"><span class="pre">UV_PROCESS_SETGID</span></tt> - sets the child&#8217;s execution group ID to <tt class="docutils literal"><span class="pre">uv_process_options_t.gid</span></tt>.</li>
+<li><code class="docutils literal"><span class="pre">UV_PROCESS_SETUID</span></code> - sets the child&#8217;s execution user ID to <code class="docutils literal"><span class="pre">uv_process_options_t.uid</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">UV_PROCESS_SETGID</span></code> - sets the child&#8217;s execution group ID to <code class="docutils literal"><span class="pre">uv_process_options_t.gid</span></code>.</li>
 </ul>
-<p>Changing the UID/GID is only supported on Unix, <tt class="docutils literal"><span class="pre">uv_spawn</span></tt> will fail on
-Windows with <tt class="docutils literal"><span class="pre">UV_ENOTSUP</span></tt>.</p>
+<p>Changing the UID/GID is only supported on Unix, <code class="docutils literal"><span class="pre">uv_spawn</span></code> will fail on
+Windows with <code class="docutils literal"><span class="pre">UV_ENOTSUP</span></code>.</p>
 <ul class="simple">
-<li><tt class="docutils literal"><span class="pre">UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS</span></tt> - No quoting or escaping of
-<tt class="docutils literal"><span class="pre">uv_process_options_t.args</span></tt> is done on Windows. Ignored on Unix.</li>
-<li><tt class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></tt> - Starts the child process in a new session, which
+<li><code class="docutils literal"><span class="pre">UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS</span></code> - No quoting or escaping of
+<code class="docutils literal"><span class="pre">uv_process_options_t.args</span></code> is done on Windows. Ignored on Unix.</li>
+<li><code class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></code> - Starts the child process in a new session, which
 will keep running after the parent process exits. See example below.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="detaching-processes">
 <h2>Detaching processes<a class="headerlink" href="#detaching-processes" title="Permalink to this headline">¶</a></h2>
-<p>Passing the flag <tt class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></tt> can be used to launch daemons, or
+<p>Passing the flag <code class="docutils literal"><span class="pre">UV_PROCESS_DETACHED</span></code> can be used to launch daemons, or
 child processes which are independent of the parent so that the parent exiting
 does not affect it.</p>
 <p class="rubric">detach/main.c</p>
@@ -248,29 +248,29 @@ does not affect it.</p>
 </pre></div>
 </td></tr></table></div>
 <p>Just remember that the handle is still monitoring the child, so your program
-won&#8217;t exit. Use <tt class="docutils literal"><span class="pre">uv_unref()</span></tt> if you want to be more <em>fire-and-forget</em>.</p>
+won&#8217;t exit. Use <code class="docutils literal"><span class="pre">uv_unref()</span></code> if you want to be more <em>fire-and-forget</em>.</p>
 </div>
 <div class="section" id="sending-signals-to-processes">
 <h2>Sending signals to processes<a class="headerlink" href="#sending-signals-to-processes" title="Permalink to this headline">¶</a></h2>
-<p>libuv wraps the standard <tt class="docutils literal"><span class="pre">kill(2)</span></tt> system call on Unix and implements one
-with similar semantics on Windows, with <em>one caveat</em>: all of <tt class="docutils literal"><span class="pre">SIGTERM</span></tt>,
-<tt class="docutils literal"><span class="pre">SIGINT</span></tt> and <tt class="docutils literal"><span class="pre">SIGKILL</span></tt>, lead to termination of the process. The signature
-of <tt class="docutils literal"><span class="pre">uv_kill</span></tt> is:</p>
+<p>libuv wraps the standard <code class="docutils literal"><span class="pre">kill(2)</span></code> system call on Unix and implements one
+with similar semantics on Windows, with <em>one caveat</em>: all of <code class="docutils literal"><span class="pre">SIGTERM</span></code>,
+<code class="docutils literal"><span class="pre">SIGINT</span></code> and <code class="docutils literal"><span class="pre">SIGKILL</span></code>, lead to termination of the process. The signature
+of <code class="docutils literal"><span class="pre">uv_kill</span></code> is:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">uv_err_t</span> <span class="nf">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>For processes started using libuv, you may use <tt class="docutils literal"><span class="pre">uv_process_kill</span></tt> instead,
-which accepts the <tt class="docutils literal"><span class="pre">uv_process_t</span></tt> watcher as the first argument, rather than
-the pid. In this case, <strong>remember to call</strong> <tt class="docutils literal"><span class="pre">uv_close</span></tt> on the watcher.</p>
+<p>For processes started using libuv, you may use <code class="docutils literal"><span class="pre">uv_process_kill</span></code> instead,
+which accepts the <code class="docutils literal"><span class="pre">uv_process_t</span></code> watcher as the first argument, rather than
+the pid. In this case, <strong>remember to call</strong> <code class="docutils literal"><span class="pre">uv_close</span></code> on the watcher.</p>
 </div>
 <div class="section" id="signals">
 <h2>Signals<a class="headerlink" href="#signals" title="Permalink to this headline">¶</a></h2>
 <p>libuv provides wrappers around Unix signals with <a class="reference external" href="http://docs.libuv.org/en/v1.x/signal.html#signal">some Windows support</a> as well.</p>
-<p>Use <tt class="docutils literal"><span class="pre">uv_signal_init()</span></tt> to initialize
+<p>Use <code class="docutils literal"><span class="pre">uv_signal_init()</span></code> to initialize
 a handle and associate it with a loop. To listen for particular signals on
-that handler, use <tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> with the handler function. Each handler
+that handler, use <code class="docutils literal"><span class="pre">uv_signal_start()</span></code> with the handler function. Each handler
 can only be associated with one signal number, with subsequent calls to
-<tt class="docutils literal"><span class="pre">uv_signal_start()</span></tt> overwriting earlier associations. Use <tt class="docutils literal"><span class="pre">uv_signal_stop()</span></tt> to
+<code class="docutils literal"><span class="pre">uv_signal_start()</span></code> overwriting earlier associations. Use <code class="docutils literal"><span class="pre">uv_signal_stop()</span></code> to
 stop watching. Here is a small example demonstrating the various possibilities:</p>
 <p class="rubric">signal/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -408,26 +408,26 @@ stop watching. Here is a small example demonstrating the various possibilities:<
 </td></tr></table></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last"><tt class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_NOWAIT)</span></tt> is similar to <tt class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_ONCE)</span></tt>
+<p class="last"><code class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_NOWAIT)</span></code> is similar to <code class="docutils literal"><span class="pre">uv_run(loop,</span> <span class="pre">UV_RUN_ONCE)</span></code>
 in that it will process only one event. UV_RUN_ONCE blocks if there are no
 pending events, while UV_RUN_NOWAIT will return immediately. We use NOWAIT
 so that one of the loops isn&#8217;t starved because the other one has no pending
 activity.</p>
 </div>
-<p>Send <tt class="docutils literal"><span class="pre">SIGUSR1</span></tt> to the process, and you&#8217;ll find the handler being invoked
-4 times, one for each <tt class="docutils literal"><span class="pre">uv_signal_t</span></tt>. The handler just stops each handle,
+<p>Send <code class="docutils literal"><span class="pre">SIGUSR1</span></code> to the process, and you&#8217;ll find the handler being invoked
+4 times, one for each <code class="docutils literal"><span class="pre">uv_signal_t</span></code>. The handler just stops each handle,
 so that the program exits. This sort of dispatch to all handlers is very
 useful. A server using multiple event loops could ensure that all data was
 safely saved before termination, simply by every loop adding a watcher for
-<tt class="docutils literal"><span class="pre">SIGINT</span></tt>.</p>
+<code class="docutils literal"><span class="pre">SIGINT</span></code>.</p>
 </div>
 <div class="section" id="child-process-i-o">
 <h2>Child Process I/O<a class="headerlink" href="#child-process-i-o" title="Permalink to this headline">¶</a></h2>
 <p>A normal, newly spawned process has its own set of file descriptors, with 0,
-1 and 2 being <tt class="docutils literal"><span class="pre">stdin</span></tt>, <tt class="docutils literal"><span class="pre">stdout</span></tt> and <tt class="docutils literal"><span class="pre">stderr</span></tt> respectively. Sometimes you
+1 and 2 being <code class="docutils literal"><span class="pre">stdin</span></code>, <code class="docutils literal"><span class="pre">stdout</span></code> and <code class="docutils literal"><span class="pre">stderr</span></code> respectively. Sometimes you
 may want to share file descriptors with the child. For example, perhaps your
 applications launches a sub-command and you want any errors to go in the log
-file, but ignore <tt class="docutils literal"><span class="pre">stdout</span></tt>. For this you&#8217;d like to have <tt class="docutils literal"><span class="pre">stderr</span></tt> of the
+file, but ignore <code class="docutils literal"><span class="pre">stdout</span></code>. For this you&#8217;d like to have <code class="docutils literal"><span class="pre">stderr</span></code> of the
 child be the same as the stderr of the parent. In this case, libuv supports
 <em>inheriting</em> file descriptors. In this sample, we invoke the test program,
 which is:</p>
@@ -442,11 +442,11 @@ which is:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The actual program <tt class="docutils literal"><span class="pre">proc-streams</span></tt> runs this while sharing only <tt class="docutils literal"><span class="pre">stderr</span></tt>.
-The file descriptors of the child process are set using the <tt class="docutils literal"><span class="pre">stdio</span></tt> field in
-<tt class="docutils literal"><span class="pre">uv_process_options_t</span></tt>. First set the <tt class="docutils literal"><span class="pre">stdio_count</span></tt> field to the number of
-file descriptors being set. <tt class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></tt> is an array of
-<tt class="docutils literal"><span class="pre">uv_stdio_container_t</span></tt>, which is:</p>
+<p>The actual program <code class="docutils literal"><span class="pre">proc-streams</span></code> runs this while sharing only <code class="docutils literal"><span class="pre">stderr</span></code>.
+The file descriptors of the child process are set using the <code class="docutils literal"><span class="pre">stdio</span></code> field in
+<code class="docutils literal"><span class="pre">uv_process_options_t</span></code>. First set the <code class="docutils literal"><span class="pre">stdio_count</span></code> field to the number of
+file descriptors being set. <code class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></code> is an array of
+<code class="docutils literal"><span class="pre">uv_stdio_container_t</span></code>, which is:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
   <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
 
@@ -457,11 +457,11 @@ file descriptors being set. <tt class="docutils literal"><span class="pre">uv_pr
 <span class="p">}</span> <span class="kt">uv_stdio_container_t</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>where flags can have several values. Use <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> if it isn&#8217;t going to be
-used. If the first three <tt class="docutils literal"><span class="pre">stdio</span></tt> fields are marked as <tt class="docutils literal"><span class="pre">UV_IGNORE</span></tt> they&#8217;ll
-redirect to <tt class="docutils literal"><span class="pre">/dev/null</span></tt>.</p>
-<p>Since we want to pass on an existing descriptor, we&#8217;ll use <tt class="docutils literal"><span class="pre">UV_INHERIT_FD</span></tt>.
-Then we set the <tt class="docutils literal"><span class="pre">fd</span></tt> to <tt class="docutils literal"><span class="pre">stderr</span></tt>.</p>
+<p>where flags can have several values. Use <code class="docutils literal"><span class="pre">UV_IGNORE</span></code> if it isn&#8217;t going to be
+used. If the first three <code class="docutils literal"><span class="pre">stdio</span></code> fields are marked as <code class="docutils literal"><span class="pre">UV_IGNORE</span></code> they&#8217;ll
+redirect to <code class="docutils literal"><span class="pre">/dev/null</span></code>.</p>
+<p>Since we want to pass on an existing descriptor, we&#8217;ll use <code class="docutils literal"><span class="pre">UV_INHERIT_FD</span></code>.
+Then we set the <code class="docutils literal"><span class="pre">fd</span></code> to <code class="docutils literal"><span class="pre">stderr</span></code>.</p>
 <p class="rubric">proc-streams/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -514,10 +514,10 @@ Then we set the <tt class="docutils literal"><span class="pre">fd</span></tt> to
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>If you run <tt class="docutils literal"><span class="pre">proc-stream</span></tt> you&#8217;ll see that only the line &#8220;This is stderr&#8221; will
-be displayed. Try marking <tt class="docutils literal"><span class="pre">stdout</span></tt> as being inherited and see the output.</p>
-<p>It is dead simple to apply this redirection to streams.  By setting <tt class="docutils literal"><span class="pre">flags</span></tt>
-to <tt class="docutils literal"><span class="pre">UV_INHERIT_STREAM</span></tt> and setting <tt class="docutils literal"><span class="pre">data.stream</span></tt> to the stream in the
+<p>If you run <code class="docutils literal"><span class="pre">proc-stream</span></code> you&#8217;ll see that only the line &#8220;This is stderr&#8221; will
+be displayed. Try marking <code class="docutils literal"><span class="pre">stdout</span></code> as being inherited and see the output.</p>
+<p>It is dead simple to apply this redirection to streams.  By setting <code class="docutils literal"><span class="pre">flags</span></code>
+to <code class="docutils literal"><span class="pre">UV_INHERIT_STREAM</span></code> and setting <code class="docutils literal"><span class="pre">data.stream</span></code> to the stream in the
 parent process, the child process can treat that stream as standard I/O. This
 can be used to implement something like <a class="reference external" href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">CGI</a>.</p>
 <p>A sample CGI script/executable is:</p>
@@ -570,7 +570,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 </pre></div>
 </td></tr></table></div>
 <p>Here we simply accept the TCP connection and pass on the socket (<em>stream</em>) to
-<tt class="docutils literal"><span class="pre">invoke_cgi_script</span></tt>.</p>
+<code class="docutils literal"><span class="pre">invoke_cgi_script</span></code>.</p>
 <p class="rubric">cgi/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -615,23 +615,23 @@ that every client is sent ten ticks after which that connection is closed.</p>
 </span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">r</span><span class="p">));</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <tt class="docutils literal"><span class="pre">stdout</span></tt> of the CGI script is set to the socket so that whatever our tick
+<p>The <code class="docutils literal"><span class="pre">stdout</span></code> of the CGI script is set to the socket so that whatever our tick
 script prints, gets sent to the client. By using processes, we can offload the
 read/write buffering to the operating system, so in terms of convenience this
 is great. Just be warned that creating processes is a costly task.</p>
 </div>
 <div class="section" id="pipes">
 <span id="id1"></span><h2>Pipes<a class="headerlink" href="#pipes" title="Permalink to this headline">¶</a></h2>
-<p>libuv&#8217;s <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> structure is slightly confusing to Unix programmers,
-because it immediately conjures up <tt class="docutils literal"><span class="pre">|</span></tt> and <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/pipe.7.html">pipe(7)</a>. But <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt> is
-not related to anonymous pipes, rather it is an IPC mechanism. <tt class="docutils literal"><span class="pre">uv_pipe_t</span></tt>
+<p>libuv&#8217;s <code class="docutils literal"><span class="pre">uv_pipe_t</span></code> structure is slightly confusing to Unix programmers,
+because it immediately conjures up <code class="docutils literal"><span class="pre">|</span></code> and <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/pipe.7.html">pipe(7)</a>. But <code class="docutils literal"><span class="pre">uv_pipe_t</span></code> is
+not related to anonymous pipes, rather it is an IPC mechanism. <code class="docutils literal"><span class="pre">uv_pipe_t</span></code>
 can be backed by a <a class="reference external" href="http://www.kernel.org/doc/man-pages/online/pages/man7/unix.7.html">Unix Domain Socket</a> or <a class="reference external" href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365590(v=vs.85).aspx">Windows Named Pipe</a> to allow
 multiple processes to communicate. This is discussed below.</p>
 <div class="section" id="parent-child-ipc">
 <h3>Parent-child IPC<a class="headerlink" href="#parent-child-ipc" title="Permalink to this headline">¶</a></h3>
 <p>A parent and child can have one or two way communication over a pipe created by
-settings <tt class="docutils literal"><span class="pre">uv_stdio_container_t.flags</span></tt> to a bit-wise combination of
-<tt class="docutils literal"><span class="pre">UV_CREATE_PIPE</span></tt> and <tt class="docutils literal"><span class="pre">UV_READABLE_PIPE</span></tt> or <tt class="docutils literal"><span class="pre">UV_WRITABLE_PIPE</span></tt>. The
+settings <code class="docutils literal"><span class="pre">uv_stdio_container_t.flags</span></code> to a bit-wise combination of
+<code class="docutils literal"><span class="pre">UV_CREATE_PIPE</span></code> and <code class="docutils literal"><span class="pre">UV_READABLE_PIPE</span></code> or <code class="docutils literal"><span class="pre">UV_WRITABLE_PIPE</span></code>. The
 read/write flag is from the perspective of the child process.</p>
 </div>
 <div class="section" id="arbitrary-process-ipc">
@@ -685,7 +685,7 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>We name the socket <tt class="docutils literal"><span class="pre">echo.sock</span></tt> which means it will be created in the local
+<p>We name the socket <code class="docutils literal"><span class="pre">echo.sock</span></code> which means it will be created in the local
 directory. This socket now behaves no different from TCP sockets as far as
 the stream API is concerned. You can test this server using <a class="reference external" href="http://www.dest-unreach.org/socat/">socat</a>:</p>
 <div class="highlight-c"><div class="highlight"><pre>$ socat - /path/to/socket
@@ -695,7 +695,7 @@ the stream API is concerned. You can test this server using <a class="reference 
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">uv_pipe_connect</span><span class="p">(</span><span class="kt">uv_connect_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">uv_pipe_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">uv_connect_cb</span> <span class="n">cb</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>where <tt class="docutils literal"><span class="pre">name</span></tt> will be <tt class="docutils literal"><span class="pre">echo.sock</span></tt> or similar.</p>
+<p>where <code class="docutils literal"><span class="pre">name</span></code> will be <code class="docutils literal"><span class="pre">echo.sock</span></code> or similar.</p>
 </div>
 <div class="section" id="sending-file-descriptors-over-pipes">
 <h3>Sending file descriptors over pipes<a class="headerlink" href="#sending-file-descriptors-over-pipes" title="Permalink to this headline">¶</a></h3>
@@ -732,12 +732,12 @@ it by the master.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p><tt class="docutils literal"><span class="pre">queue</span></tt> is the pipe connected to the master process on the other end, along
-which new file descriptors get sent. It is important to set the <tt class="docutils literal"><span class="pre">ipc</span></tt>
-argument of <tt class="docutils literal"><span class="pre">uv_pipe_init</span></tt> to 1 to indicate this pipe will be used for
+<p><code class="docutils literal"><span class="pre">queue</span></code> is the pipe connected to the master process on the other end, along
+which new file descriptors get sent. It is important to set the <code class="docutils literal"><span class="pre">ipc</span></code>
+argument of <code class="docutils literal"><span class="pre">uv_pipe_init</span></code> to 1 to indicate this pipe will be used for
 inter-process communication! Since the master will write the file handle to the
-standard input of the worker, we connect the pipe to <tt class="docutils literal"><span class="pre">stdin</span></tt> using
-<tt class="docutils literal"><span class="pre">uv_pipe_open</span></tt>.</p>
+standard input of the worker, we connect the pipe to <code class="docutils literal"><span class="pre">stdin</span></code> using
+<code class="docutils literal"><span class="pre">uv_pipe_open</span></code>.</p>
 <p class="rubric">multi-echo-server/worker.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -798,13 +798,13 @@ standard input of the worker, we connect the pipe to <tt class="docutils literal
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>First we call <tt class="docutils literal"><span class="pre">uv_pipe_pending_count()</span></tt> to ensure that a handle is available
+<p>First we call <code class="docutils literal"><span class="pre">uv_pipe_pending_count()</span></code> to ensure that a handle is available
 to read out. If your program could deal with different types of handles,
-<tt class="docutils literal"><span class="pre">uv_pipe_pending_type()</span></tt> can be used to determine the type.
-Although <tt class="docutils literal"><span class="pre">accept</span></tt> seems odd in this code, it actually makes sense. What
-<tt class="docutils literal"><span class="pre">accept</span></tt> traditionally does is get a file descriptor (the client) from
+<code class="docutils literal"><span class="pre">uv_pipe_pending_type()</span></code> can be used to determine the type.
+Although <code class="docutils literal"><span class="pre">accept</span></code> seems odd in this code, it actually makes sense. What
+<code class="docutils literal"><span class="pre">accept</span></code> traditionally does is get a file descriptor (the client) from
 another file descriptor (The listening socket). Which is exactly what we do
-here. Fetch the file descriptor (<tt class="docutils literal"><span class="pre">client</span></tt>) from <tt class="docutils literal"><span class="pre">queue</span></tt>. From this point
+here. Fetch the file descriptor (<code class="docutils literal"><span class="pre">client</span></code>) from <code class="docutils literal"><span class="pre">queue</span></code>. From this point
 the worker does standard echo server stuff.</p>
 <p>Turning now to the master, let&#8217;s take a look at how the workers are launched to
 allow load balancing.</p>
@@ -820,7 +820,7 @@ allow load balancing.</p>
 <span class="p">}</span> <span class="o">*</span><span class="n">workers</span><span class="p">;</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <tt class="docutils literal"><span class="pre">child_worker</span></tt> structure wraps the process, and the pipe between the
+<p>The <code class="docutils literal"><span class="pre">child_worker</span></code> structure wraps the process, and the pipe between the
 master and the individual process.</p>
 <p class="rubric">multi-echo-server/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -896,15 +896,15 @@ master and the individual process.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>In setting up the workers, we use the nifty libuv function <tt class="docutils literal"><span class="pre">uv_cpu_info</span></tt> to
+<p>In setting up the workers, we use the nifty libuv function <code class="docutils literal"><span class="pre">uv_cpu_info</span></code> to
 get the number of CPUs so we can launch an equal number of workers. Again it is
 important to initialize the pipe acting as the IPC channel with the third
-argument as 1. We then indicate that the child process&#8217; <tt class="docutils literal"><span class="pre">stdin</span></tt> is to be
+argument as 1. We then indicate that the child process&#8217; <code class="docutils literal"><span class="pre">stdin</span></code> is to be
 a readable pipe (from the point of view of the child). Everything is
 straightforward till here. The workers are launched and waiting for file
 descriptors to be written to their standard input.</p>
-<p>It is in <tt class="docutils literal"><span class="pre">on_new_connection</span></tt> (the TCP infrastructure is initialized in
-<tt class="docutils literal"><span class="pre">main()</span></tt>), that we accept the client socket and pass it along to the next
+<p>It is in <code class="docutils literal"><span class="pre">on_new_connection</span></code> (the TCP infrastructure is initialized in
+<code class="docutils literal"><span class="pre">main()</span></code>), that we accept the client socket and pass it along to the next
 worker in the round-robin.</p>
 <p class="rubric">multi-echo-server/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -946,10 +946,10 @@ worker in the round-robin.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>The <tt class="docutils literal"><span class="pre">uv_write2</span></tt> call handles all the abstraction and it is simply a matter of
-passing in the handle (<tt class="docutils literal"><span class="pre">client</span></tt>) as the right argument. With this our
+<p>The <code class="docutils literal"><span class="pre">uv_write2</span></code> call handles all the abstraction and it is simply a matter of
+passing in the handle (<code class="docutils literal"><span class="pre">client</span></code>) as the right argument. With this our
 multi-process echo server is operational.</p>
-<p>Thanks to Kyle for <a class="reference external" href="https://github.com/nikhilm/uvbook/issues/56">pointing out</a> that <tt class="docutils literal"><span class="pre">uv_write2()</span></tt> requires a non-empty
+<p>Thanks to Kyle for <a class="reference external" href="https://github.com/nikhilm/uvbook/issues/56">pointing out</a> that <code class="docutils literal"><span class="pre">uv_write2()</span></code> requires a non-empty
 buffer even when sending handles.</p>
 <hr class="docutils" />
 <table class="docutils footnote" frame="void" id="id3" rules="none">
@@ -965,7 +965,7 @@ well.</td></tr>
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="threads.html">Threads</a>
@@ -977,9 +977,9 @@ well.</td></tr>
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>

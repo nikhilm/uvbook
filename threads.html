@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Processes" href="processes.html" />
@@ -43,12 +43,12 @@
 </script>
 
   </head>
-  <body>
-      <div class="header"><h1 class="heading"><a href="index.html">
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
           <span>An Introduction to libuv</span></a></h1>
         <h2 class="heading"><span>Threads</span></h2>
       </div>
-      <div class="topnav">
+      <div class="topnav" role="navigation" aria-label="top navigation">
       
         <p>
         «&#160;&#160;<a href="networking.html">Networking</a>
@@ -79,17 +79,17 @@ the pthreads API and often has similar semantics.</p>
 section within libuv. Whereas other features intimately depend on the event
 loop and callback principles, threads are complete agnostic, they block as
 required, signal errors directly via return values, and, as shown in the
-<a class="reference internal" href="#thread-create-example"><em>first example</em></a>, don&#8217;t even require a running
+<a class="reference internal" href="#thread-create-example"><span>first example</span></a>, don&#8217;t even require a running
 event loop.</p>
 <p>libuv&#8217;s thread API is also very limited since the semantics and syntax of
 threads are different on all platforms, with different levels of completeness.</p>
 <p>This chapter makes the following assumption: <strong>There is only one event loop,
 running in one thread (the main thread)</strong>. No other thread interacts
-with the event loop (except using <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>).</p>
+with the event loop (except using <code class="docutils literal"><span class="pre">uv_async_send</span></code>).</p>
 <div class="section" id="core-thread-operations">
 <h2>Core thread operations<a class="headerlink" href="#core-thread-operations" title="Permalink to this headline">¶</a></h2>
-<p>There isn&#8217;t much here, you just start a thread using <tt class="docutils literal"><span class="pre">uv_thread_create()</span></tt> and
-wait for it to close using <tt class="docutils literal"><span class="pre">uv_thread_join()</span></tt>.</p>
+<p>There isn&#8217;t much here, you just start a thread using <code class="docutils literal"><span class="pre">uv_thread_create()</span></code> and
+wait for it to close using <code class="docutils literal"><span class="pre">uv_thread_join()</span></code>.</p>
 <p class="rubric" id="thread-create-example">thread-create/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -116,12 +116,12 @@ wait for it to close using <tt class="docutils literal"><span class="pre">uv_thr
 </td></tr></table></div>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
-<p class="last"><tt class="docutils literal"><span class="pre">uv_thread_t</span></tt> is just an alias for <tt class="docutils literal"><span class="pre">pthread_t</span></tt> on Unix, but this is an
+<p class="last"><code class="docutils literal"><span class="pre">uv_thread_t</span></code> is just an alias for <code class="docutils literal"><span class="pre">pthread_t</span></code> on Unix, but this is an
 implementation detail, avoid depending on it to always be true.</p>
 </div>
 <p>The second parameter is the function which will serve as the entry point for
-the thread, the last parameter is a <tt class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></tt> argument which can be used to pass
-custom parameters to the thread. The function <tt class="docutils literal"><span class="pre">hare</span></tt> will now run in a separate
+the thread, the last parameter is a <code class="docutils literal"><span class="pre">void</span> <span class="pre">*</span></code> argument which can be used to pass
+custom parameters to the thread. The function <code class="docutils literal"><span class="pre">hare</span></code> will now run in a separate
 thread, scheduled pre-emptively by the operating system:</p>
 <p class="rubric">thread-create/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -143,9 +143,9 @@ thread, scheduled pre-emptively by the operating system:</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>Unlike <tt class="docutils literal"><span class="pre">pthread_join()</span></tt> which allows the target thread to pass back a value to
-the calling thread using a second parameter, <tt class="docutils literal"><span class="pre">uv_thread_join()</span></tt> does not. To
-send values use <a class="reference internal" href="#inter-thread-communication"><em>Inter-thread communication</em></a>.</p>
+<p>Unlike <code class="docutils literal"><span class="pre">pthread_join()</span></code> which allows the target thread to pass back a value to
+the calling thread using a second parameter, <code class="docutils literal"><span class="pre">uv_thread_join()</span></code> does not. To
+send values use <a class="reference internal" href="#inter-thread-communication"><span>Inter-thread communication</span></a>.</p>
 </div>
 <div class="section" id="synchronization-primitives">
 <h2>Synchronization Primitives<a class="headerlink" href="#synchronization-primitives" title="Permalink to this headline">¶</a></h2>
@@ -163,12 +163,12 @@ the pthreads <a class="reference external" href="pthreads">man pages</a>.</p>
 <span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="nf">uv_mutex_unlock</span><span class="p">(</span><span class="kt">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>The <tt class="docutils literal"><span class="pre">uv_mutex_init()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> functions will return 0 on
+<p>The <code class="docutils literal"><span class="pre">uv_mutex_init()</span></code> and <code class="docutils literal"><span class="pre">uv_mutex_trylock()</span></code> functions will return 0 on
 success, and an error code otherwise.</p>
-<p>If <cite>libuv</cite> has been compiled with debugging enabled, <tt class="docutils literal"><span class="pre">uv_mutex_destroy()</span></tt>,
-<tt class="docutils literal"><span class="pre">uv_mutex_lock()</span></tt> and <tt class="docutils literal"><span class="pre">uv_mutex_unlock()</span></tt> will <tt class="docutils literal"><span class="pre">abort()</span></tt> on error.
-Similarly <tt class="docutils literal"><span class="pre">uv_mutex_trylock()</span></tt> will abort if the error is anything <em>other
-than</em> <tt class="docutils literal"><span class="pre">EAGAIN</span></tt> or <tt class="docutils literal"><span class="pre">EBUSY</span></tt>.</p>
+<p>If <cite>libuv</cite> has been compiled with debugging enabled, <code class="docutils literal"><span class="pre">uv_mutex_destroy()</span></code>,
+<code class="docutils literal"><span class="pre">uv_mutex_lock()</span></code> and <code class="docutils literal"><span class="pre">uv_mutex_unlock()</span></code> will <code class="docutils literal"><span class="pre">abort()</span></code> on error.
+Similarly <code class="docutils literal"><span class="pre">uv_mutex_trylock()</span></code> will abort if the error is anything <em>other
+than</em> <code class="docutils literal"><span class="pre">EAGAIN</span></code> or <code class="docutils literal"><span class="pre">EBUSY</span></code>.</p>
 <p>Recursive mutexes are supported by some platforms, but you should not rely on
 them. The BSD mutex implementation will raise an error if a thread which has
 locked a mutex attempts to lock it again. For example, a construct like:</p>
@@ -179,8 +179,8 @@ locked a mutex attempts to lock it again. For example, a construct like:</p>
 </pre></div>
 </div>
 <p>can be used to wait until another thread initializes some stuff and then
-unlocks <tt class="docutils literal"><span class="pre">a_mutex</span></tt> but will lead to your program crashing if in debug mode, or
-return an error in the second call to <tt class="docutils literal"><span class="pre">uv_mutex_lock()</span></tt>.</p>
+unlocks <code class="docutils literal"><span class="pre">a_mutex</span></code> but will lead to your program crashing if in debug mode, or
+return an error in the second call to <code class="docutils literal"><span class="pre">uv_mutex_lock()</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Mutexes on linux support attributes for a recursive mutex, but the API is
@@ -321,8 +321,8 @@ all readers and writers to indicate they have ended.</p>
 <h3>Others<a class="headerlink" href="#others" title="Permalink to this headline">¶</a></h3>
 <p>libuv also supports <a class="reference external" href="http://en.wikipedia.org/wiki/Semaphore_(programming)">semaphores</a>, <a class="reference external" href="http://en.wikipedia.org/wiki/Condition_variable#Waiting_and_signaling">condition variables</a> and <a class="reference external" href="http://en.wikipedia.org/wiki/Barrier_(computer_science)">barriers</a> with APIs
 very similar to their pthread counterparts.</p>
-<p>In addition, libuv provides a convenience function <tt class="docutils literal"><span class="pre">uv_once()</span></tt>. Multiple
-threads can attempt to call <tt class="docutils literal"><span class="pre">uv_once()</span></tt> with a given guard and a function
+<p>In addition, libuv provides a convenience function <code class="docutils literal"><span class="pre">uv_once()</span></code>. Multiple
+threads can attempt to call <code class="docutils literal"><span class="pre">uv_once()</span></code> with a given guard and a function
 pointer, <strong>only the first one will win, the function will be called once and
 only once</strong>:</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Initialize guard */</span>
@@ -349,16 +349,16 @@ only once</strong>:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>After all threads are done, <tt class="docutils literal"><span class="pre">i</span> <span class="pre">==</span> <span class="pre">1</span></tt>.</p>
-<p id="libuv-work-queue">libuv v0.11.11 onwards also added a <tt class="docutils literal"><span class="pre">uv_key_t</span></tt> struct and <a class="reference external" href="http://docs.libuv.org/en/v1.x/threading.html#thread-local-storage">api</a> for
+<p>After all threads are done, <code class="docutils literal"><span class="pre">i</span> <span class="pre">==</span> <span class="pre">1</span></code>.</p>
+<p id="libuv-work-queue">libuv v0.11.11 onwards also added a <code class="docutils literal"><span class="pre">uv_key_t</span></code> struct and <a class="reference external" href="http://docs.libuv.org/en/v1.x/threading.html#thread-local-storage">api</a> for
 thread-local storage.</p>
 </div>
 </div>
 <div class="section" id="id1">
 <h2>libuv work queue<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt> is a convenience function that allows an application to run
+<p><code class="docutils literal"><span class="pre">uv_queue_work()</span></code> is a convenience function that allows an application to run
 a task in a separate thread, and have a callback that is triggered when the
-task is done. A seemingly simple function, what makes <tt class="docutils literal"><span class="pre">uv_queue_work()</span></tt>
+task is done. A seemingly simple function, what makes <code class="docutils literal"><span class="pre">uv_queue_work()</span></code>
 tempting is that it allows potentially any third-party libraries to be used
 with the event-loop paradigm. When you use event loops, it is <em>imperative to
 make sure that no function which runs periodically in the loop thread blocks
@@ -403,11 +403,11 @@ event loop from performing other activities.</p>
 </pre></div>
 </td></tr></table></div>
 <p>The actual task function is simple, nothing to show that it is going to be
-run in a separate thread. The <tt class="docutils literal"><span class="pre">uv_work_t</span></tt> structure is the clue. You can pass
-arbitrary data through it using the <tt class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></tt> field and use it to
+run in a separate thread. The <code class="docutils literal"><span class="pre">uv_work_t</span></code> structure is the clue. You can pass
+arbitrary data through it using the <code class="docutils literal"><span class="pre">void*</span> <span class="pre">data</span></code> field and use it to
 communicate to and from the thread. But be sure you are using proper locks if
 you are changing things while both threads may be running.</p>
-<p>The trigger is <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>:</p>
+<p>The trigger is <code class="docutils literal"><span class="pre">uv_queue_work</span></code>:</p>
 <p class="rubric">queue-work/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -439,19 +439,20 @@ you are changing things while both threads may be running.</p>
 </pre></div>
 </td></tr></table></div>
 <p>The thread function will be launched in a separate thread, passed the
-<tt class="docutils literal"><span class="pre">uv_work_t</span></tt> structure and once the function returns, the <em>after</em> function
-will be called, again with the same structure.</p>
-<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="utilities.html#baton"><em>pattern</em></a>
+<code class="docutils literal"><span class="pre">uv_work_t</span></code> structure and once the function returns, the <em>after</em> function
+will be called on the thread the event loop is running in. It will be passed
+the same structure.</p>
+<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="utilities.html#baton"><span>pattern</span></a>
 is to use a baton to exchange data.</p>
-<p>Since libuv version <cite>0.9.4</cite> an additional function, <tt class="docutils literal"><span class="pre">uv_cancel()</span></tt>, is
+<p>Since libuv version <cite>0.9.4</cite> an additional function, <code class="docutils literal"><span class="pre">uv_cancel()</span></code>, is
 available. This allows you to cancel tasks on the libuv work queue. Only tasks
 that <em>are yet to be started</em> can be cancelled. If a task has <em>already started
-executing, or it has finished executing</em>, <tt class="docutils literal"><span class="pre">uv_cancel()</span></tt> <strong>will fail</strong>.</p>
-<p><tt class="docutils literal"><span class="pre">uv_cancel()</span></tt> is useful to cleanup pending tasks if the user requests
+executing, or it has finished executing</em>, <code class="docutils literal"><span class="pre">uv_cancel()</span></code> <strong>will fail</strong>.</p>
+<p><code class="docutils literal"><span class="pre">uv_cancel()</span></code> is useful to cleanup pending tasks if the user requests
 termination. For example, a music player may queue up multiple directories to
 be scanned for audio files. If the user terminates the program, it should quit
 quickly and not wait until all pending requests are run.</p>
-<p>Let&#8217;s modify the fibonacci example to demonstrate <tt class="docutils literal"><span class="pre">uv_cancel()</span></tt>. We first set
+<p>Let&#8217;s modify the fibonacci example to demonstrate <code class="docutils literal"><span class="pre">uv_cancel()</span></code>. We first set
 up a signal handler for termination.</p>
 <p class="rubric">queue-cancel/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -489,8 +490,8 @@ up a signal handler for termination.</p>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>When the user triggers the signal by pressing <tt class="docutils literal"><span class="pre">Ctrl+C</span></tt> we send
-<tt class="docutils literal"><span class="pre">uv_cancel()</span></tt> to all the workers. <tt class="docutils literal"><span class="pre">uv_cancel()</span></tt> will return <tt class="docutils literal"><span class="pre">0</span></tt> for those that are already executing or finished.</p>
+<p>When the user triggers the signal by pressing <code class="docutils literal"><span class="pre">Ctrl+C</span></code> we send
+<code class="docutils literal"><span class="pre">uv_cancel()</span></code> to all the workers. <code class="docutils literal"><span class="pre">uv_cancel()</span></code> will return <code class="docutils literal"><span class="pre">0</span></code> for those that are already executing or finished.</p>
 <p class="rubric">queue-cancel/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -512,7 +513,7 @@ up a signal handler for termination.</p>
 </pre></div>
 </td></tr></table></div>
 <p>For tasks that do get cancelled successfully, the <em>after</em> function is called
-with <tt class="docutils literal"><span class="pre">status</span></tt> set to <tt class="docutils literal"><span class="pre">UV_ECANCELED</span></tt>.</p>
+with <code class="docutils literal"><span class="pre">status</span></code> set to <code class="docutils literal"><span class="pre">UV_ECANCELED</span></code>.</p>
 <p class="rubric">queue-cancel/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
@@ -523,9 +524,9 @@ with <tt class="docutils literal"><span class="pre">status</span></tt> set to <t
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p><tt class="docutils literal"><span class="pre">uv_cancel()</span></tt> can also be used with <tt class="docutils literal"><span class="pre">uv_fs_t</span></tt> and <tt class="docutils literal"><span class="pre">uv_getaddrinfo_t</span></tt>
-requests. For the filesystem family of functions, <tt class="docutils literal"><span class="pre">uv_fs_t.errorno</span></tt> will be
-set to <tt class="docutils literal"><span class="pre">UV_ECANCELED</span></tt>.</p>
+<p><code class="docutils literal"><span class="pre">uv_cancel()</span></code> can also be used with <code class="docutils literal"><span class="pre">uv_fs_t</span></code> and <code class="docutils literal"><span class="pre">uv_getaddrinfo_t</span></code>
+requests. For the filesystem family of functions, <code class="docutils literal"><span class="pre">uv_fs_t.errorno</span></code> will be
+set to <code class="docutils literal"><span class="pre">UV_ECANCELED</span></code>.</p>
 <div class="admonition tip">
 <p class="first admonition-title">Tip</p>
 <p class="last">A well designed program would have a way to terminate long running workers
@@ -537,7 +538,7 @@ for a variable that only the main process sets to signal termination.</p>
 <span id="id2"></span><h2>Inter-thread communication<a class="headerlink" href="#inter-thread-communication" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes you want various threads to actually send each other messages <em>while</em>
 they are running. For example you might be running some long duration task in
-a separate thread (perhaps using <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>) but want to notify progress
+a separate thread (perhaps using <code class="docutils literal"><span class="pre">uv_queue_work</span></code>) but want to notify progress
 to the main thread. This is a simple example of having a download manager
 informing the user of the status of running downloads.</p>
 <p class="rubric">progress/main.c</p>
@@ -574,20 +575,20 @@ informing the user of the status of running downloads.</p>
 </td></tr></table></div>
 <p>The async thread communication works <em>on loops</em> so although any thread can be
 the message sender, only threads with libuv loops can be receivers (or rather
-the loop is the receiver). libuv will invoke the callback (<tt class="docutils literal"><span class="pre">print_progress</span></tt>)
+the loop is the receiver). libuv will invoke the callback (<code class="docutils literal"><span class="pre">print_progress</span></code>)
 with the async watcher whenever it receives a message.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">It is important to realize that since the message send is <em>async</em>, the callback
-may be invoked immediately after <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is called in another
+may be invoked immediately after <code class="docutils literal"><span class="pre">uv_async_send</span></code> is called in another
 thread, or it may be invoked after some time. libuv may also combine
-multiple calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> and invoke your callback only once. The
+multiple calls to <code class="docutils literal"><span class="pre">uv_async_send</span></code> and invoke your callback only once. The
 only guarantee that libuv makes is &#8211; The callback function is called <em>at
-least once</em> after the call to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. If you have no pending
-calls to <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>, the callback won&#8217;t be called. If you make two
+least once</em> after the call to <code class="docutils literal"><span class="pre">uv_async_send</span></code>. If you have no pending
+calls to <code class="docutils literal"><span class="pre">uv_async_send</span></code>, the callback won&#8217;t be called. If you make two
 or more calls, and libuv hasn&#8217;t had a chance to run the callback yet, it
 <em>may</em> invoke your callback <em>only once</em> for the multiple invocations of
-<tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Your callback will never be called twice for just one
+<code class="docutils literal"><span class="pre">uv_async_send</span></code>. Your callback will never be called twice for just one
 event.</p>
 </div>
 <p class="rubric">progress/main.c</p>
@@ -621,7 +622,7 @@ event.</p>
 </pre></div>
 </td></tr></table></div>
 <p>In the download function, we modify the progress indicator and queue the message
-for delivery with <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>. Remember: <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is also
+for delivery with <code class="docutils literal"><span class="pre">uv_async_send</span></code>. Remember: <code class="docutils literal"><span class="pre">uv_async_send</span></code> is also
 non-blocking and will return immediately.</p>
 <p class="rubric">progress/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
@@ -645,16 +646,16 @@ non-blocking and will return immediately.</p>
 </span><span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
-<p>After this example, which showed the abuse of the <tt class="docutils literal"><span class="pre">data</span></tt> field, <a class="reference external" href="https://github.com/bnoordhuis">bnoordhuis</a>
-pointed out that using the <tt class="docutils literal"><span class="pre">data</span></tt> field is not thread safe, and
-<tt class="docutils literal"><span class="pre">uv_async_send()</span></tt> is actually only meant to wake up the event loop. Use
+<p>After this example, which showed the abuse of the <code class="docutils literal"><span class="pre">data</span></code> field, <a class="reference external" href="https://github.com/bnoordhuis">bnoordhuis</a>
+pointed out that using the <code class="docutils literal"><span class="pre">data</span></code> field is not thread safe, and
+<code class="docutils literal"><span class="pre">uv_async_send()</span></code> is actually only meant to wake up the event loop. Use
 a mutex or rwlock to ensure accesses are performed in the right order.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">mutexes and rwlocks <strong>DO NOT</strong> work inside a signal handler, whereas
-<tt class="docutils literal"><span class="pre">uv_async_send</span></tt> does.</p>
+<code class="docutils literal"><span class="pre">uv_async_send</span></code> does.</p>
 </div>
-<p>One use case where <tt class="docutils literal"><span class="pre">uv_async_send</span></tt> is required is when interoperating with
+<p>One use case where <code class="docutils literal"><span class="pre">uv_async_send</span></code> is required is when interoperating with
 libraries that require thread affinity for their functionality. For example in
 node.js, a v8 engine instance, contexts and its objects are bound to the thread
 that the v8 instance was started in. Interacting with v8 data structures from
@@ -674,12 +675,12 @@ lib.do();
 </pre></div>
 </div>
 </li>
-<li><p class="first"><tt class="docutils literal"><span class="pre">lib.do</span></tt> is supposed to be non-blocking but the third party lib is
-blocking, so the binding uses <tt class="docutils literal"><span class="pre">uv_queue_work</span></tt>.</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">lib.do</span></code> is supposed to be non-blocking but the third party lib is
+blocking, so the binding uses <code class="docutils literal"><span class="pre">uv_queue_work</span></code>.</p>
 </li>
 <li><p class="first">The actual work being done in a separate thread wants to invoke the progress
 callback, but cannot directly call into v8 to interact with JavaScript. So
-it uses <tt class="docutils literal"><span class="pre">uv_async_send</span></tt>.</p>
+it uses <code class="docutils literal"><span class="pre">uv_async_send</span></code>.</p>
 </li>
 <li><p class="first">The async callback, invoked in the main loop thread, which is the v8 thread,
 then interacts with v8 to invoke the JavaScript callback.</p>
@@ -691,7 +692,7 @@ then interacts with v8 to invoke the JavaScript callback.</p>
 
 
       </div>
-      <div class="bottomnav">
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
       
         <p>
         «&#160;&#160;<a href="networking.html">Networking</a>
@@ -703,9 +704,9 @@ then interacts with v8 to invoke the JavaScript callback.</p>
 
       </div>
 
-    <div class="footer">
+    <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
     </div>
   </body>
 </html>
