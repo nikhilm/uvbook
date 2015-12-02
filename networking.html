@@ -186,7 +186,7 @@ callback of <code class="docutils literal"><span class="pre">uv_listen</span></c
 <span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="n">dest</span><span class="p">;</span>
 <span class="n">uv_ip4_addr</span><span class="p">(</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">dest</span><span class="p">);</span>
 
-<span class="n">uv_tcp_connect</span><span class="p">(</span><span class="n">connect</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">on_connect</span><span class="p">);</span>
+<span class="n">uv_tcp_connect</span><span class="p">(</span><span class="n">connect</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="p">(</span><span class="k">const</span> <span class="k">struct</span> <span class="n">sockaddr</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">dest</span><span class="p">,</span> <span class="n">on_connect</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal"><span class="pre">on_connect</span></code> will be called after the connection is established. The

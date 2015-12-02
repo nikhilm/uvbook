@@ -78,7 +78,7 @@ callback of ``uv_listen`` is used by ``uv_tcp_connect``. Try::
     struct sockaddr_in dest;
     uv_ip4_addr("127.0.0.1", 80, &dest);
 
-    uv_tcp_connect(connect, socket, dest, on_connect);
+    uv_tcp_connect(connect, socket, (const struct sockaddr*)&dest, on_connect);
 
 where ``on_connect`` will be called after the connection is established. The
 callback receives the ``uv_connect_t`` struct, which has a member ``.handle``
