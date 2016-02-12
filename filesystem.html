@@ -82,18 +82,18 @@ value is 0.</p>
 <div class="section" id="reading-writing-files">
 <h2>Reading/Writing files<a class="headerlink" href="#reading-writing-files" title="Permalink to this headline">¶</a></h2>
 <p>A file descriptor is obtained using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">flags</span></code> and <code class="docutils literal"><span class="pre">mode</span></code> are standard
 <a class="reference external" href="http://man7.org/linux/man-pages/man2/open.2.html">Unix flags</a>.
 libuv takes care of converting to the appropriate Windows flags.</p>
 <p>File descriptors are closed using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_close</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Filesystem operation callbacks have the signature:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">callback</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">callback</span><span class="p">(</span><span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Let&#8217;s see a simple implementation of <code class="docutils literal"><span class="pre">cat</span></code>. We start with registering
@@ -110,7 +110,8 @@ a callback for when the file is opened:</p>
  9
 10
 11
-12</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="c1">// The request passed to the callback is the same as the one the call setup</span>
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="c1">// The request passed to the callback is the same as the one the call setup</span>
     <span class="c1">// function was passed.</span>
     <span class="n">assert</span><span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">open_req</span><span class="p">);</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
@@ -122,6 +123,7 @@ a callback for when the file is opened:</p>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;error opening file: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
     <span class="p">}</span>
 <span class="p">}</span>
+
 </pre></div>
 </td></tr></table></div>
 <p>The <code class="docutils literal"><span class="pre">result</span></code> field of a <code class="docutils literal"><span class="pre">uv_fs_t</span></code> is the file descriptor in case of the
@@ -140,12 +142,13 @@ a callback for when the file is opened:</p>
 11
 12
 13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="kt">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+14
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
 </span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
     <span class="p">}</span>
     <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kt">uv_fs_t</span> <span class="n">close_req</span><span class="p">;</span>
+        <span class="n">uv_fs_t</span> <span class="n">close_req</span><span class="p">;</span>
         <span class="c1">// synchronous</span>
 <span class="hll">        <span class="n">uv_fs_close</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">close_req</span><span class="p">,</span> <span class="n">open_req</span><span class="p">.</span><span class="n">result</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 </span>    <span class="p">}</span>
@@ -154,6 +157,7 @@ a callback for when the file is opened:</p>
 <span class="hll">        <span class="n">uv_fs_write</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">write_req</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">iov</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_write</span><span class="p">);</span>
 </span>    <span class="p">}</span>
 <span class="p">}</span>
+
 </pre></div>
 </td></tr></table></div>
 <p>In the case of a read call, you should pass an <em>initialized</em> buffer which will
@@ -179,13 +183,15 @@ callbacks.</p>
 5
 6
 7
-8</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_write</span><span class="p">(</span><span class="kt">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">void</span> <span class="nf">on_write</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Write error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
     <span class="p">}</span>
-    <span class="k">else</span> <span class="p">{</span>
-<span class="hll">        <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">read_req</span><span class="p">,</span> <span class="n">open_req</span><span class="p">.</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">iov</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_read</span><span class="p">);</span>
-</span>    <span class="p">}</span>
+<span class="hll">    <span class="k">else</span> <span class="p">{</span>
+</span>        <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">read_req</span><span class="p">,</span> <span class="n">open_req</span><span class="p">.</span><span class="n">result</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">iov</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_read</span><span class="p">);</span>
+    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
@@ -228,115 +234,115 @@ supported asynchronously and have intuitive argument order. They follow the
 same patterns as the read/write/open calls, returning the result in the
 <code class="docutils literal"><span class="pre">uv_fs_t.result</span></code> field. The full list:</p>
 <p class="rubric">Filesystem operations</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_close</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_open</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                         <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_open</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                         <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                          <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                          <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span>
                          <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span>
                          <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_read</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                         <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_read</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                         <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                          <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-                         <span class="k">const</span> <span class="kt">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span>
+                         <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span>
                          <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">nbufs</span><span class="p">,</span>
                          <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">,</span>
                          <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_unlink</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                           <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_unlink</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                           <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                            <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                            <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_write</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_write</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
-                          <span class="k">const</span> <span class="kt">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span>
+                          <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span>
                           <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">nbufs</span><span class="p">,</span>
                           <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_mkdir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_mkdir</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                           <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_mkdtemp</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                            <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_mkdtemp</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                            <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                             <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">tpl</span><span class="p">,</span>
                             <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rmdir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rmdir</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_scandir</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                            <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_scandir</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                            <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                             <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                             <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span>
                             <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_scandir_next</span><span class="p">(</span><span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
-                                 <span class="kt">uv_dirent_t</span><span class="o">*</span> <span class="n">ent</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_stat</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                         <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_scandir_next</span><span class="p">(</span><span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+                                 <span class="n">uv_dirent_t</span><span class="o">*</span> <span class="n">ent</span><span class="p">);</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_stat</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                         <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                          <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                          <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fstat</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fstat</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rename</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                           <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_rename</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                           <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                            <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                            <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">new_path</span><span class="p">,</span>
                            <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fsync</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fsync</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fdatasync</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                              <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_fdatasync</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                              <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                               <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                               <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_ftruncate</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                              <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_ftruncate</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                              <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                               <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                               <span class="kt">int64_t</span> <span class="n">offset</span><span class="p">,</span>
                               <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_sendfile</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                             <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_sendfile</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                             <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                              <span class="n">uv_file</span> <span class="n">out_fd</span><span class="p">,</span>
                              <span class="n">uv_file</span> <span class="n">in_fd</span><span class="p">,</span>
                              <span class="kt">int64_t</span> <span class="n">in_offset</span><span class="p">,</span>
                              <span class="kt">size_t</span> <span class="n">length</span><span class="p">,</span>
                              <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_access</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                           <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_access</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                           <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                            <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                            <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span>
                            <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_chmod</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_chmod</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                           <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_utime</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_utime</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                           <span class="kt">double</span> <span class="n">atime</span><span class="p">,</span>
                           <span class="kt">double</span> <span class="n">mtime</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_futime</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                           <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_futime</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                           <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                            <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                            <span class="kt">double</span> <span class="n">atime</span><span class="p">,</span>
                            <span class="kt">double</span> <span class="n">mtime</span><span class="p">,</span>
                            <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_lstat</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                          <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_lstat</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                          <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
-<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_link</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
-                         <span class="kt">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
+<span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_link</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+                         <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                          <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span>
                          <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">new_path</span><span class="p">,</span>
                          <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
@@ -349,10 +355,10 @@ same patterns as the read/write/open calls, returning the result in the
 sockets, and pipes for file I/O and IPC are all treated as stream subclasses.</p>
 <p>Streams are initialized using custom functions for each subclass, then operated
 upon using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">uv_read_start</span><span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_alloc_cb</span> <span class="n">alloc_cb</span><span class="p">,</span> <span class="n">uv_read_cb</span> <span class="n">read_cb</span><span class="p">);</span>
-<span class="kt">int</span> <span class="nf">uv_read_stop</span><span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">);</span>
-<span class="kt">int</span> <span class="nf">uv_write</span><span class="p">(</span><span class="kt">uv_write_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="kt">uv_stream_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
-             <span class="k">const</span> <span class="kt">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">nbufs</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">cb</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">uv_read_start</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_alloc_cb</span> <span class="n">alloc_cb</span><span class="p">,</span> <span class="n">uv_read_cb</span> <span class="n">read_cb</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">uv_read_stop</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf">uv_write</span><span class="p">(</span><span class="n">uv_write_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_stream_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+             <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">nbufs</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">cb</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The stream based functions are simpler to use than the filesystem ones and
@@ -406,12 +412,12 @@ opened as bidirectional by default.</p>
     <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
     
-    <span class="kt">uv_fs_t</span> <span class="n">file_req</span><span class="p">;</span>
+    <span class="n">uv_fs_t</span> <span class="n">file_req</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">file_req</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_RDWR</span><span class="p">,</span> <span class="mo">0644</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
     <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">fd</span><span class="p">);</span>
 
-<span class="hll">    <span class="n">uv_read_start</span><span class="p">((</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">read_stdin</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_read_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">read_stdin</span><span class="p">);</span>
 </span>
     <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
@@ -445,26 +451,28 @@ these buffers.</p>
 17
 18
 19
-20</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">alloc_buffer</span><span class="p">(</span><span class="kt">uv_handle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">suggested_size</span><span class="p">,</span> <span class="kt">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+20
+21</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">alloc_buffer</span><span class="p">(</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">suggested_size</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
     <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="n">suggested_size</span><span class="p">),</span> <span class="n">suggested_size</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">read_stdin</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">stream</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="kt">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">read_stdin</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">stream</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">){</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">==</span> <span class="n">UV_EOF</span><span class="p">){</span>
             <span class="c1">// end of file</span>
-            <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-            <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-            <span class="n">uv_close</span><span class="p">((</span><span class="kt">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+            <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+            <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+            <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
         <span class="p">}</span>
     <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">write_data</span><span class="p">((</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">on_stdout_write</span><span class="p">);</span>
-        <span class="n">write_data</span><span class="p">((</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">on_file_write</span><span class="p">);</span>
+        <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">on_stdout_write</span><span class="p">);</span>
+        <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">on_file_write</span><span class="p">);</span>
     <span class="p">}</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">buf</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">)</span>
         <span class="n">free</span><span class="p">(</span><span class="n">buf</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">);</span>
 <span class="p">}</span>
+
 </pre></div>
 </td></tr></table></div>
 <p>The standard <code class="docutils literal"><span class="pre">malloc</span></code> is sufficient here, but you can use any memory allocation
@@ -508,29 +516,29 @@ point there is nothing to be read. Most applications will just ignore this.</p>
 23
 24
 25</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
-    <span class="kt">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
-    <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
-<span class="p">}</span> <span class="kt">write_req_t</span><span class="p">;</span>
+    <span class="n">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
+    <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">write_req_t</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">free_write_req</span><span class="p">(</span><span class="kt">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kt">write_req_t</span> <span class="o">*</span><span class="n">wr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">write_req_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">free_write_req</span><span class="p">(</span><span class="n">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">write_req_t</span> <span class="o">*</span><span class="n">wr</span> <span class="o">=</span> <span class="p">(</span><span class="n">write_req_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">;</span>
     <span class="n">free</span><span class="p">(</span><span class="n">wr</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">);</span>
     <span class="n">free</span><span class="p">(</span><span class="n">wr</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">on_stdout_write</span><span class="p">(</span><span class="kt">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">on_stdout_write</span><span class="p">(</span><span class="n">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">free_write_req</span><span class="p">(</span><span class="n">req</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">on_file_write</span><span class="p">(</span><span class="kt">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">on_file_write</span><span class="p">(</span><span class="n">uv_write_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">free_write_req</span><span class="p">(</span><span class="n">req</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">write_data</span><span class="p">(</span><span class="kt">uv_stream_t</span> <span class="o">*</span><span class="n">dest</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">cb</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kt">write_req_t</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">(</span><span class="kt">write_req_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">write_req_t</span><span class="p">));</span>
+<span class="kt">void</span> <span class="nf">write_data</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">dest</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">write_req_t</span> <span class="o">*</span><span class="n">req</span> <span class="o">=</span> <span class="p">(</span><span class="n">write_req_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">write_req_t</span><span class="p">));</span>
     <span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="n">size</span><span class="p">);</span>
     <span class="n">memcpy</span><span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">,</span> <span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
-    <span class="n">uv_write</span><span class="p">((</span><span class="kt">uv_write_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="n">dest</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cb</span><span class="p">);</span>
+    <span class="n">uv_write</span><span class="p">((</span><span class="n">uv_write_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="n">dest</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cb</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
@@ -595,7 +603,7 @@ a command whenever any of the watched files change:</p>
 
     <span class="k">while</span> <span class="p">(</span><span class="n">argc</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Adding watch on %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">]);</span>
-        <span class="kt">uv_fs_event_t</span> <span class="o">*</span><span class="n">fs_event_req</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_fs_event_t</span><span class="p">));</span>
+        <span class="n">uv_fs_event_t</span> <span class="o">*</span><span class="n">fs_event_req</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_fs_event_t</span><span class="p">));</span>
         <span class="n">uv_fs_event_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">fs_event_req</span><span class="p">);</span>
         <span class="c1">// The recursive flag watches subdirectories too.</span>
 <span class="hll">        <span class="n">uv_fs_event_start</span><span class="p">(</span><span class="n">fs_event_req</span><span class="p">,</span> <span class="n">run_command</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">UV_FS_EVENT_RECURSIVE</span><span class="p">);</span>
@@ -653,7 +661,7 @@ even on those platforms.</p>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">run_command</span><span class="p">(</span><span class="kt">uv_fs_event_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">uv_fs_event_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">char</span> <span class="n">path</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
     <span class="kt">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">1023</span><span class="p">;</span>
     <span class="c1">// Does not handle error if path is longer than 1023.</span>
@@ -704,7 +712,7 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>

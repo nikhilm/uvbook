@@ -147,12 +147,12 @@ nothing, except start a loop which will exit immediately.</p>
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;stdlib.h&gt;</span>
-<span class="cp">#include &lt;uv.h&gt;</span>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="p">));</span>
+    <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="p">));</span>
     <span class="n">uv_loop_init</span><span class="p">(</span><span class="n">loop</span><span class="p">);</span>
 
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Now quitting.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
@@ -201,39 +201,39 @@ Handles are opaque structs named as <code class="docutils literal"><span class="
 handle is used for.</p>
 <p class="rubric">libuv watchers</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Handle types. */</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="kt">uv_loop_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="kt">uv_handle_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="kt">uv_stream_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="kt">uv_tcp_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="kt">uv_udp_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="kt">uv_pipe_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="kt">uv_tty_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="kt">uv_poll_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_timer_s</span> <span class="kt">uv_timer_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_prepare_s</span> <span class="kt">uv_prepare_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_check_s</span> <span class="kt">uv_check_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_idle_s</span> <span class="kt">uv_idle_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_async_s</span> <span class="kt">uv_async_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_process_s</span> <span class="kt">uv_process_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_event_s</span> <span class="kt">uv_fs_event_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_poll_s</span> <span class="kt">uv_fs_poll_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_signal_s</span> <span class="kt">uv_signal_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_loop_s</span> <span class="n">uv_loop_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_handle_s</span> <span class="n">uv_handle_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stream_s</span> <span class="n">uv_stream_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tcp_s</span> <span class="n">uv_tcp_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_s</span> <span class="n">uv_udp_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_pipe_s</span> <span class="n">uv_pipe_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_tty_s</span> <span class="n">uv_tty_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_poll_s</span> <span class="n">uv_poll_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_timer_s</span> <span class="n">uv_timer_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_prepare_s</span> <span class="n">uv_prepare_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_check_s</span> <span class="n">uv_check_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_idle_s</span> <span class="n">uv_idle_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_async_s</span> <span class="n">uv_async_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_process_s</span> <span class="n">uv_process_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_event_s</span> <span class="n">uv_fs_event_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_poll_s</span> <span class="n">uv_fs_poll_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_signal_s</span> <span class="n">uv_signal_t</span><span class="p">;</span>
 
 <span class="cm">/* Request types. */</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_req_s</span> <span class="kt">uv_req_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getaddrinfo_s</span> <span class="kt">uv_getaddrinfo_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getnameinfo_s</span> <span class="kt">uv_getnameinfo_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_shutdown_s</span> <span class="kt">uv_shutdown_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_write_s</span> <span class="kt">uv_write_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_connect_s</span> <span class="kt">uv_connect_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_send_s</span> <span class="kt">uv_udp_send_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_s</span> <span class="kt">uv_fs_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_work_s</span> <span class="kt">uv_work_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_req_s</span> <span class="n">uv_req_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getaddrinfo_s</span> <span class="n">uv_getaddrinfo_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_getnameinfo_s</span> <span class="n">uv_getnameinfo_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_shutdown_s</span> <span class="n">uv_shutdown_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_write_s</span> <span class="n">uv_write_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_connect_s</span> <span class="n">uv_connect_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_udp_send_s</span> <span class="n">uv_udp_send_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_fs_s</span> <span class="n">uv_fs_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_work_s</span> <span class="n">uv_work_t</span><span class="p">;</span>
 
 <span class="cm">/* None of the above. */</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_cpu_info_s</span> <span class="kt">uv_cpu_info_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_interface_address_s</span> <span class="kt">uv_interface_address_t</span><span class="p">;</span>
-<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_dirent_s</span> <span class="kt">uv_dirent_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_cpu_info_s</span> <span class="n">uv_cpu_info_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_interface_address_s</span> <span class="n">uv_interface_address_t</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_dirent_s</span> <span class="n">uv_dirent_t</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Handles represent long-lived objects. Async operations on such handles are
@@ -244,7 +244,7 @@ of individual actions. For example, an UDP socket is represented by
 a <code class="docutils literal"><span class="pre">uv_udp_t</span></code>, while individual writes to the socket use a <code class="docutils literal"><span class="pre">uv_udp_send_t</span></code>
 structure that is passed to the callback after the write is done.</p>
 <p>Handles are setup by a corresponding:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="p">,</span> <span class="n">uv_TYPE_t</span> <span class="o">*</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_TYPE_init</span><span class="p">(</span><span class="n">uv_loop_t</span> <span class="o">*</span><span class="p">,</span> <span class="n">uv_TYPE_t</span> <span class="o">*</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>function.</p>
@@ -262,12 +262,12 @@ and see how <code class="docutils literal"><span class="pre">uv_run()</span></co
 watcher is stopped when the count is reached and <code class="docutils literal"><span class="pre">uv_run()</span></code> exits since no
 event watchers are active.</p>
 <p class="rubric">idle-basic/main.c</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;uv.h&gt;</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
-<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="kt">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll"><span class="kt">void</span> <span class="nf">wait_for_a_while</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
 </span>    <span class="n">counter</span><span class="o">++</span><span class="p">;</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;=</span> <span class="mf">10e6</span><span class="p">)</span>
@@ -275,7 +275,7 @@ event watchers are active.</p>
 </span><span class="p">}</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kt">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
+<span class="hll">    <span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
 </span><span class="hll">
 </span><span class="hll">    <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
 </span><span class="hll">    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">wait_for_a_while</span><span class="p">);</span>
@@ -324,7 +324,7 @@ member.</p>
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>

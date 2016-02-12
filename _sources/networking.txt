@@ -9,6 +9,12 @@ structures, DNS lookup, and tweaking various socket parameters.
 
 The ``uv_tcp_t`` and ``uv_udp_t`` structures are used for network I/O.
 
+.. NOTE::
+
+  The code samples in this chapter exist to show certain libuv APIs. They are
+  not examples of good quality code. They leak memory and don't always close
+  connections properly.
+
 TCP
 ---
 

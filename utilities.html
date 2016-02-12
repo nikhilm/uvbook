@@ -75,7 +75,7 @@ started. libuv timers can also be set to invoke at regular intervals instead of
 just once.</p>
 <p>Simple use is to init a watcher and start it with a <code class="docutils literal"><span class="pre">timeout</span></code>, and optional <code class="docutils literal"><span class="pre">repeat</span></code>.
 Timers can be stopped at any time.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">uv_timer_t</span> <span class="n">timer_req</span><span class="p">;</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_timer_t</span> <span class="n">timer_req</span><span class="p">;</span>
 
 <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">timer_req</span><span class="p">);</span>
 <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer_req</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="mi">5000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">);</span>
@@ -88,7 +88,7 @@ of <code class="docutils literal"><span class="pre">uv_timer_start</span></code>
 </div>
 <p>to stop the timer. This can be used safely from within the callback as well.</p>
 <p>The repeat interval can be modified at any time with:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_timer_set_repeat</span><span class="p">(</span><span class="kt">uv_timer_t</span> <span class="o">*</span><span class="n">timer</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">repeat</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_timer_set_repeat</span><span class="p">(</span><span class="n">uv_timer_t</span> <span class="o">*</span><span class="n">timer</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">repeat</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>which will take effect <strong>when possible</strong>. If this function is called from
@@ -101,7 +101,7 @@ the old repeat interval will be used once more before the timer switches to
 the new interval.</li>
 </ul>
 <p>The utility function:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_timer_again</span><span class="p">(</span><span class="kt">uv_timer_t</span> <span class="o">*</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_timer_again</span><span class="p">(</span><span class="n">uv_timer_t</span> <span class="o">*</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>applies <strong>only to repeating timers</strong> and is equivalent to stopping the timer
@@ -116,8 +116,8 @@ old <code class="docutils literal"><span class="pre">repeat</span></code> value.
 works by having every handle increase the reference count of the event loop
 when it is started and decreasing the reference count when stopped. It is also
 possible to manually change the reference count of handles using:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">uv_ref</span><span class="p">(</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
-<span class="kt">void</span> <span class="nf">uv_unref</span><span class="p">(</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">uv_ref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">uv_unref</span><span class="p">(</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>These functions can be used to allow a loop to exit even when a watcher is
@@ -149,15 +149,15 @@ JS object and can be ref/unrefed.</p>
 14
 15
 16
-17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="kt">uv_timer_t</span> <span class="n">gc_req</span><span class="p">;</span>
-<span class="kt">uv_timer_t</span> <span class="n">fake_job_req</span><span class="p">;</span>
+17</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">gc_req</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">fake_job_req</span><span class="p">;</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="n">uv_timer_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
-<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="kt">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
+<span class="hll">    <span class="n">uv_unref</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">gc_req</span><span class="p">);</span>
 </span>
     <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gc_req</span><span class="p">,</span> <span class="n">gc</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">);</span>
 
@@ -199,9 +199,9 @@ idle watcher to keep the UI operational.</p>
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="kt">uv_fs_t</span> <span class="n">stdin_watcher</span><span class="p">;</span>
-<span class="kt">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_fs_t</span> <span class="n">stdin_watcher</span><span class="p">;</span>
+<span class="n">uv_idle_t</span> <span class="n">idler</span><span class="p">;</span>
 <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
@@ -209,7 +209,7 @@ idle watcher to keep the UI operational.</p>
 
     <span class="n">uv_idle_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">idler</span><span class="p">);</span>
 
-    <span class="kt">uv_buf_t</span> <span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">1024</span><span class="p">);</span>
+    <span class="n">uv_buf_t</span> <span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="mi">1024</span><span class="p">);</span>
     <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdin_watcher</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_type</span><span class="p">);</span>
 <span class="hll">    <span class="n">uv_idle_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">idler</span><span class="p">,</span> <span class="n">crunch_away</span><span class="p">);</span>
 </span>    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
@@ -222,15 +222,16 @@ until the user types something and presses Return. Then it will be interrupted
 for a brief amount as the loop deals with the input data, after which it will
 keep calling the idle callback again.</p>
 <p class="rubric">idle-compute/main.c</p>
-<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">crunch_away</span><span class="p">(</span><span class="kt">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">crunch_away</span><span class="p">(</span><span class="n">uv_idle_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Compute extra-terrestrial life</span>
     <span class="c1">// fold proteins</span>
     <span class="c1">// computer another digit of PI</span>
@@ -239,6 +240,7 @@ keep calling the idle callback again.</p>
     <span class="c1">// just to avoid overwhelming your terminal emulator</span>
     <span class="n">uv_idle_stop</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
 <span class="p">}</span>
+
 </pre></div>
 </td></tr></table></div>
 </div>
@@ -256,7 +258,7 @@ This allows cleaning up the work request and all the data in one free call.</p>
 5
 6
 7</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">struct</span> <span class="n">ftp_baton</span> <span class="p">{</span>
-<span class="hll">    <span class="kt">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
+<span class="hll">    <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
 </span>    <span class="kt">char</span> <span class="o">*</span><span class="n">host</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">port</span><span class="p">;</span>
     <span class="kt">char</span> <span class="o">*</span><span class="n">username</span><span class="p">;</span>
@@ -293,13 +295,13 @@ This allows cleaning up the work request and all the data in one free call.</p>
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">ftp_session</span><span class="p">(</span><span class="kt">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">ftp_session</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
 </span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Connecting to %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="nf">ftp_cleanup</span><span class="p">(</span><span class="kt">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">ftp_cleanup</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">ftp_baton</span> <span class="o">*</span><span class="n">baton</span> <span class="o">=</span> <span class="p">(</span><span class="n">ftp_baton</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
 
     <span class="n">free</span><span class="p">(</span><span class="n">baton</span><span class="o">-&gt;</span><span class="n">host</span><span class="p">);</span>
@@ -367,15 +369,15 @@ progress with the download whenever libuv notifies of I/O readiness.</p>
 33
 34
 35
-36</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;assert.h&gt;</span>
-<span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;stdlib.h&gt;</span>
-<span class="cp">#include &lt;uv.h&gt;</span>
-<span class="cp">#include &lt;curl/curl.h&gt;</span>
+36</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;assert.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;curl/curl.h&gt;</span><span class="cp"></span>
 
-<span class="hll"><span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="hll"><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 </span><span class="n">CURLM</span> <span class="o">*</span><span class="n">curl_handle</span><span class="p">;</span>
-<span class="kt">uv_timer_t</span> <span class="n">timeout</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">timeout</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
@@ -434,7 +436,9 @@ get the download moving.</p>
 14
 15
 16
-17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">add_download</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">,</span> <span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">void</span> <span class="nf">add_download</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">url</span><span class="p">,</span> <span class="kt">int</span> <span class="n">num</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">char</span> <span class="n">filename</span><span class="p">[</span><span class="mi">50</span><span class="p">];</span>
     <span class="n">sprintf</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&quot;%d.download&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">);</span>
     <span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
@@ -445,10 +449,10 @@ get the download moving.</p>
         <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 
-    <span class="n">CURL</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="n">curl_easy_init</span><span class="p">();</span>
-<span class="hll">    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_WRITEDATA</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
-</span><span class="hll">    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_URL</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
-</span>    <span class="n">curl_multi_add_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+<span class="hll">    <span class="n">CURL</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="n">curl_easy_init</span><span class="p">();</span>
+</span><span class="hll">    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_WRITEDATA</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
+</span>    <span class="n">curl_easy_setopt</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">CURLOPT_URL</span><span class="p">,</span> <span class="n">url</span><span class="p">);</span>
+    <span class="n">curl_multi_add_handle</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Added download %s -&gt; %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">filename</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
@@ -499,35 +503,37 @@ on sockets whenever <code class="docutils literal"><span class="pre">handle_sock
 35
 36
 37
-38</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">start_timeout</span><span class="p">(</span><span class="n">CURLM</span> <span class="o">*</span><span class="n">multi</span><span class="p">,</span> <span class="kt">long</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span> <span class="p">{</span>
+38
+39</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">void</span> <span class="nf">start_timeout</span><span class="p">(</span><span class="n">CURLM</span> <span class="o">*</span><span class="n">multi</span><span class="p">,</span> <span class="kt">long</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">timeout_ms</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">timeout_ms</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="cm">/* 0 means directly call socket_action, but we&#39;ll do it in a bit */</span>
     <span class="n">uv_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timeout</span><span class="p">,</span> <span class="n">on_timeout</span><span class="p">,</span> <span class="n">timeout_ms</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kt">int</span> <span class="nf">handle_socket</span><span class="p">(</span><span class="n">CURL</span> <span class="o">*</span><span class="n">easy</span><span class="p">,</span> <span class="kt">curl_socket_t</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">curl_context</span><span class="p">;</span>
-<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_IN</span> <span class="o">||</span> <span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_OUT</span><span class="p">)</span> <span class="p">{</span>
-</span>        <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">            <span class="n">curl_context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">;</span>
-</span>        <span class="p">}</span>
+<span class="kt">int</span> <span class="nf">handle_socket</span><span class="p">(</span><span class="n">CURL</span> <span class="o">*</span><span class="n">easy</span><span class="p">,</span> <span class="n">curl_socket_t</span> <span class="n">s</span><span class="p">,</span> <span class="kt">int</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">userp</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="n">curl_context_t</span> <span class="o">*</span><span class="n">curl_context</span><span class="p">;</span>
+</span>    <span class="k">if</span> <span class="p">(</span><span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_IN</span> <span class="o">||</span> <span class="n">action</span> <span class="o">==</span> <span class="n">CURL_POLL_OUT</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">        <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
+</span>            <span class="n">curl_context</span> <span class="o">=</span> <span class="p">(</span><span class="n">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">;</span>
+        <span class="p">}</span>
         <span class="k">else</span> <span class="p">{</span>
-            <span class="n">curl_context</span> <span class="o">=</span> <span class="n">create_curl_context</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
-<span class="hll">            <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">curl_context</span><span class="p">);</span>
-</span>        <span class="p">}</span>
+<span class="hll">            <span class="n">curl_context</span> <span class="o">=</span> <span class="n">create_curl_context</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</span>            <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">curl_context</span><span class="p">);</span>
+        <span class="p">}</span>
     <span class="p">}</span>
 
     <span class="k">switch</span> <span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">case</span> <span class="nl">CURL_POLL_IN</span><span class="p">:</span>
-<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_READABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
-</span>            <span class="k">break</span><span class="p">;</span>
-        <span class="k">case</span> <span class="nl">CURL_POLL_OUT</span><span class="p">:</span>
-<span class="hll">            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_WRITABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
-</span>            <span class="k">break</span><span class="p">;</span>
+<span class="hll">        <span class="k">case</span> <span class="nl">CURL_POLL_IN</span><span class="p">:</span>
+</span>            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_READABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+<span class="hll">        <span class="k">case</span> <span class="nl">CURL_POLL_OUT</span><span class="p">:</span>
+</span>            <span class="n">uv_poll_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">curl_context</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">,</span> <span class="n">UV_WRITABLE</span><span class="p">,</span> <span class="n">curl_perform</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
         <span class="k">case</span> <span class="nl">CURL_POLL_REMOVE</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">socketp</span><span class="p">)</span> <span class="p">{</span>
-                <span class="n">uv_poll_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">socketp</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">);</span>
-                <span class="n">destroy_curl_context</span><span class="p">((</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">);</span>                
+                <span class="n">uv_poll_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="p">((</span><span class="n">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">socketp</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">poll_handle</span><span class="p">);</span>
+                <span class="n">destroy_curl_context</span><span class="p">((</span><span class="n">curl_context_t</span><span class="o">*</span><span class="p">)</span> <span class="n">socketp</span><span class="p">);</span>                
                 <span class="n">curl_multi_assign</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
             <span class="p">}</span>
             <span class="k">break</span><span class="p">;</span>
@@ -565,7 +571,7 @@ mask with the new value. <code class="docutils literal"><span class="pre">curl_p
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">curl_perform</span><span class="p">(</span><span class="kt">uv_poll_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">)</span> <span class="p">{</span>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">curl_perform</span><span class="p">(</span><span class="n">uv_poll_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="n">uv_timer_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
 </span>    <span class="kt">int</span> <span class="n">running_handles</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -573,9 +579,9 @@ mask with the new value. <code class="docutils literal"><span class="pre">curl_p
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">status</span> <span class="o">&amp;&amp;</span> <span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_READABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_IN</span><span class="p">;</span>
 </span><span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">status</span> <span class="o">&amp;&amp;</span> <span class="n">events</span> <span class="o">&amp;</span> <span class="n">UV_WRITABLE</span><span class="p">)</span> <span class="n">flags</span> <span class="o">|=</span> <span class="n">CURL_CSELECT_OUT</span><span class="p">;</span>
 </span>
-    <span class="kt">curl_context_t</span> <span class="o">*</span><span class="n">context</span><span class="p">;</span>
+    <span class="n">curl_context_t</span> <span class="o">*</span><span class="n">context</span><span class="p">;</span>
 
-    <span class="n">context</span> <span class="o">=</span> <span class="p">(</span><span class="kt">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">req</span><span class="p">;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">(</span><span class="n">curl_context_t</span><span class="o">*</span><span class="p">)</span><span class="n">req</span><span class="p">;</span>
 <span class="hll">
 </span>    <span class="n">curl_multi_socket_action</span><span class="p">(</span><span class="n">curl_handle</span><span class="p">,</span> <span class="n">context</span><span class="o">-&gt;</span><span class="n">sockfd</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">running_handles</span><span class="p">);</span>
     <span class="n">check_multi_info</span><span class="p">();</span>   
@@ -676,7 +682,7 @@ things in your application <a class="footnote-reference" href="#id4" id="id2">[2
 2
 3
 4
-5</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &quot;plugin.h&quot;</span>
+5</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&quot;plugin.h&quot;</span><span class="cp"></span>
 
 <span class="kt">void</span> <span class="nf">initialize</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">mfp_register</span><span class="p">(</span><span class="s">&quot;Hello World!&quot;</span><span class="p">);</span>
@@ -732,7 +738,7 @@ Linux it is <code class="docutils literal"><span class="pre">libhello.so</span><
 30
 31
 32
-33</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &quot;plugin.h&quot;</span>
+33</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&quot;plugin.h&quot;</span><span class="cp"></span>
 
 <span class="k">typedef</span> <span class="nf">void</span> <span class="p">(</span><span class="o">*</span><span class="n">init_plugin_function</span><span class="p">)();</span>
 
@@ -746,7 +752,7 @@ Linux it is <code class="docutils literal"><span class="pre">libhello.so</span><
         <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
     <span class="p">}</span>
 
-<span class="hll">    <span class="kt">uv_lib_t</span> <span class="o">*</span><span class="n">lib</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uv_lib_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">uv_lib_t</span><span class="p">));</span>
+<span class="hll">    <span class="n">uv_lib_t</span> <span class="o">*</span><span class="n">lib</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_lib_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_lib_t</span><span class="p">));</span>
 </span>    <span class="k">while</span> <span class="p">(</span><span class="o">--</span><span class="n">argc</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Loading %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">]);</span>
 <span class="hll">        <span class="k">if</span> <span class="p">(</span><span class="n">uv_dlopen</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="n">argc</span><span class="p">],</span> <span class="n">lib</span><span class="p">))</span> <span class="p">{</span>
@@ -785,7 +791,7 @@ converts ANSI codes to the Windows equivalent, and provides functions to get
 terminal information.</p>
 <p>The first thing to do is to initialize a <code class="docutils literal"><span class="pre">uv_tty_t</span></code> with the file descriptor
 it reads/writes from. This is achieved with:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_tty_init</span><span class="p">(</span><span class="kt">uv_loop_t</span><span class="o">*</span><span class="p">,</span> <span class="kt">uv_tty_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">readable</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_tty_init</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_tty_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">readable</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Set <code class="docutils literal"><span class="pre">readable</span></code> to true if you plan to use <code class="docutils literal"><span class="pre">uv_read_start()</span></code> on the stream.</p>
@@ -829,13 +835,13 @@ a file, control sequences should not be written as they impede readability and
 26
 27
 28
-29</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;string.h&gt;</span>
-<span class="cp">#include &lt;unistd.h&gt;</span>
-<span class="cp">#include &lt;uv.h&gt;</span>
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
-<span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="kt">uv_tty_t</span> <span class="n">tty</span><span class="p">;</span>
+<span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_tty_t</span> <span class="n">tty</span><span class="p">;</span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
@@ -843,18 +849,18 @@ a file, control sequences should not be written as they impede readability and
 </span><span class="hll">    <span class="n">uv_tty_set_mode</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="n">UV_TTY_MODE_NORMAL</span><span class="p">);</span>
 </span>    
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_guess_handle</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">UV_TTY</span><span class="p">)</span> <span class="p">{</span>
-</span>        <span class="kt">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
-        <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
+</span>        <span class="n">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
+        <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
 <span class="hll">        <span class="n">buf</span><span class="p">.</span><span class="n">base</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\033</span><span class="s">[41;37m&quot;</span><span class="p">;</span>
 </span>        <span class="n">buf</span><span class="p">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">strlen</span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">);</span>
-        <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+        <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
     <span class="p">}</span>
 
-    <span class="kt">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
-    <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="n">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
+    <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
     <span class="n">buf</span><span class="p">.</span><span class="n">base</span> <span class="o">=</span> <span class="s">&quot;Hello TTY</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
     <span class="n">buf</span><span class="p">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">strlen</span><span class="p">(</span><span class="n">buf</span><span class="p">.</span><span class="n">base</span><span class="p">);</span>
-    <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 <span class="hll">    <span class="n">uv_tty_reset_mode</span><span class="p">();</span>
 </span>    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 <span class="p">}</span>
@@ -912,29 +918,29 @@ escape codes.</p>
 45
 46
 47
-48</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;string.h&gt;</span>
-<span class="cp">#include &lt;unistd.h&gt;</span>
-<span class="cp">#include &lt;uv.h&gt;</span>
+48</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
-<span class="kt">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
-<span class="kt">uv_tty_t</span> <span class="n">tty</span><span class="p">;</span>
-<span class="kt">uv_timer_t</span> <span class="n">tick</span><span class="p">;</span>
-<span class="kt">uv_write_t</span> <span class="n">write_req</span><span class="p">;</span>
+<span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+<span class="n">uv_tty_t</span> <span class="n">tty</span><span class="p">;</span>
+<span class="n">uv_timer_t</span> <span class="n">tick</span><span class="p">;</span>
+<span class="n">uv_write_t</span> <span class="n">write_req</span><span class="p">;</span>
 <span class="kt">int</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">;</span>
 <span class="kt">int</span> <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">char</span> <span class="o">*</span><span class="n">message</span> <span class="o">=</span> <span class="s">&quot;  Hello TTY  &quot;</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">update</span><span class="p">(</span><span class="kt">uv_timer_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+<span class="kt">void</span> <span class="nf">update</span><span class="p">(</span><span class="n">uv_timer_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">char</span> <span class="n">data</span><span class="p">[</span><span class="mi">500</span><span class="p">];</span>
 
-    <span class="kt">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
+    <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
     <span class="n">buf</span><span class="p">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
 <span class="hll">    <span class="n">buf</span><span class="p">.</span><span class="n">len</span> <span class="o">=</span> <span class="n">sprintf</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\033</span><span class="s">[2J</span><span class="se">\033</span><span class="s">[H</span><span class="se">\033</span><span class="s">[%dB</span><span class="se">\033</span><span class="s">[%luC</span><span class="se">\033</span><span class="s">[42;37m%s&quot;</span><span class="p">,</span>
 </span>                            <span class="n">pos</span><span class="p">,</span>
                             <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span> <span class="p">(</span><span class="n">width</span><span class="o">-</span><span class="n">strlen</span><span class="p">(</span><span class="n">message</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
                             <span class="n">message</span><span class="p">);</span>
-    <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">write_req</span><span class="p">,</span> <span class="p">(</span><span class="kt">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="n">uv_write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">write_req</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">tty</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 
 <span class="hll">    <span class="n">pos</span><span class="o">++</span><span class="p">;</span>
 </span>    <span class="k">if</span> <span class="p">(</span><span class="n">pos</span> <span class="o">&gt;</span> <span class="n">height</span><span class="p">)</span> <span class="p">{</span>
@@ -1028,7 +1034,7 @@ Käfer&#8217;s excellent slides on writing node.js bindings &#8211;
 
     <div class="footer" role="contentinfo">
         &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
     </div>
   </body>
 </html>
