@@ -3,8 +3,6 @@
 #include <string.h>
 #include <uv.h>
 
-uv_loop_t *loop;
-
 void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
   buf->base = malloc(suggested_size);
   buf->len = suggested_size;
@@ -19,12 +17,10 @@ void on_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
         return;
     }
 
-    char *data = (char*) malloc(sizeof(char) * (nread+1));
-    data[nread] = '\0';
-    strncpy(data, buf->base, nread);
-
-    fprintf(stderr, "%s", data);
-    free(data);
+    char *ts = buf->base, *es = buf->base + nread;
+    while(ts <= es)
+      putchar(*ts++);
+    
     free(buf->base);
 }
 
@@ -49,9 +45,9 @@ void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
     uv_ip4_name((struct sockaddr_in*) res->ai_addr, addr, 16);
     fprintf(stderr, "%s\n", addr);
 
-    uv_connect_t *connect_req = (uv_connect_t*) malloc(sizeof(uv_connect_t));
-    uv_tcp_t *socket = (uv_tcp_t*) malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(loop, socket);
+    uv_connect_t *connect_req = malloc(sizeof(uv_connect_t));
+    uv_tcp_t *socket = malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(uv_default_loop(), socket);
 
     uv_tcp_connect(connect_req, socket, (const struct sockaddr*) res->ai_addr, on_connect);
 
@@ -59,18 +55,12 @@ void on_resolved(uv_getaddrinfo_t *resolver, int status, struct addrinfo *res) {
 }
 
 int main() {
-    loop = uv_default_loop();
-
-    struct addrinfo hints;
-    hints.ai_family = PF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-    hints.ai_flags = 0;
-
+    uv_loop_t *loop = uv_default_loop();
+    struct addrinfo hints = { 0, PF_INET, SOCK_STREAM, IPPROTO_TCP };
     uv_getaddrinfo_t resolver;
-    fprintf(stderr, "irc.freenode.net is... ");
     int r = uv_getaddrinfo(loop, &resolver, on_resolved, "irc.freenode.net", "6667", &hints);
-
+    
+    fprintf(stderr, "irc.freenode.net is... ");
     if (r) {
         fprintf(stderr, "getaddrinfo call error %s\n", uv_err_name(r));
         return 1;
