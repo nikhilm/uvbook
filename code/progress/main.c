@@ -7,10 +7,11 @@
 uv_loop_t *loop;
 uv_async_t async;
 
+double percentage;
+
 void fake_download(uv_work_t *req) {
     int size = *((int*) req->data);
     int downloaded = 0;
-    double percentage;
     while (downloaded < size) {
         percentage = downloaded*100.0/size;
         async.data = (void*) &percentage;
