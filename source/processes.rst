@@ -277,7 +277,7 @@ messaging is no different from TCP, so we'll re-use the echo server example.
 .. rubric:: pipe-echo-server/main.c
 .. literalinclude:: ../code/pipe-echo-server/main.c
     :linenos:
-    :lines: 56-
+    :lines: 70-
     :emphasize-lines: 5,10,14
 
 We name the socket ``echo.sock`` which means it will be created in the local
@@ -314,7 +314,7 @@ it by the master.
 .. rubric:: multi-echo-server/worker.c
 .. literalinclude:: ../code/multi-echo-server/worker.c
     :linenos:
-    :lines: 7-9,67-
+    :lines: 7-9,81-
     :emphasize-lines: 6-8
 
 ``queue`` is the pipe connected to the master process on the other end, along
@@ -327,7 +327,7 @@ standard input of the worker, we connect the pipe to ``stdin`` using
 .. rubric:: multi-echo-server/worker.c
 .. literalinclude:: ../code/multi-echo-server/worker.c
     :linenos:
-    :lines: 36-65
+    :lines: 51-79
     :emphasize-lines: 10,15,20
 
 First we call ``uv_pipe_pending_count()`` to ensure that a handle is available

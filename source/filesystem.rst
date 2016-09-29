@@ -169,7 +169,7 @@ opened as bidirectional by default.
 .. rubric:: uvtee/main.c - read on pipes
 .. literalinclude:: ../code/uvtee/main.c
     :linenos:
-    :lines: 61-79
+    :lines: 61-80
     :emphasize-lines: 4,5,15
 
 The third argument of ``uv_pipe_init()`` should be set to 1 for IPC using named

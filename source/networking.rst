@@ -39,7 +39,7 @@ Here is a simple echo server
 .. rubric:: tcp-echo-server/main.c - The listen socket
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 56-
+    :lines: 68-
     :emphasize-lines: 4-5,7-10
 
 You can see the utility function ``uv_ip4_addr`` being used to convert from
@@ -61,7 +61,7 @@ In this case we also establish interest in reading from this stream.
 .. rubric:: tcp-echo-server/main.c - Accepting the client
 .. literalinclude:: ../code/tcp-echo-server/main.c
     :linenos:
-    :lines: 38-54
+    :lines: 51-66
     :emphasize-lines: 9-10
 
 The remaining set of functions is very similar to the streams example and can
