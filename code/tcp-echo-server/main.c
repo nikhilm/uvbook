@@ -9,6 +9,17 @@
 uv_loop_t *loop;
 struct sockaddr_in addr;
 
+typedef struct {
+    uv_write_t req;
+    uv_buf_t buf;
+} write_req_t;
+
+void free_write_req(uv_write_t *req) {
+    write_req_t *wr = (write_req_t*) req;
+    free(wr->buf.base);
+    free(wr);
+}
+
 void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf) {
     buf->base = (char*) malloc(suggested_size);
     buf->len = suggested_size;
@@ -18,22 +29,23 @@ void echo_write(uv_write_t *req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_strerror(status));
     }
-    free(req);
+    free_write_req(req);
 }
 
 void echo_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
+    if (nread > 0) {
+        write_req_t *req = (write_req_t*) malloc(sizeof(write_req_t));
+        req->buf = uv_buf_init(buf->base, nread);
+        uv_write((uv_write_t*) req, client, &req->buf, 1, echo_write);
+        return;
+    }
     if (nread < 0) {
         if (nread != UV_EOF)
             fprintf(stderr, "Read error %s\n", uv_err_name(nread));
         uv_close((uv_handle_t*) client, NULL);
-    } else if (nread > 0) {
-        uv_write_t *req = (uv_write_t *) malloc(sizeof(uv_write_t));
-        uv_buf_t wrbuf = uv_buf_init(buf->base, nread);
-        uv_write(req, client, &wrbuf, 1, echo_write);
     }
 
-    if (buf->base)
-        free(buf->base);
+    free(buf->base);
 }
 
 void on_new_connection(uv_stream_t *server, int status) {

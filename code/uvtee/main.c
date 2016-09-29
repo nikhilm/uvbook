@@ -54,6 +54,7 @@ void read_stdin(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         write_data((uv_stream_t *)&file_pipe, nread, *buf, on_file_write);
     }
 
+    // OK to free buffer as write_data copies it.
     if (buf->base)
         free(buf->base);
 }
