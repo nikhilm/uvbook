@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Processes &mdash; An Introduction to libuv</title>
+    <title>Processes &#8212; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,7 +23,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Advanced event loops" href="eventloops.html" />
@@ -108,7 +107,7 @@ exits. This is achieved using <code class="docutils literal"><span class="pre">u
 22
 23
 24
-25</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+25</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="n">uv_process_t</span> <span class="n">child_req</span><span class="p">;</span>
 <span class="n">uv_process_options_t</span> <span class="n">options</span><span class="p">;</span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
@@ -140,7 +139,7 @@ exits. This is achieved using <code class="docutils literal"><span class="pre">u
 <p><code class="docutils literal"><span class="pre">options</span></code> is implicitly initialized with zeros since it is a global
 variable.  If you change <code class="docutils literal"><span class="pre">options</span></code> to a local variable, remember to
 initialize it to null out all unused fields:</p>
-<div class="last highlight-c"><div class="highlight"><pre><span class="n">uv_process_options_t</span> <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+<div class="last highlight-c"><div class="highlight"><pre><span></span><span class="n">uv_process_options_t</span> <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 </pre></div>
 </div>
 </div>
@@ -158,7 +157,7 @@ which caused the exit.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre>
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">on_exit</span><span class="p">(</span><span class="n">uv_process_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">exit_status</span><span class="p">,</span> <span class="kt">int</span> <span class="n">term_signal</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Process exited with status %&quot;</span> <span class="n">PRId64</span> <span class="s">&quot;, signal %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">term_signal</span><span class="p">);</span>
 </span>    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
@@ -225,7 +224,7 @@ does not affect it.</p>
 19
 20
 21
-22</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+22</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="kt">char</span><span class="o">*</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
@@ -258,7 +257,7 @@ won&#8217;t exit. Use <code class="docutils literal"><span class="pre">uv_unref(
 with similar semantics on Windows, with <em>one caveat</em>: all of <code class="docutils literal"><span class="pre">SIGTERM</span></code>,
 <code class="docutils literal"><span class="pre">SIGINT</span></code> and <code class="docutils literal"><span class="pre">SIGKILL</span></code>, lead to termination of the process. The signature
 of <code class="docutils literal"><span class="pre">uv_kill</span></code> is:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_err_t</span> <span class="nf">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">uv_err_t</span> <span class="nf">uv_kill</span><span class="p">(</span><span class="kt">int</span> <span class="n">pid</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>For processes started using libuv, you may use <code class="docutils literal"><span class="pre">uv_process_kill</span></code> instead,
@@ -340,7 +339,7 @@ stop watching. Here is a small example demonstrating the various possibilities:<
 63
 64
 65
-66</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+66</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
@@ -434,7 +433,7 @@ child be the same as the stderr of the parent. In this case, libuv supports
 <em>inheriting</em> file descriptors. In this sample, we invoke the test program,
 which is:</p>
 <p class="rubric">proc-streams/test.c</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
@@ -449,7 +448,7 @@ The file descriptors of the child process are set using the <code class="docutil
 <code class="docutils literal"><span class="pre">uv_process_options_t</span></code>. First set the <code class="docutils literal"><span class="pre">stdio_count</span></code> field to the number of
 file descriptors being set. <code class="docutils literal"><span class="pre">uv_process_options_t.stdio</span></code> is an array of
 <code class="docutils literal"><span class="pre">uv_stdio_container_t</span></code>, which is:</p>
-<div class="highlight-c"><div class="highlight"><pre>
+<div class="highlight-c"><div class="highlight"><pre><span></span>
 <span class="k">typedef</span> <span class="k">struct</span> <span class="n">uv_stdio_container_s</span> <span class="p">{</span>
   <span class="n">uv_stdio_flags</span> <span class="n">flags</span><span class="p">;</span>
 
@@ -491,7 +490,7 @@ Then we set the <code class="docutils literal"><span class="pre">fd</span></code
 23
 24
 25
-26</pre></div></td><td class="code"><div class="highlight"><pre>
+26</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
@@ -527,7 +526,7 @@ parent process, the child process can treat that stream as standard I/O. This
 can be used to implement something like <a class="reference external" href="http://en.wikipedia.org/wiki/Common_Gateway_Interface">CGI</a>.</p>
 <p>A sample CGI script/executable is:</p>
 <p class="rubric">cgi/tick.c</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
@@ -542,7 +541,7 @@ can be used to implement something like <a class="reference external" href="http
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>The CGI server combines the concepts from this chapter and <a class="reference internal" href="networking.html"><em>Networking</em></a> so
+<p>The CGI server combines the concepts from this chapter and <a class="reference internal" href="networking.html"><span class="doc">Networking</span></a> so
 that every client is sent ten ticks after which that connection is closed.</p>
 <p class="rubric">cgi/main.c</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -559,7 +558,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// error!</span>
@@ -600,7 +599,7 @@ that every client is sent ten ticks after which that connection is closed.</p>
 19
 20
 21
-22</pre></div></td><td class="code"><div class="highlight"><pre>
+22</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
     <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
 
     <span class="cm">/* ... finding the executable path and setting up arguments ... */</span>
@@ -673,7 +672,7 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="n">uv_pipe_t</span> <span class="n">server</span><span class="p">;</span>
@@ -697,11 +696,11 @@ messaging is no different from TCP, so we&#8217;ll re-use the echo server exampl
 <p>We name the socket <code class="docutils literal"><span class="pre">echo.sock</span></code> which means it will be created in the local
 directory. This socket now behaves no different from TCP sockets as far as
 the stream API is concerned. You can test this server using <a class="reference external" href="http://www.dest-unreach.org/socat/">socat</a>:</p>
-<div class="highlight-c"><div class="highlight"><pre>$ socat - /path/to/socket
+<div class="highlight-c"><div class="highlight"><pre><span></span>$ socat - /path/to/socket
 </pre></div>
 </div>
 <p>A client which wants to connect to a domain socket will use:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">uv_pipe_connect</span><span class="p">(</span><span class="n">uv_connect_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="n">uv_pipe_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">uv_connect_cb</span> <span class="n">cb</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">uv_pipe_connect</span><span class="p">(</span><span class="n">uv_connect_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="n">uv_pipe_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">uv_connect_cb</span> <span class="n">cb</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal"><span class="pre">name</span></code> will be <code class="docutils literal"><span class="pre">echo.sock</span></code> or similar.</p>
@@ -730,7 +729,7 @@ it by the master.</p>
  8
  9
 10
-11</pre></div></td><td class="code"><div class="highlight"><pre>
+11</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="n">uv_pipe_t</span> <span class="n">queue</span><span class="p">;</span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
@@ -778,7 +777,7 @@ standard input of the worker, we connect the pipe to <code class="docutils liter
 26
 27
 28
-29</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+29</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">!=</span> <span class="n">UV_EOF</span><span class="p">)</span>
             <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">nread</span><span class="p">));</span>
@@ -824,7 +823,7 @@ allow load balancing.</p>
 2
 3
 4
-5</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">struct</span> <span class="n">child_worker</span> <span class="p">{</span>
+5</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">child_worker</span> <span class="p">{</span>
     <span class="n">uv_process_t</span> <span class="n">req</span><span class="p">;</span>
     <span class="n">uv_process_options_t</span> <span class="n">options</span><span class="p">;</span>
     <span class="n">uv_pipe_t</span> <span class="n">pipe</span><span class="p">;</span>
@@ -869,7 +868,7 @@ master and the individual process.</p>
 33
 34
 35
-36</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">setup_workers</span><span class="p">()</span> <span class="p">{</span>
+36</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">setup_workers</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">round_robin_counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 
     <span class="c1">// ...</span>
@@ -936,7 +935,7 @@ worker in the round-robin.</p>
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
         <span class="c1">// error!</span>
         <span class="k">return</span><span class="p">;</span>
@@ -989,8 +988,8 @@ well.</td></tr>
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2012-2016, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>

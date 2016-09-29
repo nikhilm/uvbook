@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Networking &mdash; An Introduction to libuv</title>
+    <title>Networking &#8212; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,7 +23,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Threads" href="threads.html" />
@@ -89,7 +88,7 @@ libuv streams infrastructure.</p>
 <li>Call <code class="docutils literal"><span class="pre">uv_listen</span></code> on the handle to have a callback invoked whenever a new
 connection is established by a client.</li>
 <li>Use <code class="docutils literal"><span class="pre">uv_accept</span></code> to accept the connection.</li>
-<li>Use <a class="reference internal" href="filesystem.html#buffers-and-streams"><span>stream operations</span></a> to communicate with the
+<li>Use <a class="reference internal" href="filesystem.html#buffers-and-streams"><span class="std std-ref">stream operations</span></a> to communicate with the
 client.</li>
 </ol>
 <p>Here is a simple echo server</p>
@@ -109,7 +108,7 @@ client.</li>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
 <span class="hll">    <span class="n">uv_tcp_t</span> <span class="n">server</span><span class="p">;</span>
@@ -156,7 +155,7 @@ In this case we also establish interest in reading from this stream.</p>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">server</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;New connection error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">status</span><span class="p">));</span>
         <span class="c1">// error!</span>
@@ -184,7 +183,7 @@ interested in accepting the connection.</p>
 <p>Where you do bind/listen/accept on the server, on the client side it&#8217;s simply
 a matter of calling <code class="docutils literal"><span class="pre">uv_tcp_connect</span></code>. The same <code class="docutils literal"><span class="pre">uv_connect_cb</span></code> style
 callback of <code class="docutils literal"><span class="pre">uv_listen</span></code> is used by <code class="docutils literal"><span class="pre">uv_tcp_connect</span></code>. Try:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_tcp_t</span><span class="o">*</span> <span class="n">socket</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_tcp_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_tcp_t</span><span class="p">));</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">uv_tcp_t</span><span class="o">*</span> <span class="n">socket</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_tcp_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_tcp_t</span><span class="p">));</span>
 <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">socket</span><span class="p">);</span>
 
 <span class="n">uv_connect_t</span><span class="o">*</span> <span class="n">connect</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_connect_t</span><span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_connect_t</span><span class="p">));</span>
@@ -243,7 +242,7 @@ numbers below 1024.</p>
 26
 27
 28
-29</pre></div></td><td class="code"><div class="highlight"><pre>
+29</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="n">uv_udp_t</span> <span class="n">send_socket</span><span class="p">;</span>
 <span class="n">uv_udp_t</span> <span class="n">recv_socket</span><span class="p">;</span>
@@ -323,7 +322,7 @@ the OS will discard the data that could not fit</em> (That&#8217;s UDP for you!)
 21
 22
 23
-24</pre></div></td><td class="code"><div class="highlight"><pre><span class="hll"><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="n">uv_udp_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">flags</span><span class="p">)</span> <span class="p">{</span>
+24</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="hll"><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="n">uv_udp_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="k">const</span> <span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="n">addr</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">flags</span><span class="p">)</span> <span class="p">{</span>
 </span>    <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">nread</span><span class="p">));</span>
         <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
@@ -364,7 +363,7 @@ restrict the socket to IPv6 only, pass the <code class="docutils literal"><span 
 <div class="section" id="multicast">
 <h4>Multicast<a class="headerlink" href="#multicast" title="Permalink to this headline">¶</a></h4>
 <p>A socket can (un)subscribe to a multicast group using:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_udp_set_membership</span><span class="p">(</span><span class="n">uv_udp_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_udp_set_membership</span><span class="p">(</span><span class="n">uv_udp_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
                                     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">multicast_addr</span><span class="p">,</span>
                                     <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">interface_addr</span><span class="p">,</span>
                                     <span class="n">uv_membership</span> <span class="n">membership</span><span class="p">);</span>
@@ -405,7 +404,7 @@ Freenode to see an example of DNS resolution.</p>
 17
 18
 19
-20</pre></div></td><td class="code"><div class="highlight"><pre>
+20</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
@@ -454,7 +453,7 @@ call <code class="docutils literal"><span class="pre">uv_freeaddrinfo</span></co
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre>
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">on_resolved</span><span class="p">(</span><span class="n">uv_getaddrinfo_t</span> <span class="o">*</span><span class="n">resolver</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">,</span> <span class="k">struct</span> <span class="n">addrinfo</span> <span class="o">*</span><span class="n">res</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;getaddrinfo callback error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">status</span><span class="p">));</span>
@@ -516,7 +515,7 @@ useful to allow your service to bind to IP addresses when it starts.</p>
 30
 31
 32
-33</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+33</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
@@ -599,8 +598,8 @@ removed in v0.9.0.</td></tr>
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2012-2016, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>

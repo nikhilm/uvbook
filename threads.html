@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Threads &mdash; An Introduction to libuv</title>
+    <title>Threads &#8212; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,7 +23,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Processes" href="processes.html" />
@@ -79,7 +78,7 @@ the pthreads API and often has similar semantics.</p>
 section within libuv. Whereas other features intimately depend on the event
 loop and callback principles, threads are complete agnostic, they block as
 required, signal errors directly via return values, and, as shown in the
-<a class="reference internal" href="#thread-create-example"><span>first example</span></a>, don&#8217;t even require a running
+<a class="reference internal" href="#thread-create-example"><span class="std std-ref">first example</span></a>, don&#8217;t even require a running
 event loop.</p>
 <p>libuv&#8217;s thread API is also very limited since the semantics and syntax of
 threads are different on all platforms, with different levels of completeness.</p>
@@ -101,7 +100,7 @@ wait for it to close using <code class="docutils literal"><span class="pre">uv_t
  8
  9
 10
-11</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+11</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">tracklen</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
 <span class="hll">    <span class="n">uv_thread_t</span> <span class="n">hare_id</span><span class="p">;</span>
 </span><span class="hll">    <span class="n">uv_thread_t</span> <span class="n">tortoise_id</span><span class="p">;</span>
@@ -132,7 +131,7 @@ thread, scheduled pre-emptively by the operating system:</p>
 6
 7
 8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">hare</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">hare</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="kt">int</span> <span class="n">tracklen</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">arg</span><span class="p">);</span>
 </span>    <span class="k">while</span> <span class="p">(</span><span class="n">tracklen</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">tracklen</span><span class="o">--</span><span class="p">;</span>
@@ -145,7 +144,7 @@ thread, scheduled pre-emptively by the operating system:</p>
 </td></tr></table></div>
 <p>Unlike <code class="docutils literal"><span class="pre">pthread_join()</span></code> which allows the target thread to pass back a value to
 the calling thread using a second parameter, <code class="docutils literal"><span class="pre">uv_thread_join()</span></code> does not. To
-send values use <a class="reference internal" href="#inter-thread-communication"><span>Inter-thread communication</span></a>.</p>
+send values use <a class="reference internal" href="#inter-thread-communication"><span class="std std-ref">Inter-thread communication</span></a>.</p>
 </div>
 <div class="section" id="synchronization-primitives">
 <h2>Synchronization Primitives<a class="headerlink" href="#synchronization-primitives" title="Permalink to this headline">¶</a></h2>
@@ -156,7 +155,7 @@ the pthreads <a class="reference external" href="pthreads">man pages</a>.</p>
 <h3>Mutexes<a class="headerlink" href="#mutexes" title="Permalink to this headline">¶</a></h3>
 <p>The mutex functions are a <strong>direct</strong> map to the pthread equivalents.</p>
 <p class="rubric">libuv mutex functions</p>
-<div class="highlight-c"><div class="highlight"><pre>
+<div class="highlight-c"><div class="highlight"><pre><span></span>
 <span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_mutex_init</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
 <span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="nf">uv_mutex_destroy</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
 <span class="n">UV_EXTERN</span> <span class="kt">void</span> <span class="nf">uv_mutex_lock</span><span class="p">(</span><span class="n">uv_mutex_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">);</span>
@@ -173,7 +172,7 @@ than</em> <code class="docutils literal"><span class="pre">EAGAIN</span></code> 
 <p>Recursive mutexes are supported by some platforms, but you should not rely on
 them. The BSD mutex implementation will raise an error if a thread which has
 locked a mutex attempts to lock it again. For example, a construct like:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">a_mutex</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">a_mutex</span><span class="p">);</span>
 <span class="n">uv_thread_create</span><span class="p">(</span><span class="n">thread_id</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">a_mutex</span><span class="p">);</span>
 <span class="n">uv_mutex_lock</span><span class="p">(</span><span class="n">a_mutex</span><span class="p">);</span>
 <span class="c1">// more things here</span>
@@ -252,7 +251,7 @@ example.</p>
 54
 55
 56
-57</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+57</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
 <span class="n">uv_barrier_t</span> <span class="n">blocker</span><span class="p">;</span>
@@ -326,7 +325,7 @@ very similar to their pthread counterparts.</p>
 threads can attempt to call <code class="docutils literal"><span class="pre">uv_once()</span></code> with a given guard and a function
 pointer, <strong>only the first one will win, the function will be called once and
 only once</strong>:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Initialize guard */</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cm">/* Initialize guard */</span>
 <span class="k">static</span> <span class="n">uv_once_t</span> <span class="n">once_only</span> <span class="o">=</span> <span class="n">UV_ONCE_INIT</span><span class="p">;</span>
 
 <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -388,7 +387,7 @@ event loop from performing other activities.</p>
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">;</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">random</span><span class="p">()</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
         <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
@@ -423,7 +422,7 @@ you are changing things while both threads may be running.</p>
 11
 12
 13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="kt">int</span> <span class="n">data</span><span class="p">[</span><span class="n">FIB_UNTIL</span><span class="p">];</span>
@@ -443,7 +442,7 @@ you are changing things while both threads may be running.</p>
 <code class="docutils literal"><span class="pre">uv_work_t</span></code> structure and once the function returns, the <em>after</em> function
 will be called on the thread the event loop is running in. It will be passed
 the same structure.</p>
-<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="utilities.html#baton"><span>pattern</span></a>
+<p>For writing wrappers to blocking libraries, a common <a class="reference internal" href="utilities.html#baton"><span class="std std-ref">pattern</span></a>
 is to use a baton to exchange data.</p>
 <p>Since libuv version <cite>0.9.4</cite> an additional function, <code class="docutils literal"><span class="pre">uv_cancel()</span></code>, is
 available. This allows you to cancel tasks on the libuv work queue. Only tasks
@@ -472,7 +471,7 @@ up a signal handler for termination.</p>
 14
 15
 16
-17</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+17</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="kt">int</span> <span class="n">data</span><span class="p">[</span><span class="n">FIB_UNTIL</span><span class="p">];</span>
@@ -502,7 +501,7 @@ up a signal handler for termination.</p>
 6
 7
 8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">uv_signal_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">)</span>
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">signal_handler</span><span class="p">(</span><span class="n">uv_signal_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">signum</span><span class="p">)</span>
 <span class="p">{</span>
     <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Signal received!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
     <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
@@ -519,7 +518,7 @@ with <code class="docutils literal"><span class="pre">status</span></code> set t
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">after_fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">after_fib</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">UV_ECANCELED</span><span class="p">)</span>
 </span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Calculation of %d cancelled.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
 <span class="p">}</span>
@@ -558,7 +557,7 @@ informing the user of the status of running downloads.</p>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="hll"><span class="n">uv_async_t</span> <span class="n">async</span><span class="p">;</span>
 </span><span class="p">}</span>
 
@@ -608,7 +607,7 @@ event.</p>
 11
 12
 13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">double</span> <span class="n">percentage</span><span class="p">;</span>
+14</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">double</span> <span class="n">percentage</span><span class="p">;</span>
 
 <span class="kt">void</span> <span class="nf">fake_download</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
@@ -631,7 +630,7 @@ non-blocking and will return immediately.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre>
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">print_progress</span><span class="p">(</span><span class="n">uv_async_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="n">percentage</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">double</span><span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Downloaded %.2f%%</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="p">);</span>
@@ -643,7 +642,7 @@ non-blocking and will return immediately.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre>
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">after</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Download complete</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 </span>    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
@@ -667,7 +666,7 @@ which binds a third party library. It may go something like this:</p>
 <ol class="arabic">
 <li><p class="first">In node, the third party library is set up with a JavaScript callback to be
 invoked for more information:</p>
-<div class="highlight-c"><div class="highlight"><pre>var lib = require(&#39;lib&#39;);
+<div class="highlight-c"><div class="highlight"><pre><span></span>var lib = require(&#39;lib&#39;);
 lib.on_progress(function() {
     console.log(&quot;Progress&quot;);
 });
@@ -708,8 +707,8 @@ then interacts with v8 to invoke the JavaScript callback.</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2012-2016, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>

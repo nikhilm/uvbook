@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Advanced event loops &mdash; An Introduction to libuv</title>
+    <title>Advanced event loops &#8212; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,7 +23,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Utilities" href="utilities.html" />
@@ -99,7 +98,7 @@ these things can be a bit difficult to understand, so let&#8217;s look at
 18
 19
 20
-21</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">uv_run</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_run_mode</span> <span class="n">mode</span><span class="p">)</span> <span class="p">{</span>
+21</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">uv_run</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_run_mode</span> <span class="n">mode</span><span class="p">)</span> <span class="p">{</span>
   <span class="kt">int</span> <span class="n">timeout</span><span class="p">;</span>
   <span class="kt">int</span> <span class="n">r</span><span class="p">;</span>
   <span class="kt">int</span> <span class="n">ran_pending</span><span class="p">;</span>
@@ -169,7 +168,7 @@ iteration of the loop still takes places.</p>
 30
 31
 32
-33</pre></div></td><td class="code"><div class="highlight"><pre><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+33</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&lt;uv.h&gt;</span><span class="cp"></span>
 
 <span class="kt">int64_t</span> <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -222,8 +221,8 @@ iteration of the loop still takes places.</p>
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2012-2016, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>

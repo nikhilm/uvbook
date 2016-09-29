@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Filesystem &mdash; An Introduction to libuv</title>
+    <title>Filesystem &#8212; An Introduction to libuv</title>
     
     <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -23,7 +23,6 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="An Introduction to libuv" href="index.html" />
     <link rel="next" title="Networking" href="networking.html" />
@@ -68,7 +67,7 @@
 <code class="docutils literal"><span class="pre">uv_fs_t</span></code> struct.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The libuv filesystem operations are different from <a class="reference internal" href="networking.html"><em>socket operations</em></a>. Socket operations use the non-blocking operations provided
+<p class="last">The libuv filesystem operations are different from <a class="reference internal" href="networking.html"><span class="doc">socket operations</span></a>. Socket operations use the non-blocking operations provided
 by the operating system. Filesystem operations use blocking functions
 internally, but invoke these functions in a <a class="reference external" href="http://docs.libuv.org/en/v1.x/threadpool.html#thread-pool-work-scheduling">thread pool</a> and notify
 watchers registered with the event loop when application interaction is
@@ -76,24 +75,24 @@ required.</p>
 </div>
 <p>All filesystem functions have two forms - <em>synchronous</em> and <em>asynchronous</em>.</p>
 <p>The <em>synchronous</em> forms automatically get called (and <strong>block</strong>) if the
-callback is null. The return value of functions is a <a class="reference internal" href="basics.html#libuv-error-handling"><span>libuv error code</span></a>. This is usually only useful for synchronous calls.
+callback is null. The return value of functions is a <a class="reference internal" href="basics.html#libuv-error-handling"><span class="std std-ref">libuv error code</span></a>. This is usually only useful for synchronous calls.
 The <em>asynchronous</em> form is called when a callback is passed and the return
 value is 0.</p>
 <div class="section" id="reading-writing-files">
 <h2>Reading/Writing files<a class="headerlink" href="#reading-writing-files" title="Permalink to this headline">¶</a></h2>
 <p>A file descriptor is obtained using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="n">path</span><span class="p">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">int</span> <span class="n">mode</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><code class="docutils literal"><span class="pre">flags</span></code> and <code class="docutils literal"><span class="pre">mode</span></code> are standard
 <a class="reference external" href="http://man7.org/linux/man-pages/man2/open.2.html">Unix flags</a>.
 libuv takes care of converting to the appropriate Windows flags.</p>
 <p>File descriptors are closed using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span> <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span> <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Filesystem operation callbacks have the signature:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">callback</span><span class="p">(</span><span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">callback</span><span class="p">(</span><span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Let&#8217;s see a simple implementation of <code class="docutils literal"><span class="pre">cat</span></code>. We start with registering
@@ -111,7 +110,7 @@ a callback for when the file is opened:</p>
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_open</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">on_open</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// The request passed to the callback is the same as the one the call setup</span>
     <span class="c1">// function was passed.</span>
 <span class="hll">    <span class="n">assert</span><span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">open_req</span><span class="p">);</span>
@@ -143,7 +142,7 @@ a callback for when the file is opened:</p>
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">on_read</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
 </span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
     <span class="p">}</span>
@@ -184,7 +183,7 @@ callbacks.</p>
 6
 7
 8
-9</pre></div></td><td class="code"><div class="highlight"><pre>
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">void</span> <span class="nf">on_write</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Write error: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
@@ -210,7 +209,7 @@ a write that &#8216;succeeds&#8217; may not be committed to disk yet.</p>
 6
 7
 8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
 <span class="hll">    <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">open_req</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">O_RDONLY</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">on_open</span><span class="p">);</span>
 </span>    <span class="n">uv_run</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 
@@ -234,7 +233,7 @@ supported asynchronously and have intuitive argument order. They follow the
 same patterns as the read/write/open calls, returning the result in the
 <code class="docutils literal"><span class="pre">uv_fs_t.result</span></code> field. The full list:</p>
 <p class="rubric">Filesystem operations</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">UV_EXTERN</span> <span class="kt">int</span> <span class="nf">uv_fs_close</span><span class="p">(</span><span class="n">uv_loop_t</span><span class="o">*</span> <span class="n">loop</span><span class="p">,</span>
                           <span class="n">uv_fs_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span>
                           <span class="n">uv_file</span> <span class="n">file</span><span class="p">,</span>
                           <span class="n">uv_fs_cb</span> <span class="n">cb</span><span class="p">);</span>
@@ -355,7 +354,7 @@ same patterns as the read/write/open calls, returning the result in the
 sockets, and pipes for file I/O and IPC are all treated as stream subclasses.</p>
 <p>Streams are initialized using custom functions for each subclass, then operated
 upon using</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">uv_read_start</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_alloc_cb</span> <span class="n">alloc_cb</span><span class="p">,</span> <span class="n">uv_read_cb</span> <span class="n">read_cb</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">uv_read_start</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">,</span> <span class="n">uv_alloc_cb</span> <span class="n">alloc_cb</span><span class="p">,</span> <span class="n">uv_read_cb</span> <span class="n">read_cb</span><span class="p">);</span>
 <span class="kt">int</span> <span class="nf">uv_read_stop</span><span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">);</span>
 <span class="kt">int</span> <span class="nf">uv_write</span><span class="p">(</span><span class="n">uv_write_t</span><span class="o">*</span> <span class="n">req</span><span class="p">,</span> <span class="n">uv_stream_t</span><span class="o">*</span> <span class="n">handle</span><span class="p">,</span>
              <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="n">bufs</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">nbufs</span><span class="p">,</span> <span class="n">uv_write_cb</span> <span class="n">cb</span><span class="p">);</span>
@@ -379,7 +378,7 @@ asynchronously shows the power of evented I/O. The two writes won&#8217;t block 
 other, but we have to be careful to copy over the buffer data to ensure we don&#8217;t
 free a buffer until it has been written.</p>
 <p>The program is to be executed as:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">uvtee</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="p">.</span><span class="o">/</span><span class="n">uvtee</span> <span class="o">&lt;</span><span class="n">output_file</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <p>We start off opening pipes on the files we require. libuv pipes to a file are
@@ -404,7 +403,7 @@ opened as bidirectional by default.</p>
 17
 18
 19
-20</pre></div></td><td class="code"><div class="highlight"><pre>
+20</pre></div></td><td class="code"><div class="highlight"><pre><span></span>
 <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 <span class="hll">
@@ -427,7 +426,7 @@ opened as bidirectional by default.</p>
 </pre></div>
 </td></tr></table></div>
 <p>The third argument of <code class="docutils literal"><span class="pre">uv_pipe_init()</span></code> should be set to 1 for IPC using named
-pipes. This is covered in <a class="reference internal" href="processes.html"><em>Processes</em></a>. The <code class="docutils literal"><span class="pre">uv_pipe_open()</span></code> call
+pipes. This is covered in <a class="reference internal" href="processes.html"><span class="doc">Processes</span></a>. The <code class="docutils literal"><span class="pre">uv_pipe_open()</span></code> call
 associates the pipe with the file descriptor, in this case <code class="docutils literal"><span class="pre">0</span></code> (standard
 input).</p>
 <p>We start monitoring <code class="docutils literal"><span class="pre">stdin</span></code>. The <code class="docutils literal"><span class="pre">alloc_buffer</span></code> callback is invoked as new
@@ -454,7 +453,7 @@ these buffers.</p>
 18
 19
 20
-21</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">alloc_buffer</span><span class="p">(</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">suggested_size</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+21</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">alloc_buffer</span><span class="p">(</span><span class="n">uv_handle_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">suggested_size</span><span class="p">,</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
     <span class="o">*</span><span class="n">buf</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="n">suggested_size</span><span class="p">),</span> <span class="n">suggested_size</span><span class="p">);</span>
 <span class="p">}</span>
 
@@ -517,7 +516,7 @@ point there is nothing to be read. Most applications will just ignore this.</p>
 22
 23
 24
-25</pre></div></td><td class="code"><div class="highlight"><pre><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+25</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
     <span class="n">uv_write_t</span> <span class="n">req</span><span class="p">;</span>
     <span class="n">uv_buf_t</span> <span class="n">buf</span><span class="p">;</span>
 <span class="p">}</span> <span class="n">write_req_t</span><span class="p">;</span>
@@ -556,7 +555,7 @@ like reference counted buffers or a pool of buffers in any major application.</p
 <p>If your program is meant to be used with other programs it may knowingly or
 unknowingly be writing to a pipe. This makes it susceptible to <a class="reference external" href="http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod#The_special_problem_of_SIGPIPE">aborting on
 receiving a SIGPIPE</a>. It is a good idea to insert:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">signal</span><span class="p">(</span><span class="n">SIGPIPE</span><span class="p">,</span> <span class="n">SIG_IGN</span><span class="p">)</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">signal</span><span class="p">(</span><span class="n">SIGPIPE</span><span class="p">,</span> <span class="n">SIG_IGN</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="last">in the initialization stages of your application.</p>
@@ -571,7 +570,7 @@ inconsistent parts of libuv. File change notification systems are themselves
 extremely varied across platforms so getting everything working everywhere is
 difficult. To demonstrate, I&#8217;m going to build a simple utility which runs
 a command whenever any of the watched files change:</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="p">.</span><span class="o">/</span><span class="n">onchange</span> <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">file1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">file2</span><span class="p">]</span> <span class="p">...</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="p">.</span><span class="o">/</span><span class="n">onchange</span> <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">file1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">file2</span><span class="p">]</span> <span class="p">...</span>
 </pre></div>
 </div>
 <p>The file change notification is started using <code class="docutils literal"><span class="pre">uv_fs_event_init()</span></code>:</p>
@@ -594,7 +593,7 @@ a command whenever any of the watched files change:</p>
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+19</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Usage: %s &lt;command&gt; &lt;file1&gt; [file2 ...]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
         <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
@@ -617,7 +616,7 @@ a command whenever any of the watched files change:</p>
 </td></tr></table></div>
 <p>The third argument is the actual file or directory to monitor. The last
 argument, <code class="docutils literal"><span class="pre">flags</span></code>, can be:</p>
-<div class="highlight-c"><div class="highlight"><pre>  <span class="n">UV_FS_EVENT_WATCH_ENTRY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+<div class="highlight-c"><div class="highlight"><pre><span></span>  <span class="n">UV_FS_EVENT_WATCH_ENTRY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
   <span class="n">UV_FS_EVENT_STAT</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
   <span class="n">UV_FS_EVENT_RECURSIVE</span> <span class="o">=</span> <span class="mi">4</span>
 </pre></div>
@@ -663,7 +662,7 @@ even on those platforms.</p>
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">uv_fs_event_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">uv_fs_event_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">filename</span><span class="p">,</span> <span class="kt">int</span> <span class="n">events</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">char</span> <span class="n">path</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
     <span class="kt">size_t</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">1023</span><span class="p">;</span>
     <span class="c1">// Does not handle error if path is longer than 1023.</span>
@@ -692,7 +691,7 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>see <a class="reference internal" href="processes.html#pipes"><span>Pipes</span></a></td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>see <a class="reference internal" href="processes.html#pipes"><span class="std std-ref">Pipes</span></a></td></tr>
 </tbody>
 </table>
 </div>
@@ -713,8 +712,8 @@ ReadDirectoryChangesW on Windows, event ports on Solaris, unsupported on Cygwin<
       </div>
 
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2012-2014, Nikhil Marathe.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+        &#169; Copyright 2012-2016, Nikhil Marathe.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>
