@@ -778,9 +778,7 @@ standard input of the worker, we connect the pipe to <code class="docutils liter
 26
 27
 28
-29
-30</pre></div></td><td class="code"><div class="highlight"><pre>
-<span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_new_connection</span><span class="p">(</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="n">q</span><span class="p">,</span> <span class="kt">ssize_t</span> <span class="n">nread</span><span class="p">,</span> <span class="k">const</span> <span class="n">uv_buf_t</span> <span class="o">*</span><span class="n">buf</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">nread</span> <span class="o">!=</span> <span class="n">UV_EOF</span><span class="p">)</span>
             <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Read error %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_err_name</span><span class="p">(</span><span class="n">nread</span><span class="p">));</span>
@@ -788,19 +786,19 @@ standard input of the worker, we connect the pipe to <code class="docutils liter
         <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
 
-<span class="hll">    <span class="n">uv_pipe_t</span> <span class="o">*</span><span class="n">pipe</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">;</span>
-</span>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">uv_pipe_pending_count</span><span class="p">(</span><span class="n">pipe</span><span class="p">))</span> <span class="p">{</span>
-        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;No pending count</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">uv_pipe_t</span> <span class="o">*</span><span class="n">pipe</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_pipe_t</span><span class="o">*</span><span class="p">)</span> <span class="n">q</span><span class="p">;</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">uv_pipe_pending_count</span><span class="p">(</span><span class="n">pipe</span><span class="p">))</span> <span class="p">{</span>
+</span>        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;No pending count</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
         <span class="k">return</span><span class="p">;</span>
     <span class="p">}</span>
-<span class="hll">
-</span>    <span class="n">uv_handle_type</span> <span class="n">pending</span> <span class="o">=</span> <span class="n">uv_pipe_pending_type</span><span class="p">(</span><span class="n">pipe</span><span class="p">);</span>
-    <span class="n">assert</span><span class="p">(</span><span class="n">pending</span> <span class="o">==</span> <span class="n">UV_TCP</span><span class="p">);</span>
+
+<span class="hll">    <span class="n">uv_handle_type</span> <span class="n">pending</span> <span class="o">=</span> <span class="n">uv_pipe_pending_type</span><span class="p">(</span><span class="n">pipe</span><span class="p">);</span>
+</span>    <span class="n">assert</span><span class="p">(</span><span class="n">pending</span> <span class="o">==</span> <span class="n">UV_TCP</span><span class="p">);</span>
 
     <span class="n">uv_tcp_t</span> <span class="o">*</span><span class="n">client</span> <span class="o">=</span> <span class="p">(</span><span class="n">uv_tcp_t</span><span class="o">*</span><span class="p">)</span> <span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">uv_tcp_t</span><span class="p">));</span>
-<span class="hll">    <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
-</span>    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">uv_os_fd_t</span> <span class="n">fd</span><span class="p">;</span>
+    <span class="n">uv_tcp_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">client</span><span class="p">);</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">uv_accept</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="p">(</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span>        <span class="n">uv_os_fd_t</span> <span class="n">fd</span><span class="p">;</span>
         <span class="n">uv_fileno</span><span class="p">((</span><span class="k">const</span> <span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">fd</span><span class="p">);</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Worker %d: Accepted fd %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">getpid</span><span class="p">(),</span> <span class="n">fd</span><span class="p">);</span>
         <span class="n">uv_read_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span> <span class="n">client</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">echo_read</span><span class="p">);</span>

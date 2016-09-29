@@ -55,7 +55,7 @@ a callback for when the file is opened:
 .. rubric:: uvcat/main.c - opening a file
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 42-54
+    :lines: 41-53
     :emphasize-lines: 4, 6-7
 
 The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
@@ -169,7 +169,7 @@ opened as bidirectional by default.
 .. rubric:: uvtee/main.c - read on pipes
 .. literalinclude:: ../code/uvtee/main.c
     :linenos:
-    :lines: 61-79
+    :lines: 61-80
     :emphasize-lines: 4,5,15
 
 The third argument of ``uv_pipe_init()`` should be set to 1 for IPC using named

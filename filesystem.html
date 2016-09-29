@@ -111,19 +111,19 @@ a callback for when the file is opened:</p>
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre>    <span class="c1">// The request passed to the callback is the same as the one the call setup</span>
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">on_open</span><span class="p">(</span><span class="n">uv_fs_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// The request passed to the callback is the same as the one the call setup</span>
     <span class="c1">// function was passed.</span>
-    <span class="n">assert</span><span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">open_req</span><span class="p">);</span>
-<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
-</span>        <span class="n">iov</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
-<span class="hll">        <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">read_req</span><span class="p">,</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">,</span>
-</span><span class="hll">                   <span class="o">&amp;</span><span class="n">iov</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_read</span><span class="p">);</span>
-</span>    <span class="p">}</span>
+<span class="hll">    <span class="n">assert</span><span class="p">(</span><span class="n">req</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">open_req</span><span class="p">);</span>
+</span>    <span class="k">if</span> <span class="p">(</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">        <span class="n">iov</span> <span class="o">=</span> <span class="n">uv_buf_init</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">buffer</span><span class="p">));</span>
+</span><span class="hll">        <span class="n">uv_fs_read</span><span class="p">(</span><span class="n">uv_default_loop</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">read_req</span><span class="p">,</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">,</span>
+</span>                   <span class="o">&amp;</span><span class="n">iov</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">on_read</span><span class="p">);</span>
+    <span class="p">}</span>
     <span class="k">else</span> <span class="p">{</span>
         <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;error opening file: %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">uv_strerror</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">req</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">));</span>
     <span class="p">}</span>
 <span class="p">}</span>
-
 </pre></div>
 </td></tr></table></div>
 <p>The <code class="docutils literal"><span class="pre">result</span></code> field of a <code class="docutils literal"><span class="pre">uv_fs_t</span></code> is the file descriptor in case of the
@@ -403,12 +403,14 @@ opened as bidirectional by default.</p>
 16
 17
 18
-19</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+19
+20</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
+<span class="hll">
+</span><span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span>    <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
 
-<span class="hll">    <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class="hll">    <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
-</span>
     <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">stdout_pipe</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
     
@@ -416,9 +418,9 @@ opened as bidirectional by default.</p>
     <span class="kt">int</span> <span class="n">fd</span> <span class="o">=</span> <span class="n">uv_fs_open</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">file_req</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">O_CREAT</span> <span class="o">|</span> <span class="n">O_RDWR</span><span class="p">,</span> <span class="mo">0644</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
     <span class="n">uv_pipe_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
     <span class="n">uv_pipe_open</span><span class="p">(</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">fd</span><span class="p">);</span>
+<span class="hll">
+</span>    <span class="n">uv_read_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">read_stdin</span><span class="p">);</span>
 
-<span class="hll">    <span class="n">uv_read_start</span><span class="p">((</span><span class="n">uv_stream_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stdin_pipe</span><span class="p">,</span> <span class="n">alloc_buffer</span><span class="p">,</span> <span class="n">read_stdin</span><span class="p">);</span>
-</span>
     <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
@@ -469,10 +471,10 @@ these buffers.</p>
         <span class="n">write_data</span><span class="p">((</span><span class="n">uv_stream_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">file_pipe</span><span class="p">,</span> <span class="n">nread</span><span class="p">,</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="n">on_file_write</span><span class="p">);</span>
     <span class="p">}</span>
 
+    <span class="c1">// OK to free buffer as write_data copies it.</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">buf</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">)</span>
         <span class="n">free</span><span class="p">(</span><span class="n">buf</span><span class="o">-&gt;</span><span class="n">base</span><span class="p">);</span>
 <span class="p">}</span>
-
 </pre></div>
 </td></tr></table></div>
 <p>The standard <code class="docutils literal"><span class="pre">malloc</span></code> is sufficient here, but you can use any memory allocation

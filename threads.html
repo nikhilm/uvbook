@@ -557,20 +557,22 @@ informing the user of the status of running downloads.</p>
 12
 13
 14
-15</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">uv_loop_t</span> <span class="o">*</span><span class="n">loop</span><span class="p">;</span>
 <span class="hll"><span class="n">uv_async_t</span> <span class="n">async</span><span class="p">;</span>
-</span>
-<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="p">}</span>
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">()</span> <span class="p">{</span>
     <span class="n">loop</span> <span class="o">=</span> <span class="n">uv_default_loop</span><span class="p">();</span>
 
     <span class="n">uv_work_t</span> <span class="n">req</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">10240</span><span class="p">;</span>
     <span class="n">req</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">size</span><span class="p">;</span>
+<span class="hll">
+</span>    <span class="n">uv_async_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="n">print_progress</span><span class="p">);</span>
+    <span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="n">fake_download</span><span class="p">,</span> <span class="n">after</span><span class="p">);</span>
 
-<span class="hll">    <span class="n">uv_async_init</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="n">print_progress</span><span class="p">);</span>
-</span>    <span class="n">uv_queue_work</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="p">,</span> <span class="n">fake_download</span><span class="p">,</span> <span class="n">after</span><span class="p">);</span>
-
-    <span class="k">return</span> <span class="n">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nf">uv_run</span><span class="p">(</span><span class="n">loop</span><span class="p">,</span> <span class="n">UV_RUN_DEFAULT</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
@@ -606,20 +608,20 @@ event.</p>
 11
 12
 13
-14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fake_download</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
+14</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">double</span> <span class="n">percentage</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">fake_download</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">int</span><span class="o">*</span><span class="p">)</span> <span class="n">req</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
     <span class="kt">int</span> <span class="n">downloaded</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kt">double</span> <span class="n">percentage</span><span class="p">;</span>
     <span class="k">while</span> <span class="p">(</span><span class="n">downloaded</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">)</span> <span class="p">{</span>
-        <span class="n">percentage</span> <span class="o">=</span> <span class="n">downloaded</span><span class="o">*</span><span class="mf">100.0</span><span class="o">/</span><span class="n">size</span><span class="p">;</span>
-<span class="hll">        <span class="n">async</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">percentage</span><span class="p">;</span>
-</span><span class="hll">        <span class="n">uv_async_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">async</span><span class="p">);</span>
-</span>
+<span class="hll">        <span class="n">percentage</span> <span class="o">=</span> <span class="n">downloaded</span><span class="o">*</span><span class="mf">100.0</span><span class="o">/</span><span class="n">size</span><span class="p">;</span>
+</span><span class="hll">        <span class="n">async</span><span class="p">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">percentage</span><span class="p">;</span>
+</span>        <span class="n">uv_async_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">async</span><span class="p">);</span>
+
         <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
         <span class="n">downloaded</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">200</span><span class="o">+</span><span class="n">random</span><span class="p">())</span><span class="o">%</span><span class="mi">1000</span><span class="p">;</span> <span class="c1">// can only download max 1000bytes/sec,</span>
                                            <span class="c1">// but at least a 200;</span>
     <span class="p">}</span>
-<span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <p>In the download function, we modify the progress indicator and queue the message
@@ -629,10 +631,10 @@ non-blocking and will return immediately.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">print_progress</span><span class="p">(</span><span class="n">uv_async_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
+4</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">void</span> <span class="nf">print_progress</span><span class="p">(</span><span class="n">uv_async_t</span> <span class="o">*</span><span class="n">handle</span><span class="p">)</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="n">percentage</span> <span class="o">=</span> <span class="o">*</span><span class="p">((</span><span class="kt">double</span><span class="o">*</span><span class="p">)</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
     <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Downloaded %.2f%%</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">percentage</span><span class="p">);</span>
-<span class="p">}</span>
 </pre></div>
 </td></tr></table></div>
 <p>The callback is a standard libuv pattern, extracting the data from the watcher.</p>
@@ -641,10 +643,10 @@ non-blocking and will return immediately.</p>
 <div class="highlight-c"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
 2
 3
-4</pre></div></td><td class="code"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">after</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
-    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Download complete</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-<span class="hll">    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
-</span><span class="p">}</span>
+4</pre></div></td><td class="code"><div class="highlight"><pre>
+<span class="kt">void</span> <span class="nf">after</span><span class="p">(</span><span class="n">uv_work_t</span> <span class="o">*</span><span class="n">req</span><span class="p">,</span> <span class="kt">int</span> <span class="n">status</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Download complete</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span>    <span class="n">uv_close</span><span class="p">((</span><span class="n">uv_handle_t</span><span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">async</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
 </pre></div>
 </td></tr></table></div>
 <p>After this example, which showed the abuse of the <code class="docutils literal"><span class="pre">data</span></code> field, <a class="reference external" href="https://github.com/bnoordhuis">bnoordhuis</a>
