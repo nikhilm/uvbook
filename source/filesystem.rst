@@ -55,7 +55,7 @@ a callback for when the file is opened:
 .. rubric:: uvcat/main.c - opening a file
 .. literalinclude:: ../code/uvcat/main.c
     :linenos:
-    :lines: 42-54
+    :lines: 41-53
     :emphasize-lines: 4, 6-7
 
 The ``result`` field of a ``uv_fs_t`` is the file descriptor in case of the
