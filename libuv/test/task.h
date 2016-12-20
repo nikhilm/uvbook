@@ -186,7 +186,7 @@ enum test_status {
 #endif
 
 
-#if defined _WIN32 && ! defined __GNUC__
+#if defined _WIN32 && ! defined __GNUC__ && _MSC_VER < 1900
 
 #include <stdarg.h>
 
