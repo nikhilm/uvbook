@@ -32,7 +32,9 @@
 
 
 /* Windows has no snprintf, only _snprintf. */
+#if _MSC_VER < 1900
 #define snprintf _snprintf
+#endif
 
 
 typedef struct {
