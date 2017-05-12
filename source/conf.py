@@ -267,7 +267,7 @@ epub_scheme = 'URL'
 #epub_uid = ''
 
 # A tuple containing the cover image and cover page html template filenames.
-#epub_cover = ()
+epub_cover = ('cover.png')
 
 # HTML files that should be inserted before the pages created by sphinx.
 # The format is a list of tuples containing the path and title.
